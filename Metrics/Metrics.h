@@ -1,8 +1,14 @@
-﻿// Metrics.h : Include file for standard system include files,
-// or project specific include files.
+﻿#pragma once
 
-#pragma once
+#include "MetricsData.h"
 
-#include <iostream>
+#ifdef _WIN32
+	#define DllExport __declspec( dllexport )
+#else
+	#define DllExport __attribute__((visibility("default")))
+#endif
 
-// TODO: Reference additional headers your program requires here.
+namespace Metrics
+{
+	DllExport MetricsData& RetrieveMetricsData();
+}

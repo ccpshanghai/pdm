@@ -1,12 +1,19 @@
-﻿// Metrics.cpp : Defines the entry point for the application.
-//
+﻿#include "Metrics.h"
+#include "Gatherer.h"
 
-#include "Metrics.h"
-
-using namespace std;
-
-int main()
+namespace Metrics
 {
-	cout << "Hello CMake." << endl;
-	return 0;
+	MetricsData& RetrieveMetricsData()
+	{
+		static MetricsData s_data{};
+		static bool s_hasData = false;
+
+		if (!s_hasData)
+		{
+			s_data = GatherData();
+			s_hasData = true;
+		}
+
+		return s_data;
+	}
 }
