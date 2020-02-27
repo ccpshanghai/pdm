@@ -1,4 +1,4 @@
-﻿cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.10)
 
 project(Tests)
 
@@ -32,9 +32,6 @@ add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/googletest-src
 add_executable(Tests
 	Tests.cpp
 )
-
-set_property(TARGET Tests PROPERTY CXX_STANDARD 17)
-set_property(TARGET Tests PROPERTY CXX_STANDARD_REQUIRED ON)
 
 target_link_libraries(Tests LINK_PUBLIC MetricsLib gtest_main)
 
