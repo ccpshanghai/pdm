@@ -3,8 +3,7 @@
 project(Metrics_CLI)
 
 add_executable(Metrics_CLI
-	Metrics_CLI.cpp
-	Metrics_CLI.h
+	main.cpp
 )
 
 target_link_libraries(Metrics_CLI LINK_PUBLIC MetricsLib)

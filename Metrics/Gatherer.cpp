@@ -2,8 +2,8 @@
 
 namespace Metrics
 {
-	MetricsData GatherData()
+	const MetricsData GatherData() throw()
 	{
-		return MetricsData{ { {"name1", "test1"}, {"name2", "test2"} } };
+		return MetricsData{ { {"name1", "test1"}, {"name2", "test3"} } };
 	}
 }

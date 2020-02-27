@@ -3,7 +3,7 @@
 
 namespace Metrics
 {
-	MetricsData& RetrieveMetricsData()
+	const MetricsData& RetrieveMetricsData() throw()
 	{
 		static MetricsData s_data{};
 		static bool s_hasData = false;
