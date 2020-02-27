@@ -1,15 +1,15 @@
-﻿#include "Metrics.h"
+#include "Metrics.h"
 
 #include <iostream>
 #include <algorithm>
 #include <fstream>
-#include <conio.h>
 
 using namespace Metrics;
 
 void Wait()
 {
-	static_cast<void>(_getch());
+    std::cout << "Press Enter to exit...";
+    std::cin.get();
 }
 
 void OutputLines(const MetricsData metrics, std::ostream& stream)
