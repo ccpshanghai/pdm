@@ -70,7 +70,7 @@ auto Execute()
 		const auto& metrics = RetrieveMetricsData();
 
 		std::fstream outfile;
-		std::string filename = "MetricsOutput_" + TimestampToString(metrics.timestamp) + ".txt";
+		std::string filename = "MetricsOutput_" + GetMachineName() + "_" + TimestampToString(metrics.timestamp) + ".txt";
 		outfile.open(filename, std::ios::out);
 
 		if (!outfile)

@@ -4,5 +4,6 @@
 
 namespace Metrics
 {
+
 	const MetricsData GatherData();
 }
