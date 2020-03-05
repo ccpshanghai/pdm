@@ -72,18 +72,18 @@ namespace PDM
 		return false;
 	}
 
-	void D3DAdapterInfo::PopulateDriverVersion()
+	void PopulateAdapterDriverVersion(D3DAdapterInfo& adapter)
 	{
 		std::string keyPath;
-		if (!GetDeviceRegistryKey(deviceID, keyPath)) return;
+		if (!GetDeviceRegistryKey(adapter.deviceID, keyPath)) return;
 
 		HKEY key;
 		LONG result = RegOpenKeyEx(HKEY_LOCAL_MACHINE, keyPath.c_str(), 0, KEY_QUERY_VALUE, &key);
 		if (result != ERROR_SUCCESS) return;
 
-		GetRegistryValue(key, "DriverVersion", driverVersionString);
-		GetRegistryValue(key, "DriverDate", driverDate);
-		GetRegistryValue(key, "ProviderName", driverVendor);
+		GetRegistryValue(key, "DriverVersion", adapter.driverVersionString);
+		GetRegistryValue(key, "DriverDate",    adapter.driverDate);
+		GetRegistryValue(key, "ProviderName",  adapter.driverVendor);
 
 		RegCloseKey(key);
 	}
@@ -226,7 +226,7 @@ namespace PDM
 			adapter.deviceID = desc.DeviceId;
 			adapter.subSystemID = desc.SubSysId;
 			adapter.revision = desc.Revision;
-			adapter.PopulateDriverVersion();
+			PopulateAdapterDriverVersion(adapter);
 
 			info.adapters.push_back(adapter);
 		}

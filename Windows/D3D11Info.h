@@ -20,8 +20,6 @@ namespace PDM
 		std::string driverVersionString;
 		std::string driverDate;
 		std::string driverVendor;
-
-		void PopulateDriverVersion();
 	};
 
 	struct MonitorInfo

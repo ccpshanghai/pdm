@@ -5,15 +5,15 @@ namespace PDM
 {
 	const PDMData& RetrievePDMData()
 	{
-		static PDMData s_data{};
-		static bool s_hasData = false;
+		static PDMData data{};
+		static bool hasData = false;
 
-		if (!s_hasData)
+		if (!hasData)
 		{
-			s_data = GatherData();
-			s_hasData = true;
+			data = GatherData();
+			hasData = true;
 		}
 
-		return s_data;
+		return data;
 	}
 }

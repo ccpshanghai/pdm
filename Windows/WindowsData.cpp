@@ -19,23 +19,18 @@
 
 namespace PDM
 {
-	std::string GuidToString(GUID guid)
+	struct NetworkAdapterInfo
 	{
-		LPOLESTR guidstr;
-		if (SUCCEEDED(StringFromCLSID(guid, &guidstr)))
-		{
-			CW2A str(guidstr);
-			CoTaskMemFree(guidstr);
-			return std::string(str);
-		}
-		return "";
-	}
-
-	const HKEY parent = HKEY_LOCAL_MACHINE;
-	const CString keyName = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
+		std::string name;
+		std::string description;
+		std::string macAddress;
+	};
 
 	std::string GetStringFromReg(CString keyValName)
 	{
+		const HKEY parent = HKEY_LOCAL_MACHINE;
+		const CString keyName = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
+
 		CRegKey key;
 		std::string out;
 
@@ -59,31 +54,6 @@ namespace PDM
 		return out;
 	}
 
-	std::string GetWindowsName()
-	{
-		return GetStringFromReg(L"ProductName");
-	}
-
-	std::string GetWindowsMajorVersion()
-	{
-		return GetStringFromReg(L"CurrentMajorVersionNumber");
-	}
-
-	std::string GetWindowsMinorVersion()
-	{
-		return GetStringFromReg(L"CurrentMinorVersionNumber");
-	}
-
-	std::string GetWindowsBuildNumber()
-	{
-		return GetStringFromReg(L"CurrentBuild");
-	}
-
-	std::string GetWindowsKernelVersion()
-	{
-		return GetStringFromReg(L"CurrentVersion");
-	}
-
 	Bitness GetOSBitnessInternal()
 	{
 #ifdef _WIN64
@@ -100,42 +70,42 @@ namespace PDM
 		return IsWine() ? OS::WINE : OS::WINDOWS;
 	}
 
-	const std::string GetOSName()
+	std::string GetOSName()
 	{
 		if (IsWine()) return "";
 
-		return GetWindowsName();
+		return GetStringFromReg(L"ProductName");
 	}
 
-	const std::string GetOSMajorVersion()
+	std::string GetOSMajorVersion()
 	{
 		if (IsWine()) return "";
 
-		return GetWindowsMajorVersion();
+		return GetStringFromReg(L"CurrentMajorVersionNumber");
 	}
 
-	const std::string GetOSMinorVersion()
+	std::string GetOSMinorVersion()
 	{
 		if (IsWine()) return "";
 
-		return GetWindowsMinorVersion();
+		return GetStringFromReg(L"CurrentMinorVersionNumber");
 	}
 
-	const std::string GetOSBuildNumber()
+	std::string GetOSBuildNumber()
 	{
 		if (IsWine()) return "";
 
-		return GetWindowsBuildNumber();
+		return GetStringFromReg(L"CurrentBuild");
 	}
 
-	const std::string GetOSKernelVersion()
+	std::string GetOSKernelVersion()
 	{
 		if (IsWine()) return "";
 
-		return GetWindowsKernelVersion();
+		return GetStringFromReg(L"CurrentVersion");
 	}
 
-	const std::string GetMachineName()
+	std::string GetMachineName()
 	{
 		constexpr auto INFO_BUFFER_SIZE = 1024;
 		TCHAR  infoBuf[INFO_BUFFER_SIZE];
@@ -144,7 +114,7 @@ namespace PDM
 		return GetComputerName(infoBuf, &bufCharCount) ? infoBuf : "";
 	}
 
-	const std::string GetUsername()
+	std::string GetUsername()
 	{
 		char username[UNLEN + 1];
 		DWORD username_len = UNLEN + 1;
@@ -166,7 +136,7 @@ namespace PDM
 		return status.ullTotalPhys;
 	}
 
-	const std::string GetMachineUuid()
+	std::string GetMachineUuid()
 	{
 		REGSAM access = KEY_READ;
 #ifndef _WIN64
@@ -267,7 +237,7 @@ namespace PDM
 	}
 
 #pragma warning(disable:26812)
-	std::string D3DFeatureSupportToString(D3D_FEATURE_LEVEL support)
+	constexpr const char* D3DFeatureSupportToString(D3D_FEATURE_LEVEL support)
 #pragma warning(default:26812)
 	{
 		switch (support)
@@ -295,7 +265,7 @@ namespace PDM
 		}
 	}
 
-	std::string VulkanSupportToString(VulkanSupport support)
+	constexpr const char* VulkanSupportToString(VulkanSupport support)
 	{
 		switch (support)
 		{

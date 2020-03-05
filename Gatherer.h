@@ -4,6 +4,5 @@
 
 namespace PDM
 {
-
-	const PDMData GatherData();
+	PDMData GatherData();
 }

@@ -23,7 +23,7 @@ namespace PDM
 	Bitness GetOSBitnessInternal();
 
 
-	std::string GetVersion()
+	constexpr const char* GetVersion()
 	{
 		return "1.0.0";
 	}
@@ -104,7 +104,7 @@ namespace PDM
 		return info.bitness;
 	}
 
-	const std::string BitnessToString(Bitness bitness)
+	constexpr const char* BitnessToString(Bitness bitness)
 	{
 		switch (bitness)
 		{
@@ -118,7 +118,7 @@ namespace PDM
 		}
 	}
 
-	const std::string OSToString(OS os)
+	constexpr const char* OSToString(OS os)
 	{
 		switch (os)
 		{
@@ -142,7 +142,7 @@ namespace PDM
 		return time;
 	}
 
-	const PDMData GatherData()
+	PDMData GatherData()
 	{
 		time_t rawtime;
 		time(&rawtime);
