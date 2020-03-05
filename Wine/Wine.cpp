@@ -4,7 +4,7 @@
 #include <atlbase.h>
 #include <string>
 
-namespace Wine
+namespace PDM
 {
 	bool IsWine()
 	{
@@ -72,7 +72,7 @@ namespace Wine
 		return hostOs;
 	}
 
-	Metrics::SubItem GetWineSubItems()
+	SubItem GetWineSubItems()
 	{
 		if (!IsWine()) return {};
 		
@@ -92,13 +92,13 @@ namespace Wine
 
 #else
 
-namespace Wine
+namespace PDM
 {
 	bool IsWine() { return false; }
 	const char* GetWineVersion() { return ""; }
 	const char* GetWineHostOs() { return ""; }
 
-	Metrics::SubItem GetWineSubItems()
+	PDM::SubItem GetWineSubItems()
 	{
 		return {};
 	}

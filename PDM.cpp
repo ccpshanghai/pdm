@@ -1,11 +1,11 @@
-﻿#include "Metrics.h"
+﻿#include "PDM.h"
 #include "Gatherer.h"
 
-namespace Metrics
+namespace PDM
 {
-	const MetricsData& RetrieveMetricsData()
+	const PDMData& RetrievePDMData()
 	{
-		static MetricsData s_data{};
+		static PDMData s_data{};
 		static bool s_hasData = false;
 
 		if (!s_hasData)

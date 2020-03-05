@@ -6,10 +6,10 @@
 #include <thread>
 
 #ifdef _WIN32
-#include "Windows/WindowsMetrics.h"
+#include "Windows/WindowsData.h"
 #endif
 
-namespace Metrics
+namespace PDM
 {
 	struct CPUInfo
 	{
@@ -142,7 +142,7 @@ namespace Metrics
 		return time;
 	}
 
-	const MetricsData GatherData()
+	const PDMData GatherData()
 	{
 		time_t rawtime;
 		time(&rawtime);
@@ -152,7 +152,7 @@ namespace Metrics
 
 		CPUInfo cpuinfo = GetCPUInfo();
 
-		return MetricsData
+		return PDMData
 		{
 			{
 				"DATA",
@@ -210,7 +210,7 @@ namespace Metrics
 					},
 					GetWindowsSubItems(),
 					{},
-					Wine::GetWineSubItems(),
+					GetWineSubItems(),
 				}
 			},
 			timestamp

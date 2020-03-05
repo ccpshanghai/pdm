@@ -4,7 +4,7 @@
 #include <string_view>
 #include <ctime>
 
-namespace Metrics
+namespace PDM
 {
 	enum class Bitness
 	{
@@ -62,9 +62,9 @@ namespace Metrics
 		std::vector<DataField> items;
 	};
 
-	struct MetricsData
+	struct PDMData
 	{
-		bool operator ==(const MetricsData& other) const
+		bool operator ==(const PDMData& other) const
 		{
 			return data == other.data && timestamp == other.timestamp;
 		}

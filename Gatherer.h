@@ -1,9 +1,9 @@
 #pragma once
 
-#include "MetricsData.h"
+#include "PDMData.h"
 
-namespace Metrics
+namespace PDM
 {
 
-	const MetricsData GatherData();
+	const PDMData GatherData();
 }

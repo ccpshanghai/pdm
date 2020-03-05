@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include "MetricsData.h"
+#include "PDMData.h"
 
 #ifdef _WIN32
 #define DllExport __declspec( dllexport )
@@ -8,9 +8,9 @@
 #define DllExport __attribute__((visibility("default")))
 #endif
 
-namespace Metrics
+namespace PDM
 {
-	DllExport const MetricsData& RetrieveMetricsData();
+	DllExport const PDMData& RetrievePDMData();
 
 	OS GetOSType();
 	const std::string GetOSName();

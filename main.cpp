@@ -1,10 +1,10 @@
-#include "Metrics.h"
+#include "PDM.h"
 
 #include <iostream>
 #include <algorithm>
 #include <fstream>
 
-using namespace Metrics;
+using namespace PDM;
 
 void Output(const SubItem& item, std::ostream& stream, int indentation = 0);
 void Output(const std::vector<SubItem>& items, std::ostream& stream, int indentation);
@@ -49,7 +49,7 @@ void Output(const std::vector<SubItem>& items, std::ostream& stream, int indenta
 	});
 }
 
-void Output(const MetricsData& data, std::ostream& stream)
+void Output(const PDMData& data, std::ostream& stream)
 {
 	Output(data.data, stream);
 	stream.flush();
@@ -67,10 +67,10 @@ auto Execute()
 {
 	try
 	{
-		const auto& metrics = RetrieveMetricsData();
+		const auto& data = RetrievePDMData();
 
 		std::fstream outfile;
-		std::string filename = "MetricsOutput_" + GetMachineName() + "_" + TimestampToString(metrics.timestamp) + ".txt";
+		std::string filename = "PDM_Output_" + GetMachineName() + "_" + TimestampToString(data.timestamp) + ".txt";
 		outfile.open(filename, std::ios::out);
 
 		if (!outfile)
@@ -79,11 +79,11 @@ auto Execute()
 		}
 		else
 		{
-			Output(metrics, outfile);
+			Output(data, outfile);
 			outfile.close();
 		}
 
-		Output(metrics, std::cout);
+		Output(data, std::cout);
 	}
 	catch (std::exception & e)
 	{

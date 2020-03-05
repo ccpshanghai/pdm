@@ -1,12 +1,12 @@
 #pragma once
 
-#include "../Metrics.h"
+#include "../PDM.h"
 
-namespace Wine
+namespace PDM
 {
 	DllExport bool IsWine();
 	DllExport const char* GetWineVersion();
 	DllExport const char* GetWineHostOs();
 
-	Metrics::SubItem GetWineSubItems();
+	SubItem GetWineSubItems();
 }

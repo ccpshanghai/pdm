@@ -1,8 +1,8 @@
 #ifdef _WIN32
 
-#include "WindowsMetrics.h"
+#include "WindowsData.h"
 #include "D3D11Info.h"
-#include "../MetricsData.h"
+#include "../PDMData.h"
 #include "../Wine/Wine.h"
 #include "VulkanInfo.h"
 
@@ -17,7 +17,7 @@
 #pragma comment(lib, "IPHLPAPI.lib")
 
 
-namespace Metrics
+namespace PDM
 {
 	std::string GuidToString(GUID guid)
 	{
@@ -97,40 +97,40 @@ namespace Metrics
 
 	OS GetOSType()
 	{
-		return Wine::IsWine() ? OS::WINE : OS::WINDOWS;
+		return IsWine() ? OS::WINE : OS::WINDOWS;
 	}
 
 	const std::string GetOSName()
 	{
-		if (Wine::IsWine()) return "";
+		if (IsWine()) return "";
 
 		return GetWindowsName();
 	}
 
 	const std::string GetOSMajorVersion()
 	{
-		if (Wine::IsWine()) return "";
+		if (IsWine()) return "";
 
 		return GetWindowsMajorVersion();
 	}
 
 	const std::string GetOSMinorVersion()
 	{
-		if (Wine::IsWine()) return "";
+		if (IsWine()) return "";
 
 		return GetWindowsMinorVersion();
 	}
 
 	const std::string GetOSBuildNumber()
 	{
-		if (Wine::IsWine()) return "";
+		if (IsWine()) return "";
 
 		return GetWindowsBuildNumber();
 	}
 
 	const std::string GetOSKernelVersion()
 	{
-		if (Wine::IsWine()) return "";
+		if (IsWine()) return "";
 
 		return GetWindowsKernelVersion();
 	}
@@ -186,7 +186,7 @@ namespace Metrics
 		return status == ERROR_SUCCESS && type == REG_SZ ? guid : "";
 	}
 
-	std::vector<AdapterInfo> GetAdapterInfo()
+	std::vector<NetworkAdapterInfo> GetAdapterInfo()
 	{
 		ULONG l = 0;
 		DWORD res = GetAdaptersInfo(0, &l);
@@ -196,7 +196,7 @@ namespace Metrics
 		if (res != ERROR_SUCCESS) return {};
 
 		IP_ADAPTER_INFO* pi = (IP_ADAPTER_INFO*)&buf[0];
-		std::vector<AdapterInfo> adapters;
+		std::vector<NetworkAdapterInfo> adapters;
 		for (; pi; pi = pi->Next)
 		{
 			std::stringstream stream;
@@ -309,9 +309,9 @@ namespace Metrics
 		}
 	}
 
-	Metrics::SubItem GetWindowsSubItems()
+	PDM::SubItem GetWindowsSubItems()
 	{
-		if (Wine::IsWine()) return {};
+		if (IsWine()) return {};
 
 		D3D11Info d3dInfo = GetD3DInfo();
 

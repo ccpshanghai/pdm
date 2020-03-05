@@ -1,6 +1,6 @@
 ﻿cmake_minimum_required(VERSION 3.8)
 
-project(MetricsLib)
+project(libPDM)
 
 if (MSVC)
 	add_compile_options(-W4)
@@ -21,20 +21,20 @@ if(NOT APPLE)
 endif()
 
 set(CPP_FILES 
-	Metrics.cpp
+	PDM.cpp
 	Gatherer.cpp
 	Wine/Wine.cpp
-	Windows/WindowsMetrics.cpp
+	Windows/WindowsData.cpp
 	Windows/D3D11Info.cpp
 	Windows/VulkanInfo.cpp
 )
 
-add_library(MetricsLib SHARED
+add_library(libPDM SHARED
 	${CPP_FILES}
 )
 
 set_target_properties(
-	MetricsLib PROPERTIES
+	libPDM PROPERTIES
 		SOVERSION 1
 		VERSION   1.0.0
 )
@@ -42,30 +42,30 @@ set_target_properties(
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN YES)
 
-install(TARGETS MetricsLib
+install(TARGETS libPDM
 	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-		COMPONENT Metrics_RunTime
+		COMPONENT PDM_RunTime
 	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-		COMPONENT Metrics_RunTime
-		NAMELINK_COMPONENT Metrics_Development
+		COMPONENT PDM_RunTime
+		NAMELINK_COMPONENT PDM_Development
 	ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-		COMPONENT Metrics_Development
+		COMPONENT PDM_Development
 )
 
-target_include_directories(MetricsLib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(libPDM PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 include(GenerateExportHeader)
-generate_export_header(MetricsLib)
+generate_export_header(libPDM)
 
 include(CMakePackageConfigHelpers)
 
 write_basic_package_version_file(
-	MetricsLibConfigVersion.cmake
+	PDMLibConfigVersion.cmake
 	VERSION 1.0.0
 	COMPATIBILITY SameMajorVersion
 )
 
-add_executable(MetricsCLI
+add_executable(PDMCLI
 	${CPP_FILES}
 	main.cpp
 )

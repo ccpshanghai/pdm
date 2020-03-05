@@ -2,17 +2,20 @@
 
 #include <string>
 
-enum class VulkanSupport
+namespace PDM
 {
-	UNKNOWN,
-	SUPPORTED,
-	UNSUPPORTED,
-};
+	enum class VulkanSupport
+	{
+		UNKNOWN,
+		SUPPORTED,
+		UNSUPPORTED,
+	};
 
-struct VulkanProperties
-{
-	VulkanSupport support{ VulkanSupport::UNKNOWN };
-	std::string version;
-};
+	struct VulkanProperties
+	{
+		VulkanSupport support{ VulkanSupport::UNKNOWN };
+		std::string version;
+	};
 
-VulkanProperties GetVulkanProperties();
+	VulkanProperties GetVulkanProperties();
+}

@@ -2,13 +2,13 @@
 
 #ifdef _WIN32
 
-#include "../Metrics.h"
+#include "../PDM.h"
 
 #include <string>
 
-namespace Metrics
+namespace PDM
 {
-	struct AdapterInfo
+	struct NetworkAdapterInfo
 	{
 		std::string name;
 		std::string description;
@@ -21,7 +21,7 @@ namespace Metrics
 	std::string GetWindowsBuildNumber();
 	std::string GetWindowsKernelVersion();
 
-	Metrics::SubItem GetWindowsSubItems();
+	SubItem GetWindowsSubItems();
 }
 
 #endif
