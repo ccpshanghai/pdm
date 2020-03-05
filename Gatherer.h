@@ -4,5 +4,5 @@
 
 namespace Metrics
 {
-	const MetricsData GatherData() throw();
+	const MetricsData GatherData();
 }
