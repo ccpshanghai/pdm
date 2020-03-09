@@ -357,9 +357,12 @@ namespace PDM
 
 #else
 
-PDM::SubItem GetWindowsSubItems()
+namespace PDM
 {
-	return {};
+	SubItem GetWindowsSubItems()
+	{
+		return {};
+	}
 }
 
 #endif

@@ -112,7 +112,7 @@ namespace PDM
 
 		time_t rawtime;
 		time(&rawtime);
-		TimeStamp time{ 0 };
+		TimeStamp time{ {0} };
 
 #ifdef _WIN32
 		localtime_s(&time, &rawtime);
