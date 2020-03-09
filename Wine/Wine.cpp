@@ -94,11 +94,11 @@ namespace PDM
 
 namespace PDM
 {
-	constexpr bool IsWine() { return false; }
-	constexpr const char* GetWineVersion() { return ""; }
-	constexpr const char* GetWineHostOs() { return ""; }
+	bool IsWine() { return false; }
+	const char* GetWineVersion() { return ""; }
+	const char* GetWineHostOs() { return ""; }
 
-	constexpr SubItem GetWineSubItems()
+	SubItem GetWineSubItems()
 	{
 		return {};
 	}

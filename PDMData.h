@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include <string_view>
+#include <string>
 #include <ctime>
 
 namespace PDM
@@ -44,7 +44,7 @@ namespace PDM
 			return name == other.name && value == other.value;
 		}
 
-		std::string_view name;
+		std::string name;
 		std::string value;
 	};
 
@@ -57,7 +57,7 @@ namespace PDM
 				items == other.items;
 		}
 
-		std::string_view name;
+		std::string name;
 		std::vector<SubItem> subitems;
 		std::vector<DataField> items;
 	};

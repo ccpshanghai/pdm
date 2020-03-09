@@ -1,6 +1,7 @@
+#include "WindowsData.h"
+
 #ifdef _WIN32
 
-#include "WindowsData.h"
 #include "D3D11Info.h"
 #include "../PDMData.h"
 #include "../Wine/Wine.h"
@@ -191,9 +192,7 @@ namespace PDM
 
 	bool IsHypervisorGuestVM()
 	{
-		int cpuInfo[4];
-		__cpuid(cpuInfo, 1);
-		return cpuInfo[2] & 0x80000000;
+		return CPUID(1).ECX() & 0x80000000;
 	}
 
 	bool IsVMExecutionTiming()
@@ -367,6 +366,13 @@ namespace PDM
 			}
 		};
 	}
+}
+
+#else
+
+PDM::SubItem GetWindowsSubItems()
+{
+	return {};
 }
 
 #endif

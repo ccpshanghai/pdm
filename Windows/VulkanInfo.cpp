@@ -1,3 +1,5 @@
+#ifdef _WIN32
+
 #include "VulkanInfo.h"
 #include "VulkanDefs.h"
 #include "../Defines.h"
@@ -63,3 +65,5 @@ namespace PDM
 		return properties;
 	}
 }
+
+#endif

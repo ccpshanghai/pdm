@@ -27,6 +27,7 @@ set(CPP_FILES
 	Windows/WindowsData.cpp
 	Windows/D3D11Info.cpp
 	Windows/VulkanInfo.cpp
+	MacOS/MacOSData.cpp
 )
 
 add_library(libPDM SHARED

@@ -1,12 +1,14 @@
 #include "Gatherer.h"
 #include "Wine/Wine.h"
+#include "Windows/WindowsData.h"
+#include "MacOS/MacOSData.h"
 
-#include <intrin.h>
 #include <string>
 #include <thread>
+#include <time.h>
 
 #ifdef _WIN32
-#include "Windows/WindowsData.h"
+#include <intrin.h>
 #endif
 
 namespace PDM
@@ -34,44 +36,48 @@ namespace PDM
 
 		Bitness bitness;
 
-		int cpuInfo[4] = { 0 };
-		__cpuid(cpuInfo, 0x80000000);
-		int idMax = cpuInfo[0];
-		if (idMax >= 0x80000001)
+		CPUID id8(0x80000000);
+		if (id8.EAX() >= 0x80000001u)
 		{
-			__cpuidex(cpuInfo, 0x80000001, 0);
-			bitness = cpuInfo[3] & (1 << 29) ? Bitness::BITNESS_64 : Bitness::BITNESS_32;
+			CPUID id81(0x80000001);
+			bitness = id81.EDX() & (1 << 29) ? Bitness::BITNESS_64 : Bitness::BITNESS_32;
 		}
 		else
 		{
 			bitness = Bitness::BITNESS_32;
 		}
+		
+		std::string brand;
 
-		char brand[0x40] = { 0 };
-
-		if (idMax >= 0x80000004)
+		if (id8.EAX() >= 0x80000004u)
 		{
-			__cpuidex(reinterpret_cast<int*>(brand), 0x80000002, 0);
-			__cpuidex(reinterpret_cast<int*>(brand + 16), 0x80000003, 0);
-			__cpuidex(reinterpret_cast<int*>(brand + 32), 0x80000004, 0);
+			for (unsigned i = 0; i < 3; i++)
+			{
+				CPUID id(0x80000002u + i);
+				if (i)
+				{
+					brand += std::string(reinterpret_cast<const char*>(&id.EAX()), 4);
+					brand += std::string(reinterpret_cast<const char*>(&id.EBX()), 4);
+				}
+				brand += std::string(reinterpret_cast<const char*>(&id.ECX()), 4);
+				brand += std::string(reinterpret_cast<const char*>(&id.EDX()), 4);
+			}
 		}
 
-		char vendor[0x20] = { 0 };
-		__cpuidex(cpuInfo, 0, 0);
-		*reinterpret_cast<int*>(vendor) = cpuInfo[1];
-		*reinterpret_cast<int*>(vendor + 4) = cpuInfo[3];
-		*reinterpret_cast<int*>(vendor + 8) = cpuInfo[2];
+		CPUID id0(0);
+		std::string vendor;
+		vendor += std::string(reinterpret_cast<const char*>(&id0.EBX()), 4);
+		vendor += std::string(reinterpret_cast<const char*>(&id0.EDX()), 4);
+		vendor += std::string(reinterpret_cast<const char*>(&id0.ECX()), 4);
 
 		int model = 0;
 		int stepping = 0;
 
-		__cpuid(cpuInfo, 0);
-		idMax = cpuInfo[0];
-		if (idMax > 0)
+		if (id0.EAX() > 0)
 		{
-			__cpuidex(cpuInfo, 1, 0);
-			model = (cpuInfo[0] >> 4) & 0xf;
-			stepping = cpuInfo[0] & 0xf;
+			CPUID id1(1);
+			model = (id1.EAX() >> 4) & 0xf;
+			stepping = id1.EAX() & 0xf;
 		}
 
 		return { model, stepping, vendor, brand, bitness };
@@ -146,8 +152,8 @@ namespace PDM
 	{
 		time_t rawtime;
 		time(&rawtime);
-		struct tm timeinfo{0};
-		localtime_s(&timeinfo, &rawtime);
+		struct tm timeinfo;
+		localtime_r(&rawtime, &timeinfo);
 		TimeStamp timestamp{ timeinfo };
 
 		CPUInfo cpuinfo = GetCPUInfo();
@@ -206,12 +212,14 @@ namespace PDM
 									{"IS_VM",        IsRunningVM() ? "YES" : "NO"},
 								}
 							},
-						}
+						},
+						{}
 					},
 					GetWindowsSubItems(),
-					{},
+					GetMacOSSubItems(),
 					GetWineSubItems(),
-				}
+				},
+				{}
 			},
 			timestamp
 		};
