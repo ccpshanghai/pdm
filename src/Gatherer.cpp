@@ -80,6 +80,46 @@ namespace PDM
 		return { model, stepping, vendor, brand, bitness };
 	}
 
+	bool IsVMExecutionTiming()
+	{
+		// Both these values are arbitrary (needs investigation)
+		const unsigned THRESHOLD = 500;
+		const unsigned RUNS = 1024;
+
+		uint64_t average{ 0 };
+		for (unsigned i = 0; i < RUNS; i++)
+		{
+#if _WIN64
+			auto time1 = __rdtsc();
+			auto time2 = __rdtsc();
+#else
+			unsigned time1 = 0;
+			unsigned time2 = 0;
+			__asm
+			{
+				RDTSC
+				MOV time1, EAX
+				RDTSC
+				MOV time2, EAX
+			}
+#endif
+			average += time2 - time1;
+		}
+
+		average /= RUNS;
+		return average > THRESHOLD;
+	}
+
+	bool IsHypervisorGuestVM()
+	{
+		return CPUID(1).ECX() & 0x80000000;
+	}
+
+	bool IsRunningVM()
+	{
+		return IsHypervisorGuestVM() || IsVMExecutionTiming();
+	}
+
 	constexpr Bitness GetProcessBitness()
 	{
 		switch (sizeof(void*))

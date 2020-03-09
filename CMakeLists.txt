@@ -10,22 +10,28 @@ set(SRC_FILES
 	src/Windows/WindowsData.cpp
 	src/Windows/D3D11Info.cpp
 	src/Windows/VulkanInfo.cpp
-	src/MacOS/MacOSData.cpp
+	src/MacOS/MacOSData.mm
 )
 
-if(NOT APPLE)
-	set(CMAKE_INSTALL_RPATH $ORIGIN)
-endif()
+# For IDE support
+set(HDR_FILES 
+  include/PDM.h
+  include/PDMData.h
+  src/Defines.h
+  src/Gatherer.h
+  src/Wine/Wine.h
+  src/Windows/WindowsData.h
+  src/Windows/D3D11Info.h
+  src/Windows/VulkanInfo.h
+  src/Windows/VulkanDefs.h
+  src/MacOS/MacOSData.h
+)
 
 add_library(pdm STATIC
 	${SRC_FILES}
+  ${HDR_FILES}
 )
 add_library(ccp::pdm ALIAS pdm)
-
-set_property(TARGET pdm PROPERTY CXX_STANDARD 17)
-set_property(TARGET pdm PROPERTY CXX_STANDARD_REQUIRED ON)
-set_property(TARGET pdm PROPERTY CXX_VISIBILITY_PRESET hidden)
-set_property(TARGET pdm PROPERTY VISIBILITY_INLINES_HIDDEN YES)
 
 target_include_directories(pdm
   PUBLIC
@@ -77,11 +83,23 @@ install(
 export(EXPORT pdm-targets FILE ${CMAKE_CURRENT_BINARY_DIR}/pdmTargets.cmake NAMESPACE ccp::)
 export(PACKAGE pdm)
 
-# Testing application
 
 add_executable(pdmCLI
 	${SRC_FILES}
+  ${HDR_FILES}
 	src/main.cpp
 )
+
 set_property(TARGET pdmCLI PROPERTY CXX_STANDARD 17)
 set_property(TARGET pdmCLI PROPERTY CXX_STANDARD_REQUIRED ON)
+set_property(TARGET pdm    PROPERTY CXX_STANDARD 17)
+set_property(TARGET pdm    PROPERTY CXX_STANDARD_REQUIRED ON)
+set_property(TARGET pdm    PROPERTY CXX_VISIBILITY_PRESET hidden)
+set_property(TARGET pdm    PROPERTY VISIBILITY_INLINES_HIDDEN YES)
+
+if (APPLE)
+  find_library(IOKit IOKit)
+  find_library(AppKit AppKit)
+  target_link_libraries(pdmCLI ${IOKit} ${AppKit})
+  target_link_libraries(pdm    ${IOKit} ${AppKit})
+endif()

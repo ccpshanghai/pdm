@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "PDMData.h"
 
@@ -23,5 +23,4 @@ namespace PDM
 	unsigned GetScreenCount();
 	uint64_t GetTotalMemory();
 	std::string GetMachineUuid();
-	bool IsRunningVM();
 }
