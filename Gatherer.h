@@ -2,6 +2,10 @@
 
 #include "PDMData.h"
 
+#ifdef _WIN32
+#include <intrin.h>
+#endif
+
 namespace PDM
 {
 	class CPUID
@@ -12,8 +16,8 @@ namespace PDM
 		explicit CPUID(unsigned funcId, unsigned subFuncId = 0)
 		{
 		#ifdef _WIN32
-			__cpuidex(static_cast<int*>(regs), static_cast<int>(funcId), static_cast<int>(subFuncId));
-			#else
+			__cpuidex(reinterpret_cast<int*>(regs), static_cast<int>(funcId), static_cast<int>(subFuncId));
+		#else
 			asm volatile
 			(
 				"cpuid" :

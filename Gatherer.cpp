@@ -1,4 +1,5 @@
 #include "Gatherer.h"
+#include "Defines.h"
 #include "Wine/Wine.h"
 #include "Windows/WindowsData.h"
 #include "MacOS/MacOSData.h"
@@ -7,16 +8,12 @@
 #include <thread>
 #include <time.h>
 
-#ifdef _WIN32
-#include <intrin.h>
-#endif
-
 namespace PDM
 {
 	struct CPUInfo
 	{
-		int model;
-		int stepping;
+		int model{ 0 };
+		int stepping{ 0 };
 		std::string vendor;
 		std::string brand;
 		Bitness bitness;
@@ -54,14 +51,14 @@ namespace PDM
 			for (unsigned i = 0; i < 3; i++)
 			{
 				CPUID id(0x80000002u + i);
-				if (i)
-				{
-					brand += std::string(reinterpret_cast<const char*>(&id.EAX()), 4);
-					brand += std::string(reinterpret_cast<const char*>(&id.EBX()), 4);
-				}
+
+				brand += std::string(reinterpret_cast<const char*>(&id.EAX()), 4);
+				brand += std::string(reinterpret_cast<const char*>(&id.EBX()), 4);
 				brand += std::string(reinterpret_cast<const char*>(&id.ECX()), 4);
 				brand += std::string(reinterpret_cast<const char*>(&id.EDX()), 4);
 			}
+
+			trim(brand);
 		}
 
 		CPUID id0(0);
@@ -110,6 +107,22 @@ namespace PDM
 		return info.bitness;
 	}
 
+	TimeStamp GetCurrentTime()
+	{
+
+		time_t rawtime;
+		time(&rawtime);
+		TimeStamp time{ 0 };
+
+#ifdef _WIN32
+		localtime_s(&time, &rawtime);
+#else
+		localtime_r(&rawtime, &time);
+#endif
+
+		return time;
+	}
+
 	constexpr const char* BitnessToString(Bitness bitness)
 	{
 		switch (bitness)
@@ -150,15 +163,10 @@ namespace PDM
 
 	PDMData GatherData()
 	{
-		time_t rawtime;
-		time(&rawtime);
-		struct tm timeinfo;
-		localtime_r(&rawtime, &timeinfo);
-		TimeStamp timestamp{ timeinfo };
-
+		TimeStamp timestamp = GetCurrentTime();
 		CPUInfo cpuinfo = GetCPUInfo();
 
-		return PDMData
+		return
 		{
 			{
 				"DATA",

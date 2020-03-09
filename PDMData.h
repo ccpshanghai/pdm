@@ -8,9 +8,9 @@ namespace PDM
 {
 	enum class Bitness
 	{
-		BITNESS_UNKNOWN = 0,
-		BITNESS_32 = 32,
-		BITNESS_64 = 64
+		BITNESS_UNKNOWN =  0,
+		BITNESS_32      = 32,
+		BITNESS_64      = 64
 	};
 
 	enum class OS

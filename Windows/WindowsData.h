@@ -2,4 +2,7 @@
 
 #include "../PDM.h"
 
-PDM::SubItem GetWindowsSubItems();
+namespace PDM
+{
+	SubItem GetWindowsSubItems();
+}

@@ -10,10 +10,11 @@ namespace PDM
 	{
 		static bool hasCached = false;
 		static bool wine = false;
+
 		if (!hasCached)
 		{
 			HMODULE hMod = GetModuleHandle("ntdll");
-			if (!hMod) return 0;
+			if (!hMod) return false;
 			wine = GetProcAddress(hMod, "wine_get_version") != nullptr;
 			hasCached = true;
 		}
@@ -26,6 +27,7 @@ namespace PDM
 
 		static bool hasCached = false;
 		static char* wineVersion = "";
+
 		if (!hasCached)
 		{
 			HMODULE hMod = GetModuleHandle("ntdll");
@@ -47,6 +49,7 @@ namespace PDM
 
 		static bool hasCached = false;
 		static char* hostOs = "";
+
 		if (!hasCached)
 		{
 			HMODULE hMod = GetModuleHandle("ntdll");

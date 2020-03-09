@@ -22,6 +22,7 @@ namespace PDM
 		PFN_vkDestroyInstance vkDestroyInstance = reinterpret_cast<PFN_vkDestroyInstance>(GetProcAddress(vulkanDll, "vkDestroyInstance"));
 
 		if (!vkCreateInstance || !vkGetPhysicalDeviceProperties || !vkEnumeratePhysicalDevices || !vkDestroyInstance) return properties;
+
 		VkInstance instance;
 		VkInstanceCreateInfo vkCreate{ VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO, nullptr, 0, nullptr, 0, nullptr, 0, nullptr };
 

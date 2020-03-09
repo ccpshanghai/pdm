@@ -4,6 +4,7 @@
 
 #include "D3D11Info.h"
 #include "../PDMData.h"
+#include "../Gatherer.h"
 #include "../Wine/Wine.h"
 #include "VulkanInfo.h"
 
@@ -73,37 +74,27 @@ namespace PDM
 
 	std::string GetOSName()
 	{
-		if (IsWine()) return "";
-
-		return GetStringFromReg(L"ProductName");
+		return IsWine() ? "" : GetStringFromReg(L"ProductName");
 	}
 
 	std::string GetOSMajorVersion()
 	{
-		if (IsWine()) return "";
-
-		return GetStringFromReg(L"CurrentMajorVersionNumber");
+		return IsWine() ? "" : GetStringFromReg(L"CurrentMajorVersionNumber");
 	}
 
 	std::string GetOSMinorVersion()
 	{
-		if (IsWine()) return "";
-
-		return GetStringFromReg(L"CurrentMinorVersionNumber");
+		return IsWine() ? "" : GetStringFromReg(L"CurrentMinorVersionNumber");
 	}
 
 	std::string GetOSBuildNumber()
 	{
-		if (IsWine()) return "";
-
-		return GetStringFromReg(L"CurrentBuild");
+		return IsWine() ? "" : GetStringFromReg(L"CurrentBuild");
 	}
 
 	std::string GetOSKernelVersion()
 	{
-		if (IsWine()) return "";
-
-		return GetStringFromReg(L"CurrentVersion");
+		return IsWine() ? "" : GetStringFromReg(L"CurrentVersion");
 	}
 
 	std::string GetMachineName()
@@ -111,7 +102,6 @@ namespace PDM
 		constexpr auto INFO_BUFFER_SIZE = 1024;
 		TCHAR  infoBuf[INFO_BUFFER_SIZE];
 		DWORD  bufCharCount = INFO_BUFFER_SIZE;
-
 		return GetComputerName(infoBuf, &bufCharCount) ? infoBuf : "";
 	}
 
@@ -119,9 +109,7 @@ namespace PDM
 	{
 		char username[UNLEN + 1];
 		DWORD username_len = UNLEN + 1;
-		GetUserName(username, &username_len);
-
-		return username;
+		return GetUserName(username, &username_len) ? username : "";
 	}
 
 	unsigned GetScreenCount()
@@ -133,8 +121,7 @@ namespace PDM
 	{
 		MEMORYSTATUSEX status;
 		status.dwLength = DWORD(sizeof(status));
-		GlobalMemoryStatusEx(&status);
-		return status.ullTotalPhys;
+		return GlobalMemoryStatusEx(&status) ? status.ullTotalPhys : 0;
 	}
 
 	std::string GetMachineUuid()
@@ -278,7 +265,7 @@ namespace PDM
 		}
 	}
 
-	PDM::SubItem GetWindowsSubItems()
+	SubItem GetWindowsSubItems()
 	{
 		if (IsWine()) return {};
 

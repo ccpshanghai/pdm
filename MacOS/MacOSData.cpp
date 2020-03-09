@@ -77,9 +77,12 @@ namespace PDM
 
 #else
 
-PDM::SubItem GetMacOSSubItems()
+namespace PDM
 {
-	return {};
+	SubItem GetMacOSSubItems()
+	{
+		return {};
+	}
 }
 
 #endif

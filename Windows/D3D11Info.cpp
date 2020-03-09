@@ -23,7 +23,7 @@ namespace PDM
 
 	bool GetHexIdFromDeviceId(const char* deviceId, uint32_t& deviceIdHex)
 	{
-		const char* deviceIdPrefix = "DEV_";
+		constexpr auto deviceIdPrefix = "DEV_";
 
 		auto found = strstr(deviceId, deviceIdPrefix);
 		if (!found) return false;
@@ -33,7 +33,7 @@ namespace PDM
 
 	const char* GetRegistryPathToLocalMachine(const char* registryPath)
 	{
-		const char* rootPath = "\\Registry\\Machine\\";
+		constexpr auto rootPath = "\\Registry\\Machine\\";
 		if (strncmp(registryPath, rootPath, strlen(rootPath)) == 0)
 			return registryPath + strlen(rootPath);
 		else
@@ -62,8 +62,7 @@ namespace PDM
 		char buffer[256];
 		DWORD dwcb_data = sizeof(buffer);
 
-		LONG result = RegQueryValueEx(key, name, nullptr, nullptr, reinterpret_cast<LPBYTE>(buffer), &dwcb_data);
-		if (result == ERROR_SUCCESS)
+		if (LONG result = RegQueryValueEx(key, name, nullptr, nullptr, reinterpret_cast<LPBYTE>(buffer), &dwcb_data); result == ERROR_SUCCESS)
 		{
 			value = buffer;
 			return true;
@@ -78,8 +77,7 @@ namespace PDM
 		if (!GetDeviceRegistryKey(adapter.deviceID, keyPath)) return;
 
 		HKEY key;
-		LONG result = RegOpenKeyEx(HKEY_LOCAL_MACHINE, keyPath.c_str(), 0, KEY_QUERY_VALUE, &key);
-		if (result != ERROR_SUCCESS) return;
+		if (LONG result = RegOpenKeyEx(HKEY_LOCAL_MACHINE, keyPath.c_str(), 0, KEY_QUERY_VALUE, &key); result != ERROR_SUCCESS) return;
 
 		GetRegistryValue(key, "DriverVersion", adapter.driverVersionString);
 		GetRegistryValue(key, "DriverDate",    adapter.driverDate);
@@ -129,7 +127,7 @@ namespace PDM
 		}
 		__except (EXCEPTION_EXECUTE_HANDLER)
 		{
-			return E_FAIL;
+			hr = E_FAIL;
 		}
 		if (context) context->Release();
 		if (device) device->Release();
@@ -148,8 +146,8 @@ namespace PDM
 		SCOPE_EXIT
 		(
 			dxgiFactory = nullptr;
-		FreeLibrary(dx11ModuleHandle);
-		FreeLibrary(dxgiModuleHandle);
+			FreeLibrary(dx11ModuleHandle);
+			FreeLibrary(dxgiModuleHandle);
 		);
 
 		SetProcessDpiAwareness(PROCESS_SYSTEM_DPI_AWARE); // Give us physical monitor resolutions
@@ -194,10 +192,9 @@ namespace PDM
 					std::swap(width, height);
 
 				uint32_t bpc = 0;
-				CComQIPtr<IDXGIOutput6> pOutput6(pOutput);
-				pOutput = nullptr; // Need to do this explicitly
-				if (pOutput6)
+				if (CComQIPtr<IDXGIOutput6> pOutput6(pOutput); pOutput6)
 				{
+					pOutput = nullptr; // Need to do this explicitly
 					DXGI_OUTPUT_DESC1 outpDesc1;
 					pOutput6->GetDesc1(&outpDesc1);
 					bpc = outpDesc1.BitsPerColor;
@@ -214,7 +211,7 @@ namespace PDM
 				index++;
 			}
 
-			DXGI_ADAPTER_DESC desc;
+			DXGI_ADAPTER_DESC desc{ 0 };
 			pAdapter->GetDesc(&desc);
 
 			std::string description(ws2s(desc.Description));

@@ -7,7 +7,6 @@
 using namespace PDM;
 
 void Output(const SubItem& item, std::ostream& stream, int indentation = 0);
-void Output(const std::vector<SubItem>& items, std::ostream& stream, int indentation);
 
 void Output(const std::vector<DataField>& items, std::ostream& stream, int indentation)
 {
@@ -20,7 +19,7 @@ void Output(const std::vector<DataField>& items, std::ostream& stream, int inden
 
 	std::for_each(cbegin(items), cend(items), [&stream, indentation, maxlen](const DataField& item)
 	{
-		for (auto i = 0; i < indentation; i++) stream << '\t';
+		for (auto i = indentation; i--;) stream << '\t';
 		auto& val = item.value.empty() ? "{EMPTY}" : item.value;
 		stream << item.name;
 		for (auto i = item.name.length(); i < maxlen; i++) stream << ' ';
@@ -30,23 +29,23 @@ void Output(const std::vector<DataField>& items, std::ostream& stream, int inden
 	stream << '\n';
 }
 
-void Output(const SubItem& item, std::ostream& stream, int indentation)
-{
-	if (!item.items.size() && !item.subitems.size()) return;
-
-	for (int i = 0; i < indentation; i++) stream << '\t';
-	stream << "{" << item.name << "}\n";
-
-	Output(item.items, stream, indentation + 1);
-	Output(item.subitems, stream, indentation + 1);
-}
-
 void Output(const std::vector<SubItem>& items, std::ostream& stream, int indentation)
 {
 	std::for_each(cbegin(items), cend(items), [&stream, indentation](const SubItem& item)
 	{
 		Output(item, stream, indentation);
 	});
+}
+
+void Output(const SubItem& item, std::ostream& stream, int indentation)
+{
+	if (!item.items.size() && !item.subitems.size()) return;
+
+	for (auto i = indentation; i--;) stream << '\t';
+	stream << "{" << item.name << "}\n";
+
+	Output(item.items, stream, indentation + 1);
+	Output(item.subitems, stream, indentation + 1);
 }
 
 void Output(const PDMData& data, std::ostream& stream)
