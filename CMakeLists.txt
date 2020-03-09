@@ -1,6 +1,6 @@
 ﻿cmake_minimum_required(VERSION 3.7)
 
-project(pdm, VERSION 1.0.0)
+project(pdm VERSION 1.0.0)
 list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake)
 
 set(SRC_FILES 
