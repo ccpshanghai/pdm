@@ -3,7 +3,7 @@
 #ifdef _WIN32
 
 #include "D3D11Info.h"
-#include "../PDMData.h"
+#include "../../include/PDMData.h"
 #include "../Gatherer.h"
 #include "../Wine/Wine.h"
 #include "VulkanInfo.h"
