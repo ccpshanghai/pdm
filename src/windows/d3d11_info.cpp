@@ -1,6 +1,6 @@
 #ifdef _WIN32
 
-#include "d3d11_jnfo.h"
+#include "d3d11_info.h"
 #include "../defines.h"
 
 #include <functional>
