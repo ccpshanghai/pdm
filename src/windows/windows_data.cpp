@@ -1,6 +1,6 @@
 #include "windows_data.h"
 
-#ifdef _WIN32
+#if _WIN32
 
 #include "d3d11_info.h"
 #include "../../include/pdm_data.h"
@@ -58,7 +58,7 @@ namespace PDM
 
 	Bitness GetOSBitnessInternal()
 	{
-#ifdef _WIN64
+#if _WIN64
 		return Bitness::BITNESS_64;
 #else
 		BOOL isWow = false;
@@ -127,7 +127,7 @@ namespace PDM
 	std::string GetMachineUuid()
 	{
 		REGSAM access = KEY_READ;
-#ifndef _WIN64
+#if !_WIN64
 		if (GetOSBitnessInternal() != Bitness.BITNESS_32)
 			access |= KEY_WOW64_64KEY;
 #endif

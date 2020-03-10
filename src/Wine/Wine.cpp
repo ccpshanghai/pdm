@@ -1,6 +1,6 @@
 #include "wine.h"
 
-#ifdef _WIN32
+#if _WIN32
 #include <atlbase.h>
 #include <string>
 

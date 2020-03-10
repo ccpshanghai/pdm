@@ -154,7 +154,7 @@ namespace PDM
 		time(&rawtime);
 		TimeStamp time{ {0} };
 
-#ifdef _WIN32
+#if _WIN32
 		localtime_s(&time, &rawtime);
 #else
 		localtime_r(&rawtime, &time);

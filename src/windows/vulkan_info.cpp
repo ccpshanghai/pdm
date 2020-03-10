@@ -1,4 +1,4 @@
-#ifdef _WIN32
+#if _WIN32
 
 #include "vulkan_info.h"
 #include "vulkan_defs.h"

@@ -2,7 +2,7 @@
 
 #include "pdm_data.h"
 
-#ifdef _WIN32
+#if _WIN32
 #define DllExport __declspec( dllexport )
 #else
 #define DllExport __attribute__((visibility("default")))

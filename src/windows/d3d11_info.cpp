@@ -1,4 +1,4 @@
-#ifdef _WIN32
+#if _WIN32
 
 #include "d3d11_info.h"
 #include "../defines.h"

@@ -1,6 +1,6 @@
 #include "macos_data.h"
 
-#ifdef __APPLE__
+#if __APPLE__
 
 #include <sys/sysctl.h>
 #include <sys/utsname.h>
