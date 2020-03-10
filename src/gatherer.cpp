@@ -83,31 +83,27 @@ namespace PDM
 	bool IsVMExecutionTiming()
 	{
 		// Both these values are arbitrary (needs investigation)
-		const unsigned THRESHOLD = 500;
+		// Average time on a modern processor natively is around 25 cycles
+		const unsigned THRESHOLD_TIME = 500;
 		const unsigned RUNS = 1024;
 
-		uint64_t average{ 0 };
+		unsigned thresholdCrossings = 0;
+		uint64_t time1 = 0;
+		uint64_t time2 = 0;
+		
 		for (unsigned i = 0; i < RUNS; i++)
 		{
 #if _WIN64
-			auto time1 = __rdtsc();
-			auto time2 = __rdtsc();
+			time1 = __rdtsc();
+			time2 = __rdtsc();
 #else
-			unsigned time1 = 0;
-			unsigned time2 = 0;
-			__asm
-			{
-				RDTSC
-				MOV time1, EAX
-				RDTSC
-				MOV time2, EAX
-			}
+			asm volatile("RDTSC" : "=a" (time1));
+			asm volatile("RDTSC" : "=a" (time2));
 #endif
-			average += time2 - time1;
+			if (time2 - time1 > THRESHOLD_TIME) thresholdCrossings++;
 		}
 
-		average /= RUNS;
-		return average > THRESHOLD;
+		return thresholdCrossings > (RUNS / 2);
 	}
 
 	bool IsHypervisorGuestVM()
