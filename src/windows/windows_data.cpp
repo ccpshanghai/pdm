@@ -1,12 +1,12 @@
-#include "WindowsData.h"
+#include "windows_data.h"
 
 #ifdef _WIN32
 
-#include "D3D11Info.h"
-#include "../../include/PDMData.h"
-#include "../Gatherer.h"
-#include "../Wine/Wine.h"
-#include "VulkanInfo.h"
+#include "d3d11_info.h"
+#include "../../include/pdm_data.h"
+#include "../gatherer.h"
+#include "../wine/wine.h"
+#include "vulkan_info.h"
 
 #include <algorithm>
 #include <sstream>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../include/PDM.h"
+#include "../../include/pdm.h"
 
 namespace PDM
 {

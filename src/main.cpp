@@ -1,4 +1,4 @@
-#include "../include/PDM.h"
+#include "../include/pdm.h"
 
 #include <iostream>
 #include <algorithm>

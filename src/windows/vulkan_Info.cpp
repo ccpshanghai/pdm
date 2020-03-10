@@ -1,8 +1,8 @@
 #ifdef _WIN32
 
-#include "VulkanInfo.h"
-#include "VulkanDefs.h"
-#include "../Defines.h"
+#include "vulkan_info.h"
+#include "vulkan_defs.h"
+#include "../defines.h"
 
 #include <windows.h>
 

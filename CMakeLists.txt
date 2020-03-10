@@ -4,27 +4,27 @@ project(pdm VERSION 1.0.0)
 list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake)
 
 set(SRC_FILES 
-	src/PDM.cpp
-	src/Gatherer.cpp
-	src/Wine/Wine.cpp
-	src/Windows/WindowsData.cpp
-	src/Windows/D3D11Info.cpp
-	src/Windows/VulkanInfo.cpp
-	src/MacOS/MacOSData.mm
+	src/pdm.cpp
+	src/gatherer.cpp
+	src/wine/wine.cpp
+	src/windows/windows_data.cpp
+	src/windows/d3d11_info.cpp
+	src/windows/vulkan_info.cpp
+	src/macos/macos_data.mm
 )
 
 # For IDE support
 set(HDR_FILES 
-  include/PDM.h
-  include/PDMData.h
-  src/Defines.h
-  src/Gatherer.h
-  src/Wine/Wine.h
-  src/Windows/WindowsData.h
-  src/Windows/D3D11Info.h
-  src/Windows/VulkanInfo.h
-  src/Windows/VulkanDefs.h
-  src/MacOS/MacOSData.h
+  include/pdm.h
+  include/pdm_data.h
+  src/defines.h
+  src/gatherer.h
+  src/wine/wine.h
+  src/windows/windows_data.h
+  src/windows/d3d11_info.h
+  src/windows/vulkan_info.h
+  src/windows/vulkan_defs.h
+  src/macos/macos_data.h
 )
 
 add_library(pdm STATIC
