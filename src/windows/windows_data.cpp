@@ -1,4 +1,5 @@
 #include "windows_data.h"
+#include <string>
 
 #if _WIN32
 
