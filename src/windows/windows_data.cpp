@@ -5,8 +5,6 @@
 #include "d3d11_info.h"
 #include "../../include/pdm_data.h"
 #include "../gatherer.h"
-#include "../wine/wine.h"
-#include "vulkan_info.h"
 
 #include <algorithm>
 #include <sstream>
