@@ -1,8 +1,6 @@
 #include "gatherer.h"
 #include "defines.h"
-#include "wine/wine.h"
-#include "windows/windows_data.h"
-#include "macos/macos_data.h"
+#include "../include/pdm.h"
 
 #include <string>
 #include <thread>

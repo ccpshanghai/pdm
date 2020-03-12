@@ -1,4 +1,4 @@
-﻿cmake_minimum_required(VERSION 3.7)
+cmake_minimum_required(VERSION 3.7)
 
 project(pdm VERSION 1.0.0)
 list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake)
@@ -19,12 +19,8 @@ set(HDR_FILES
   include/pdm_data.h
   src/defines.h
   src/gatherer.h
-  src/wine/wine.h
-  src/windows/windows_data.h
   src/windows/d3d11_info.h
-  src/windows/vulkan_info.h
   src/windows/vulkan_defs.h
-  src/macos/macos_data.h
 )
 
 add_library(pdm STATIC

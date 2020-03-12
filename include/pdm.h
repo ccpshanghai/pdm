@@ -32,4 +32,7 @@ namespace PDM
 	bool GetMetalSupported();
 	VulkanProperties GetVulkanProperties();
 	std::string GetD3DHighestSupport();
+	bool IsWine();
+	const char* GetWineVersion();
+	const char* GetWineHostOs();
 }

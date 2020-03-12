@@ -1,6 +1,5 @@
 #if _WIN32
 
-#include "vulkan_info.h"
 #include "vulkan_defs.h"
 #include "../defines.h"
 #include "../../include/pdm.h"
