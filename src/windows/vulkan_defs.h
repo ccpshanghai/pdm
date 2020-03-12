@@ -1,18 +1,20 @@
 #pragma once
 
+#include <string>
+
 namespace PDM
 {
 	// Subset of Vulkan definitions to get API version from physical devices
 
 #define VK_DEFINE_HANDLE(object) typedef struct object##_T* object;
-	VK_DEFINE_HANDLE(VkPhysicalDevice)
-		VK_DEFINE_HANDLE(VkInstance)
+	VK_DEFINE_HANDLE(VkPhysicalDevice);
+	VK_DEFINE_HANDLE(VkInstance);
 
 #define VK_VERSION_MAJOR(version)  ((uint32_t)(version) >> 22)
 #define VK_VERSION_MINOR(version) (((uint32_t)(version) >> 12) & 0x3ff)
 #define VK_VERSION_PATCH(version)  ((uint32_t)(version) & 0xfff)
 
-		const size_t VK_MAX_PHYSICAL_DEVICE_NAME_SIZE = 256;
+	const size_t VK_MAX_PHYSICAL_DEVICE_NAME_SIZE = 256;
 	const size_t VK_UUID_SIZE = 16;
 
 	typedef uint32_t VkBool32;
@@ -131,7 +133,8 @@ namespace PDM
 		VkDeviceSize          nonCoherentAtomSize;
 	} VkPhysicalDeviceLimits;
 
-	typedef enum VkResult {
+	typedef enum VkResult
+	{
 		VK_SUCCESS = 0,
 		VK_NOT_READY = 1,
 		VK_TIMEOUT = 2,
@@ -205,7 +208,8 @@ namespace PDM
 		VkPhysicalDeviceSparseProperties    sparseProperties;
 	} VkPhysicalDeviceProperties;
 
-	typedef enum VkStructureType {
+	typedef enum VkStructureType
+	{
 		VK_STRUCTURE_TYPE_APPLICATION_INFO = 0,
 		VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO = 1,
 		VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO = 2,
@@ -722,25 +726,27 @@ namespace PDM
 		VK_STRUCTURE_TYPE_MAX_ENUM = 0x7FFFFFFF
 	} VkStructureType;
 
-	typedef struct VkApplicationInfo {
+	typedef struct VkApplicationInfo
+	{
 		VkStructureType    sType;
-		const void* pNext;
-		const char* pApplicationName;
+		const void*        pNext;
+		const char*        pApplicationName;
 		uint32_t           applicationVersion;
-		const char* pEngineName;
+		const char*        pEngineName;
 		uint32_t           engineVersion;
 		uint32_t           apiVersion;
 	} VkApplicationInfo;
 
-	typedef struct VkInstanceCreateInfo {
+	typedef struct VkInstanceCreateInfo
+	{
 		VkStructureType             sType;
-		const void* pNext;
+		const void*                 pNext;
 		VkInstanceCreateFlags       flags;
-		const VkApplicationInfo* pApplicationInfo;
+		const VkApplicationInfo*    pApplicationInfo;
 		uint32_t                    enabledLayerCount;
-		const char* const* ppEnabledLayerNames;
+		const char* const*          ppEnabledLayerNames;
 		uint32_t                    enabledExtensionCount;
-		const char* const* ppEnabledExtensionNames;
+		const char* const*          ppEnabledExtensionNames;
 	} VkInstanceCreateInfo;
 
 	typedef VkResult(*PFN_vkCreateInstance)(const VkInstanceCreateInfo* pCreateInfo, const void* pAllocator, VkInstance* pInstance);

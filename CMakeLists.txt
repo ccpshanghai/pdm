@@ -29,7 +29,7 @@ set(HDR_FILES
 
 add_library(pdm STATIC
 	${SRC_FILES}
-  ${HDR_FILES}
+	${HDR_FILES}
 )
 add_library(ccp::pdm ALIAS pdm)
 
@@ -86,7 +86,7 @@ export(PACKAGE pdm)
 
 add_executable(pdmCLI
 	${SRC_FILES}
-  ${HDR_FILES}
+	${HDR_FILES}
 	src/main.cpp
 )
 

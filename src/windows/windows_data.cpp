@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <sstream>
+#include <clocale>
 #include <atlstr.h>
 #include <Lmcons.h>
 #include <intrin.h>
@@ -21,15 +22,11 @@
 
 namespace PDM
 {
-	unsigned StringToInt(std::string str)
-	{
-		
-	}
+	const CString CURRENT_VERSION_KEY = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
 
-	std::string GetStringFromReg(CString keyValName)
+	std::string GetStringFromReg(CString keyName, CString keyValName)
 	{
 		const HKEY parent = HKEY_LOCAL_MACHINE;
-		const CString keyName = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
 
 		CRegKey key;
 		std::string out;
@@ -72,27 +69,33 @@ namespace PDM
 
 	std::string GetOSName()
 	{
-		return IsWine() ? "" : GetStringFromReg(L"ProductName");
+		return IsWine() ? "" : GetStringFromReg(CURRENT_VERSION_KEY, L"ProductName");
 	}
 
 	unsigned GetOSMajorVersion()
 	{
-		return IsWine() ? 0 : std::stoi(GetStringFromReg(L"CurrentMajorVersionNumber"));
+		return IsWine() ? 0 : std::stoi(GetStringFromReg(CURRENT_VERSION_KEY, L"CurrentMajorVersionNumber"));
 	}
 
 	unsigned GetOSMinorVersion()
 	{
-		return IsWine() ? 0 : std::stoi(GetStringFromReg(L"CurrentMinorVersionNumber"));
+		return IsWine() ? 0 : std::stoi(GetStringFromReg(CURRENT_VERSION_KEY, L"CurrentMinorVersionNumber"));
 	}
 
 	unsigned GetOSBuildNumber()
 	{
-		return IsWine() ? 0 : std::stoi(GetStringFromReg(L"CurrentBuild"));
+		return IsWine() ? 0 : std::stoi(GetStringFromReg(CURRENT_VERSION_KEY, L"CurrentBuild"));
 	}
 
 	std::string GetOSKernelVersion()
 	{
-		return IsWine() ? "" : GetStringFromReg(L"CurrentVersion");
+		return IsWine() ? "" : GetStringFromReg(CURRENT_VERSION_KEY, L"CurrentVersion");
+	}
+
+	std::string GetHardwareModel()
+	{
+		const CString SystemInformationKey = L"SYSTEM\\CurrentControlSet\\Control\\SystemInformation";
+		return GetStringFromReg(SystemInformationKey, L"SystemManufacturer") + " [" + GetStringFromReg(SystemInformationKey, L"SystemProductName") + "]";
 	}
 
 	std::string GetMachineName()
@@ -110,7 +113,7 @@ namespace PDM
 		return GetUserName(username, &username_len) ? username : "";
 	}
 
-	unsigned GetScreenCount()
+	unsigned GetMonitorCount()
 	{
 		return GetSystemMetrics(SM_CMONITORS);
 	}
@@ -178,19 +181,27 @@ namespace PDM
 		return adapters;
 	}
 
+	std::string GetUserLocale()
+	{
+		auto locale = std::setlocale(LC_ALL, "");
+		return locale ? locale : "";
+	}
+
 	bool IsRemoteSession()
 	{
 		return GetSystemMetrics(SM_REMOTESESSION);
 	}
 
-	std::vector<MonitorInfo> GetMonitorInfo()
+	std::vector<GPUInfo> GetGPUInfo()
 	{
-		return IsWine() ? {} : GetD3DInfo().monitors;
+		if (IsWine()) return {};
+		return GetD3DInfo().adapters;
 	}
 
-	std::vector<MonitorInfo> GetGPUInfo()
+	std::vector<MonitorInfo> GetMonitorsInfo()
 	{
-		return IsWine() ? {} : GetD3DInfo().adapters;
+		if (IsWine()) return {};
+		return GetD3DInfo().monitors;
 	}
 
 #pragma warning(disable:26812)

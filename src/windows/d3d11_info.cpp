@@ -71,7 +71,7 @@ namespace PDM
 		return false;
 	}
 
-	void PopulateAdapterDriverVersion(D3DAdapterInfo& adapter)
+	void PopulateAdapterDriverVersion(GPUInfo& adapter)
 	{
 		std::string keyPath;
 		if (!GetDeviceRegistryKey(adapter.deviceID, keyPath)) return;
@@ -221,7 +221,7 @@ namespace PDM
 			std::string description(ws2s(desc.Description));
 			if (description == "Microsoft Basic Render Driver") continue;
 
-			D3DAdapterInfo adapter;
+			GPUInfo adapter;
 			adapter.description = description;
 			adapter.vendorID = desc.VendorId;
 			adapter.deviceID = desc.DeviceId;

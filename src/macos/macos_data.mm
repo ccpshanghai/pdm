@@ -1,4 +1,4 @@
-#include "macos_data.h"
+#include "../../include/pdm.h"
 
 #if __APPLE__
 
@@ -131,7 +131,7 @@ namespace PDM
 		return rev;
 	}
 
-	std::vector<MonitorInfo> GetMonitorInfo()
+	std::vector<MonitorInfo> GetMonitorsInfo()
 	{
 		std::vector<MonitorInfo> monitors;
 		

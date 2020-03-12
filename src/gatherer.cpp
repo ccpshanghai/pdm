@@ -217,16 +217,16 @@ namespace PDM
 		CPUInfo cpuinfo = GetCPUInfo();
 
 		std::vector<SubItem> monitors;
-		for (auto& m : GetMonitorInfo())
+		for (auto& monitor : GetMonitorsInfo())
 		{
 			monitors.push_back
 			({
 				"MONITOR",
 				{},
 				{
-					{"VERTICAL_RES",   std::to_string(m.width)},
-					{"HORIZONTAL_RES", std::to_string(m.height)},
-					{"BITS_PER_COLOR", std::to_string(m.bitsPerColor)},
+					{"VERTICAL_RES",   std::to_string(monitor.width)},
+					{"HORIZONTAL_RES", std::to_string(monitor.height)},
+					{"BITS_PER_COLOR", std::to_string(monitor.bitsPerColor)},
 				}
 			});
 		}

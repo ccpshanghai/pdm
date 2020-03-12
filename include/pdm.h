@@ -26,7 +26,7 @@ namespace PDM
 	uint64_t GetTotalMemory();
 	bool IsRemoteSession();
 	std::string GetMachineUuid();
-	std::vector<MonitorInfo> GetMonitorInfo();
+	std::vector<MonitorInfo> GetMonitorsInfo();
 	std::vector<GPUInfo> GetGPUInfo();
 	std::vector<NetworkAdapterInfo> GetNetworkAdapterInfo();
 	bool GetMetalSupported();
