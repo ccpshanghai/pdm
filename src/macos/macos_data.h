@@ -4,5 +4,4 @@
 
 namespace PDM
 {
-	SubItem GetMacOSSubItems();
 }

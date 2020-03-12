@@ -135,9 +135,11 @@ namespace PDM
 		return hr;
 	}
 
-	D3D11Info GetD3DInfo()
+	D3D11Info& GetD3DInfo()
 	{
-		D3D11Info info;
+		static D3D11Info info;
+		static bool initialized = false;
+		if (initialized) return info;
 
 		HMODULE dxgiModuleHandle{};
 		HMODULE dx11ModuleHandle{};
@@ -163,6 +165,8 @@ namespace PDM
 		PFN_D3D11_CREATE_DEVICE createDevice = reinterpret_cast<PFN_D3D11_CREATE_DEVICE>(GetProcAddress(dx11ModuleHandle, "D3D11CreateDevice"));
 		if (!createDevice) return info;
 		if (FAILED(createDxgiFactory(__uuidof(IDXGIFactory), &dxgiFactory.p))) return info;
+		
+		initialized = true;
 
 		uint32_t count = 0;
 		IDXGIAdapter* pAdapter;

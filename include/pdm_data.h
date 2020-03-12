@@ -21,6 +21,45 @@ namespace PDM
 		UNKNOWN
 	};
 
+	struct MonitorInfo
+	{
+		uint32_t width{};
+		uint32_t height{};
+		uint32_t bitsPerColor{};
+	};
+
+	struct GPUInfo
+	{
+		std::string description;
+		uint32_t vendorID{};
+		uint32_t deviceID{};
+		uint32_t subSystemID{};
+		uint32_t revision{};
+		std::string driverVersionString;
+		std::string driverDate;
+		std::string driverVendor;
+	};
+
+	struct NetworkAdapterInfo
+	{
+		std::string name;
+		std::string macAddress;
+		std::string uuid;
+	};
+
+	enum class VulkanSupport
+	{
+		UNKNOWN,
+		SUPPORTED,
+		UNSUPPORTED,
+	};
+
+	struct VulkanProperties
+	{
+		VulkanSupport support{ VulkanSupport::UNKNOWN };
+		std::string version;
+	};
+
 	struct TimeStamp : tm
 	{
 		bool operator ==(const TimeStamp& other) const

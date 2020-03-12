@@ -21,12 +21,10 @@
 
 namespace PDM
 {
-	struct NetworkAdapterInfo
+	unsigned StringToInt(std::string str)
 	{
-		std::string name;
-		std::string description;
-		std::string macAddress;
-	};
+		
+	}
 
 	std::string GetStringFromReg(CString keyValName)
 	{
@@ -77,19 +75,19 @@ namespace PDM
 		return IsWine() ? "" : GetStringFromReg(L"ProductName");
 	}
 
-	std::string GetOSMajorVersion()
+	unsigned GetOSMajorVersion()
 	{
-		return IsWine() ? "" : GetStringFromReg(L"CurrentMajorVersionNumber");
+		return IsWine() ? 0 : std::stoi(GetStringFromReg(L"CurrentMajorVersionNumber"));
 	}
 
-	std::string GetOSMinorVersion()
+	unsigned GetOSMinorVersion()
 	{
-		return IsWine() ? "" : GetStringFromReg(L"CurrentMinorVersionNumber");
+		return IsWine() ? 0 : std::stoi(GetStringFromReg(L"CurrentMinorVersionNumber"));
 	}
 
-	std::string GetOSBuildNumber()
+	unsigned GetOSBuildNumber()
 	{
-		return IsWine() ? "" : GetStringFromReg(L"CurrentBuild");
+		return IsWine() ? 0 : std::stoi(GetStringFromReg(L"CurrentBuild"));
 	}
 
 	std::string GetOSKernelVersion()
@@ -144,7 +142,7 @@ namespace PDM
 		return status == ERROR_SUCCESS && type == REG_SZ ? guid : "";
 	}
 
-	std::vector<NetworkAdapterInfo> GetAdapterInfo()
+	std::vector<NetworkAdapterInfo> GetNetworkAdapterInfo()
 	{
 		ULONG l = 0;
 		DWORD res = GetAdaptersInfo(0, &l);
@@ -160,17 +158,20 @@ namespace PDM
 			std::stringstream stream;
 			for (unsigned i = 0; i < 6; i++)
 			{
-				if (i) stream << "-";
+				if (i) stream << ":";
 				stream << std::hex << static_cast<unsigned>(pi->Address[i]);
 			}
 			std::string macAddr(stream.str());
 			std::transform(macAddr.begin(), macAddr.end(), macAddr.begin(), [](char c) { return static_cast<char>(std::toupper(c)); });
-
+			
+			std::string uuid = pi->AdapterName;
+			if (uuid.rfind("{") != 0 || uuid[uuid.size() - 1 != '}']) continue;
+			
 			adapters.push_back
 			({
-				pi->AdapterName,
 				pi->Description,
 				macAddr,
+				uuid.substr(1, uuid.size() - 2),
 			});
 		}
 
@@ -180,6 +181,16 @@ namespace PDM
 	bool IsRemoteSession()
 	{
 		return GetSystemMetrics(SM_REMOTESESSION);
+	}
+
+	std::vector<MonitorInfo> GetMonitorInfo()
+	{
+		return IsWine() ? {} : GetD3DInfo().monitors;
+	}
+
+	std::vector<MonitorInfo> GetGPUInfo()
+	{
+		return IsWine() ? {} : GetD3DInfo().adapters;
 	}
 
 #pragma warning(disable:26812)
@@ -207,111 +218,13 @@ namespace PDM
 		case D3D_FEATURE_LEVEL_9_1:
 			return "9.1";
 		default:
-			return "UNKNOWN";
+			return "NONE";
 		}
 	}
 
-	constexpr const char* VulkanSupportToString(VulkanSupport support)
+	std::string GetD3DHighestSupport()
 	{
-		switch (support)
-		{
-		case VulkanSupport::SUPPORTED:
-			return "YES";
-		case VulkanSupport::UNSUPPORTED:
-			return "NO";
-		case VulkanSupport::UNKNOWN:
-		default:
-			return "UNKNOWN";
-		}
-	}
-
-	SubItem GetWindowsSubItems()
-	{
-		if (IsWine()) return {};
-
-		D3D11Info d3dInfo = GetD3DInfo();
-
-		std::vector<SubItem> monitors;
-		for (auto& m : d3dInfo.monitors)
-		{
-			monitors.push_back
-			({
-				"MONITOR",
-				{},
-				{
-					{"VERTICAL_RES",   std::to_string(m.width)},
-					{"HORIZONTAL_RES", std::to_string(m.height)},
-					{"BITS_PER_COLOR", std::to_string(m.bitsPerColor)},
-				}
-			});
-		}
-
-		std::vector<SubItem> gpus;
-		for (auto& gpu : d3dInfo.adapters)
-		{
-			gpus.push_back
-			({
-				"GPU",
-				{},
-				{
-					{"DESCRIPTION",    gpu.description},
-					{"VENDOR_ID",      std::to_string(gpu.vendorID)},
-					{"DEVICE_ID",      std::to_string(gpu.deviceID)},
-					{"SUBSYSTEM_ID",   std::to_string(gpu.subSystemID)},
-					{"DRIVER_DATE",    gpu.driverDate},
-					{"DRIVER_VENDOR",  gpu.driverVendor},
-					{"DRIVER_VERSION", gpu.driverVersionString},
-					{"REVISION",       std::to_string(gpu.revision)},
-				}
-			});
-		}
-
-		std::vector<SubItem> networkAdapters;
-		for (auto& adapter : GetAdapterInfo())
-		{
-			networkAdapters.push_back
-			({
-				"ADAPTER",
-				{},
-				{
-					{"NAME",        adapter.name},
-					{"DESCRIPTION", adapter.description},
-					{"MAC_ADDRESS", adapter.macAddress},
-				}
-			});
-		}
-
-		VulkanProperties vulkanProperties = GetVulkanProperties();
-
-		return
-		{
-			"WINDOWS",
-			{
-				{
-					"MONITORS",
-					monitors,
-					{},
-				},
-				{
-					"GPUS",
-					gpus,
-					{},
-				},
-				{
-					"NETWORK_ADAPTERS",
-					networkAdapters,
-					{},
-				},
-			},
-			{
-				{
-					{"IS_REMOTE_SESSION",      IsRemoteSession() ? "YES" : "NO"},
-					{"D3D_HIGHEST_SUPPORT",    D3DFeatureSupportToString(d3dInfo.maxSupportedFeatureLevel)},
-					{"VULKAN_SUPPORTED",       VulkanSupportToString(vulkanProperties.support)},
-					{"VULKAN_HIGHEST_SUPPORT", vulkanProperties.version},
-				},
-			}
-		};
+		return D3DFeatureSupportToString(GetD3DInfo().maxSupportedFeatureLevel);
 	}
 }
 
@@ -319,9 +232,9 @@ namespace PDM
 
 namespace PDM
 {
-	SubItem GetWindowsSubItems()
+	std::string GetD3DHighestSupport()
 	{
-		return {};
+		return "NONE";
 	}
 }
 

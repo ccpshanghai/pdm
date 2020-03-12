@@ -2,31 +2,36 @@
 
 #if __APPLE__
 
+#include <vector>
 #include <sys/sysctl.h>
 #include <sys/utsname.h>
-#import <Foundation/Foundation.h>
+#include <IOKit/network/IOEthernetInterface.h>
+#include <IOKit/network/IOEthernetController.h>
+
 #import <AppKit/AppKit.h>
+#import <Metal/Metal.h>
 
-std::string GetOSString(const char* name)
-{
-	char buffer[1024] = { 0 };
-	size_t size = sizeof(buffer);
-	sysctlbyname(name, buffer, &size, nullptr, 0);
-	
-	return buffer;
-}
-
-uint64_t GetOSInteger(const char* name)
-{
-	uint64_t result = 0;
-	size_t size = sizeof(result);
-	sysctlbyname(name, &result, &size, nullptr, 0);
-	
-	return result;
-}
 
 namespace PDM
 {
+	std::string GetOSString(const char* name)
+	{
+		char buffer[1024] = { 0 };
+		size_t size = sizeof(buffer);
+		sysctlbyname(name, buffer, &size, nullptr, 0);
+		
+		return buffer;
+	}
+
+	uint64_t GetOSInteger(const char* name)
+	{
+		uint64_t result = 0;
+		size_t size = sizeof(result);
+		sysctlbyname(name, &result, &size, nullptr, 0);
+		
+		return result;
+	}
+
 	Bitness GetOSBitnessInternal()
 	{
 		struct utsname un;
@@ -51,19 +56,19 @@ namespace PDM
 		return [[[NSProcessInfo processInfo] operatingSystemVersionString] UTF8String];
 	}
 
-	std::string GetOSMajorVersion()
+	unsigned GetOSMajorVersion()
 	{
-		return std::to_string([[NSProcessInfo processInfo] operatingSystemVersion].majorVersion);
+		return [[NSProcessInfo processInfo] operatingSystemVersion].majorVersion;
 	}
 
-	std::string GetOSMinorVersion()
+	unsigned GetOSMinorVersion()
 	{
-		return std::to_string([[NSProcessInfo processInfo] operatingSystemVersion].minorVersion);
+		return [[NSProcessInfo processInfo] operatingSystemVersion].minorVersion;
 	}
 
-	std::string GetOSBuildNumber()
+	unsigned GetOSBuildNumber()
 	{
-		return std::to_string([[NSProcessInfo processInfo] operatingSystemVersion].patchVersion);
+		return [[NSProcessInfo processInfo] operatingSystemVersion].patchVersion;
 	}
 
 	std::string GetOSKernelVersion()
@@ -81,14 +86,24 @@ namespace PDM
 		return [[[NSProcessInfo processInfo] userName] UTF8String];
 	}
 
-	unsigned GetScreenCount()
+	unsigned GetMonitorCount()
 	{
 		return [[NSScreen screens] count];
+	}
+
+	std::string GetHardwareModel()
+	{
+		return GetOSString("hw.model");
 	}
 
 	uint64_t GetTotalMemory()
 	{
 		return [[NSProcessInfo processInfo] physicalMemory];
+	}
+
+	bool IsRemoteSession()
+	{
+		return false;
 	}
 
 	std::string GetMachineUuid()
@@ -103,9 +118,151 @@ namespace PDM
 		return buffer;
 	}
 
-	SubItem GetMacOSSubItems()
+	std::string GetUserLocale()
 	{
-		return {};
+		return [[[NSLocale currentLocale] localeIdentifier] UTF8String];
+	}
+
+	uint32_t GetIntFromID(CFMutableDictionaryRef dict, NSString* name)
+	{
+		auto val = CFDictionaryGetValue(dict, name);
+		if (val == nil) return 0;
+		uint32_t rev = *static_cast<const uint32_t*>([static_cast<NSData*>(val) bytes]);
+		return rev;
+	}
+
+	std::vector<MonitorInfo> GetMonitorInfo()
+	{
+		std::vector<MonitorInfo> monitors;
+		
+		for (NSScreen* screen in [NSScreen screens])
+		{
+			monitors.push_back
+			({
+				static_cast<uint32_t>(screen.frame.size.width),
+				static_cast<uint32_t>(screen.frame.size.height),
+				static_cast<uint32_t>(NSBitsPerSampleFromDepth(screen.depth))
+			});
+		}
+		
+		return monitors;
+	}
+
+	std::string bytesToHexString(NSData* data)
+	{
+		auto result = [[NSMutableString alloc] initWithCapacity: [data length] << 1];
+		auto mbytes = static_cast<const UInt8*>([data bytes]);
+		char hBytes[8] = {'\0'};
+
+		for (int i = 0; i < [data length]; i++)
+		{
+			snprintf(hBytes, 3, "%02X", mbytes[i]);
+			if (0 == i) [result appendFormat:@"%s", hBytes];
+			else [result appendFormat:@":%s", hBytes];
+		}
+		
+		std::string str = [result UTF8String];
+		[result release];
+		
+		return str;
+	}
+
+	std::vector<NetworkAdapterInfo> GetNetworkAdapterInfo()
+	{
+		std::vector<NetworkAdapterInfo> adapters;
+		
+		mach_port_t machPort;
+		IOMasterPort(MACH_PORT_NULL, &machPort);
+		io_iterator_t netIterator = {0};
+		IOServiceGetMatchingServices(machPort, IOServiceMatching(kIOEthernetInterfaceClass), &netIterator);
+		io_object_t interfaceService, controllerService;
+		
+		while ( (interfaceService = IOIteratorNext(netIterator)) )
+		{
+			if (kern_return_t kernResult = IORegistryEntryGetParentEntry( interfaceService, kIOServicePlane, &controllerService ); kernResult == KERN_SUCCESS)
+			{
+				CFTypeRef MACAddrAsCFData   = IORegistryEntryCreateCFProperty(controllerService, CFSTR(kIOMACAddress), kCFAllocatorDefault, 0);
+				CFTypeRef BSDNameAsCFString = IORegistryEntryCreateCFProperty(interfaceService,  CFSTR("BSD Name"),    kCFAllocatorDefault, 0);
+				
+				if (MACAddrAsCFData && BSDNameAsCFString)
+				{
+					adapters.push_back
+					({
+						[static_cast<NSString*>(BSDNameAsCFString) UTF8String],
+						bytesToHexString(static_cast<NSData*>(MACAddrAsCFData))
+					});
+				}
+				if (nil != BSDNameAsCFString) CFRelease(BSDNameAsCFString);
+				if (nil != MACAddrAsCFData) CFRelease(MACAddrAsCFData);
+			}
+		}
+		IOObjectRelease(netIterator);
+		
+		return adapters;
+	}
+
+	std::vector<GPUInfo> GetGPUInfo()
+	{
+		std::vector<GPUInfo> gpus;
+		
+		CFMutableDictionaryRef matchDict = IOServiceMatching("IOPCIDevice");
+		io_iterator_t iterator;
+
+		if (IOServiceGetMatchingServices(kIOMasterPortDefault, matchDict, &iterator) == kIOReturnSuccess)
+		{
+			io_registry_entry_t regEntry;
+
+			while ((regEntry = IOIteratorNext(iterator)))
+			{
+				CFMutableDictionaryRef serviceDictionary;
+				if (IORegistryEntryCreateCFProperties(regEntry, &serviceDictionary, kCFAllocatorDefault, kNilOptions) != kIOReturnSuccess)
+				{
+					IOObjectRelease(regEntry);
+					continue;
+				}
+
+				if (auto model = static_cast<NSData*>(CFDictionaryGetValue(serviceDictionary, @"model")); model != nil)
+				{
+					if (CFGetTypeID(model) == CFDataGetTypeID())
+					{
+						NSString *nsStr = [[NSString alloc] initWithData:model encoding:NSASCIIStringEncoding];
+						std::string modelStr = [nsStr UTF8String];
+						[nsStr release];
+						
+						gpus.push_back
+						({
+							modelStr,
+							GetIntFromID(serviceDictionary, @"vendor-id"),
+							GetIntFromID(serviceDictionary, @"device-id"),
+							GetIntFromID(serviceDictionary, @"subsystem-id"),
+							GetIntFromID(serviceDictionary, @"revision-id"),
+						});
+					}
+				}
+				
+				CFRelease(serviceDictionary);
+				IOObjectRelease(regEntry);
+			}
+			
+			IOObjectRelease(iterator);
+		}
+		
+		return gpus;
+	}
+
+	bool GetMetalSupported()
+	{
+		return [MTLCopyAllDevices() count] > 0;
+	}
+
+	VulkanProperties GetVulkanProperties()
+	{
+		return
+		{
+			// We can safely assume that metal support implies vulkan support (but we might want to probe this in the future anyway)
+			GetMetalSupported() ? VulkanSupport::SUPPORTED : VulkanSupport::UNSUPPORTED,
+			""
+		};
 	}
 }
 
@@ -113,9 +270,9 @@ namespace PDM
 
 namespace PDM
 {
-	SubItem GetMacOSSubItems()
+	bool GetMetalSupported()
 	{
-		return {};
+		return false;
 	}
 }
 

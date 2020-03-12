@@ -14,13 +14,22 @@ namespace PDM
 
 	OS GetOSType();
 	std::string GetOSName();
-	std::string GetOSMajorVersion();
-	std::string GetOSMinorVersion();
-	std::string GetOSBuildNumber();
+	unsigned GetOSMajorVersion();
+	unsigned GetOSMinorVersion();
+	unsigned GetOSBuildNumber();
 	std::string GetOSKernelVersion();
+	std::string GetHardwareModel();
 	std::string GetMachineName();
 	std::string GetUsername();
-	unsigned GetScreenCount();
+	std::string GetUserLocale();
+	unsigned GetMonitorCount();
 	uint64_t GetTotalMemory();
+	bool IsRemoteSession();
 	std::string GetMachineUuid();
+	std::vector<MonitorInfo> GetMonitorInfo();
+	std::vector<GPUInfo> GetGPUInfo();
+	std::vector<NetworkAdapterInfo> GetNetworkAdapterInfo();
+	bool GetMetalSupported();
+	VulkanProperties GetVulkanProperties();
+	std::string GetD3DHighestSupport();
 }

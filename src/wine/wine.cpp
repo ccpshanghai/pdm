@@ -74,23 +74,6 @@ namespace PDM
 
 		return hostOs;
 	}
-
-	SubItem GetWineSubItems()
-	{
-		if (!IsWine()) return {};
-		
-		return
-		{
-			"WINE",
-			{},
-			{
-				{
-					{"WINE_VERSION", GetWineVersion()},
-					{"WINE_HOST_OS", GetWineHostOs()},
-				}
-			}
-		};
-	}
 }
 
 #else
@@ -100,11 +83,6 @@ namespace PDM
 	bool IsWine() { return false; }
 	const char* GetWineVersion() { return ""; }
 	const char* GetWineHostOs() { return ""; }
-
-	SubItem GetWineSubItems()
-	{
-		return {};
-	}
 }
 
 #endif

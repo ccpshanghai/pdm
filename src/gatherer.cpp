@@ -189,6 +189,20 @@ namespace PDM
 		}
 	}
 
+	constexpr const char* VulkanSupportToString(VulkanSupport support)
+	{
+		switch (support)
+		{
+		case VulkanSupport::SUPPORTED:
+			return "YES";
+		case VulkanSupport::UNSUPPORTED:
+			return "NO";
+		case VulkanSupport::UNKNOWN:
+		default:
+			return "UNKNOWN";
+		}
+	}
+
 	std::string TimestampToString(const TimeStamp& timestamp)
 	{
 		const int MAX_SIZE = 20;
@@ -201,6 +215,57 @@ namespace PDM
 	{
 		TimeStamp timestamp = GetCurrentTime();
 		CPUInfo cpuinfo = GetCPUInfo();
+
+		std::vector<SubItem> monitors;
+		for (auto& m : GetMonitorInfo())
+		{
+			monitors.push_back
+			({
+				"MONITOR",
+				{},
+				{
+					{"VERTICAL_RES",   std::to_string(m.width)},
+					{"HORIZONTAL_RES", std::to_string(m.height)},
+					{"BITS_PER_COLOR", std::to_string(m.bitsPerColor)},
+				}
+			});
+		}
+
+		std::vector<SubItem> gpus;
+		for (auto& gpu : GetGPUInfo())
+		{
+			gpus.push_back
+			({
+				"GPU",
+				{},
+				{
+					{"DESCRIPTION",    gpu.description},
+					{"VENDOR_ID",      std::to_string(gpu.vendorID)},
+					{"DEVICE_ID",      std::to_string(gpu.deviceID)},
+					{"REVISION",       std::to_string(gpu.revision)},
+					{"DRIVER_DATE",    gpu.driverDate},
+					{"DRIVER_VENDOR",  gpu.driverVendor},
+					{"DRIVER_VERSION", gpu.driverVersionString},
+				}
+			});
+		}
+
+		std::vector<SubItem> networkAdapters;
+		for (auto& adapter : GetNetworkAdapterInfo())
+		{
+			networkAdapters.push_back
+			({
+				"ADAPTER",
+				{},
+				{
+					{"NAME",        adapter.name},
+					{"MAC_ADDRESS", adapter.macAddress},
+					{"UUID",        adapter.uuid},
+				}
+			});
+		}
+		
+		VulkanProperties vulkanProperties = GetVulkanProperties();
 
 		return
 		{
@@ -220,48 +285,83 @@ namespace PDM
 								}
 							},
 							{
-								"CPU",
-								{},
-								{
-									{"BITNESS",            BitnessToString(GetCPUBitness(cpuinfo))},
-									{"LOCIGAL_CORE_COUNT", std::to_string(std::thread::hardware_concurrency())},
-									{"BRAND",              cpuinfo.brand},
-									{"VENDOR",             cpuinfo.vendor},
-									{"MODEL",              std::to_string(cpuinfo.model)},
-									{"STEPPING",           std::to_string(cpuinfo.stepping)},
-								}
-							},
-							{
 								"OS",
-								{},
 								{
-									{"TYPE",           OSToString(GetOSType())},
-									{"NAME",           GetOSName()},
-									{"BITNESS",        BitnessToString(GetOSBitness())},
-									{"MAJOR_VERSION",  GetOSMajorVersion()},
-									{"MINOR_VERSION",  GetOSMinorVersion()},
-									{"BUILD_NUMBER",   GetOSBuildNumber()},
-									{"KERNEL_VERSION", GetOSKernelVersion()},
-									{"USERNAME",       GetUsername()},
+									{
+										"GRAPHICS_APIS",
+										{},
+										{
+											{"METAL_SUPPORTED",        GetMetalSupported() ? "YES" : "NO"},
+											{"VULKAN_SUPPORTED",       VulkanSupportToString(vulkanProperties.support)},
+											{"VULKAN_HIGHEST_SUPPORT", vulkanProperties.version},
+											{"D3D_HIGHEST_SUPPORT",    GetD3DHighestSupport()},
+										},
+									},
+									{
+										"WINE",
+										{},
+										{
+											{"VERSION", GetWineVersion()},
+											{"HOST_OS", GetWineHostOs()},
+										},
+									},
+								},
+								{
+									{"TYPE",              OSToString(GetOSType())},
+									{"NAME",              GetOSName()},
+									{"BITNESS",           BitnessToString(GetOSBitness())},
+									{"MAJOR_VERSION",     std::to_string(GetOSMajorVersion())},
+									{"MINOR_VERSION",     std::to_string(GetOSMinorVersion())},
+									{"BUILD_NUMBER",      std::to_string(GetOSBuildNumber())},
+									{"KERNEL_VERSION",    GetOSKernelVersion()},
+									{"USERNAME",          GetUsername()},
+									{"USER_LOCALE",       GetUserLocale()},
+									{"IS_REMOTE_SESSION", IsRemoteSession() ? "YES" : "NO"},
 								}
 							},
 							{
 								"MACHINE",
-								{},
 								{
-									{"MACHINE_NAME", GetMachineName()},
-									{"MACHINE_UUID", GetMachineUuid()},
-									{"TOTAL_MEMORY", std::to_string(GetTotalMemory())},
-									{"SCREEN_COUNT", std::to_string(GetScreenCount())},
-									{"IS_VM",        IsRunningVM() ? "YES" : "NO"},
+									{
+										"CPU",
+										{},
+										{
+											{"BITNESS",            BitnessToString(GetCPUBitness(cpuinfo))},
+											{"LOCIGAL_CORE_COUNT", std::to_string(std::thread::hardware_concurrency())},
+											{"BRAND",              cpuinfo.brand},
+											{"VENDOR",             cpuinfo.vendor},
+											{"MODEL",              std::to_string(cpuinfo.model)},
+											{"STEPPING",           std::to_string(cpuinfo.stepping)},
+										}
+									},
+									{
+										"MONITORS",
+										monitors,
+										{},
+									},
+									{
+										"GPUS",
+										gpus,
+										{},
+									},
+									{
+										"NETWORK_ADAPTERS",
+										networkAdapters,
+										{},
+									},
+								},
+								{
+									{"MODEL",          GetHardwareModel()},
+									{"NAME",           GetMachineName()},
+									{"UUID",           GetMachineUuid()},
+									{"TOTAL_MEMORY",   std::to_string(GetTotalMemory())},
+									{"MONITOR_COUNT",  std::to_string(GetMonitorCount())},
+									{"IS_VM",          IsRunningVM() ? "YES" : "NO"},
 								}
 							},
 						},
 						{}
 					},
-					GetWindowsSubItems(),
-					GetMacOSSubItems(),
-					GetWineSubItems(),
 				},
 				{}
 			},
