@@ -3,6 +3,9 @@ cmake_minimum_required(VERSION 3.7)
 project(pdm VERSION 1.0.0)
 list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake)
 
+# Pass version info to code
+configure_file(include/version.h.in ${CMAKE_CURRENT_SOURCE_DIR}/include/version.h)
+
 set(SRC_FILES 
 	src/pdm.cpp
 	src/gatherer.cpp

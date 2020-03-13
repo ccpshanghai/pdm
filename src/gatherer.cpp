@@ -1,6 +1,7 @@
 #include "gatherer.h"
 #include "defines.h"
 #include "../include/pdm.h"
+#include "../include/version.h"
 
 #include <string>
 #include <thread>
@@ -22,7 +23,7 @@ namespace PDM
 
 	constexpr const char* GetVersion()
 	{
-		return "1.0.0";
+		return PROJECT_VER;
 	}
 
 	CPUInfo GetCPUInfo()
