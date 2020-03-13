@@ -4,6 +4,7 @@
 
 #include "d3d11_info.h"
 #include "../../include/pdm_data.h"
+#include "../defines.h"
 #include "../gatherer.h"
 
 #include <algorithm>
@@ -140,7 +141,7 @@ namespace PDM
 		LSTATUS status = RegQueryValueEx(key, "MachineGuid", nullptr, &type, reinterpret_cast<LPBYTE>(guid), &size);
 		RegCloseKey(key);
 
-		return status == ERROR_SUCCESS && type == REG_SZ ? guid : "";
+		return status == ERROR_SUCCESS && type == REG_SZ ? toupper(std::string(guid)) : "";
 	}
 
 	std::vector<NetworkAdapterInfo> GetNetworkAdapterInfo()
@@ -162,17 +163,16 @@ namespace PDM
 				if (i) stream << ":";
 				stream << std::hex << static_cast<unsigned>(pi->Address[i]);
 			}
-			std::string macAddr(stream.str());
-			std::transform(macAddr.begin(), macAddr.end(), macAddr.begin(), [](char c) { return static_cast<char>(std::toupper(c)); });
 			
 			std::string uuid = pi->AdapterName;
-			if (uuid.rfind("{") != 0 || uuid[uuid.size() - 1 != '}']) continue;
+			if (uuid.rfind("{") == 0 && uuid[uuid.size() - 1] == '}')
+				uuid = uuid.substr(1, uuid.size() - 2);
 			
 			adapters.push_back
 			({
 				pi->Description,
-				macAddr,
-				uuid.substr(1, uuid.size() - 2),
+				toupper(std::string(stream.str())),
+				uuid,
 			});
 		}
 

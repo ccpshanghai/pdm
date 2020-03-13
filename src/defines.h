@@ -5,7 +5,7 @@
 
 namespace PDM
 {
-	static inline void ltrim(std::string& s)
+	inline void ltrim(std::string& s)
 	{
 		s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch)
 		{
@@ -13,7 +13,7 @@ namespace PDM
 		}));
 	}
 
-	static inline void rtrim(std::string& s)
+	inline void rtrim(std::string& s)
 	{
 		s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch)
 		{
@@ -21,10 +21,16 @@ namespace PDM
 		}).base(), s.end());
 	}
 
-	static inline void trim(std::string& s)
+	inline void trim(std::string& s)
 	{
 		ltrim(s);
 		rtrim(s);
+	}
+
+	inline std::string toupper(std::string s)
+	{
+		std::transform(s.begin(), s.end(), s.begin(), [](char c) { return static_cast<char>(std::toupper(c)); });
+		return s;
 	}
 
 	template <typename F>
