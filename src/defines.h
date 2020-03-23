@@ -9,7 +9,7 @@ namespace PDM
 	{
 		s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch)
 		{
-			return !std::isspace(ch);
+			return !std::isspace(ch) && ch;
 		}));
 	}
 
@@ -17,7 +17,7 @@ namespace PDM
 	{
 		s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch)
 		{
-			return !std::isspace(ch);
+			return !std::isspace(ch) && ch;
 		}).base(), s.end());
 	}
 
