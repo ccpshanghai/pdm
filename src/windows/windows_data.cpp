@@ -161,7 +161,9 @@ namespace PDM
 			for (unsigned i = 0; i < 6; i++)
 			{
 				if (i) stream << ":";
-				stream << std::hex << static_cast<unsigned>(pi->Address[i]);
+				unsigned val = static_cast<unsigned>(pi->Address[i]);
+				if (val <= 0xf) stream << "0";
+				stream << std::hex << val;
 			}
 			
 			std::string uuid = pi->AdapterName;
