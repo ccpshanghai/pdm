@@ -79,27 +79,34 @@ namespace PDM
 		return { model, stepping, vendor, brand, bitness };
 	}
 
+	uint64_t GetTimingCycles()
+	{
+		uint64_t time1 = 0;
+		uint64_t time2 = 0;
+
+#if _WIN64
+		time1 = __rdtsc();
+		time2 = __rdtsc();
+#else
+		asm volatile("RDTSC" : "=a" (time1));
+		asm volatile("RDTSC" : "=a" (time2));
+#endif
+		return time2 - time1;
+	}
+
 	bool IsVMExecutionTiming()
 	{
 		// Both these values are arbitrary (needs investigation)
 		// Average time on a modern processor natively is around 25 cycles
-		const unsigned THRESHOLD_TIME = 500;
+		// Time on a hypevisor VM varies from 150 to 1000 cycles
+		const unsigned THRESHOLD_CYCLES = 100;
 		const unsigned RUNS = 1024;
 
 		unsigned thresholdCrossings = 0;
-		uint64_t time1 = 0;
-		uint64_t time2 = 0;
 		
 		for (unsigned i = 0; i < RUNS; i++)
 		{
-#if _WIN64
-			time1 = __rdtsc();
-			time2 = __rdtsc();
-#else
-			asm volatile("RDTSC" : "=a" (time1));
-			asm volatile("RDTSC" : "=a" (time2));
-#endif
-			if (time2 - time1 > THRESHOLD_TIME) thresholdCrossings++;
+			if (GetTimingCycles() > THRESHOLD_CYCLES) thresholdCrossings++;
 		}
 
 		return thresholdCrossings > (RUNS / 2);

@@ -62,6 +62,42 @@ std::string TimestampToString(const TimeStamp& timestamp)
 	return time;
 }
 
+void OutputExecutionTimings(std::string filename)
+{
+	std::fstream outfile;
+	outfile.open(filename, std::ios::out);
+
+	if (outfile)
+	{
+		const unsigned threshold = 100;
+		const unsigned runs = 100;
+
+		outfile << "Runs: " << runs << " Threshold: " << threshold << "\n";
+		
+		uint64_t average = 0;
+		unsigned crossings = 0;
+
+		for (unsigned i = 0; i < runs; i++)
+		{
+			uint64_t cycles = GetTimingCycles();
+			average += cycles;
+
+			outfile << "Cycles: ";
+			if (cycles > threshold)
+			{
+				outfile << "*";
+				crossings++;
+			}
+			outfile << cycles << "\n";
+		}
+
+		average /= runs;
+
+		outfile << "Average: " << average << " Crossings: " << crossings << std::endl;
+		outfile.close();
+	}
+}
+
 auto Execute()
 {
 	try
@@ -69,8 +105,9 @@ auto Execute()
 		const auto& data = RetrievePDMData();
 
 		std::fstream outfile;
-		std::string filename = "PDM_Output_" + GetMachineName() + "_" + TimestampToString(data.timestamp) + ".txt";
-		outfile.open(filename, std::ios::out);
+		std::string filename = "PDM_Output_" + GetMachineName() + "_" + TimestampToString(data.timestamp);
+
+		outfile.open(filename + ".txt", std::ios::out);
 
 		if (!outfile)
 		{
@@ -83,6 +120,8 @@ auto Execute()
 		}
 
 		Output(data, std::cout);
+
+		OutputExecutionTimings(filename + "_VM_Execution_Timings.txt");
 	}
 	catch (std::exception & e)
 	{
