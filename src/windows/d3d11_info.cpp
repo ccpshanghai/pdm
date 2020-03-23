@@ -83,6 +83,26 @@ namespace PDM
 		RegCloseKey(key);
 	}
 
+	void SetDPIScalingAware() // Give us physical monitor resolutions
+	{
+		HMODULE scalingModuleHandle = LoadLibrary("api-ms-win-shcore-scaling-l1-1-1.dll");
+		if (scalingModuleHandle)
+		{
+			typedef enum PROCESS_DPI_AWARENESS {
+				PROCESS_DPI_UNAWARE = 0,
+				PROCESS_SYSTEM_DPI_AWARE = 1,
+				PROCESS_PER_MONITOR_DPI_AWARE = 2
+			} PROCESS_DPI_AWARENESS;
+			typedef HRESULT(*LPSetProcessDpiAwareness)(_In_ PROCESS_DPI_AWARENESS value);
+
+			LPSetProcessDpiAwareness SetProcessDpiAwareness = reinterpret_cast<LPSetProcessDpiAwareness>(GetProcAddress(scalingModuleHandle, "SetProcessDpiAwareness"));
+			if (SetProcessDpiAwareness) SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
+			FreeLibrary(scalingModuleHandle);
+		}
+		
+		SetProcessDPIAware(); // For older windows
+	}
+
 	////////////////////////////////////////
 
 #pragma warning(disable:26812)
@@ -149,7 +169,7 @@ namespace PDM
 			FreeLibrary(dxgiModuleHandle);
 		);
 
-		SetProcessDPIAware(); // Give us physical monitor resolutions
+		SetDPIScalingAware();
 
 		dxgiModuleHandle = LoadLibrary("dxgi.dll");
 		if (!dxgiModuleHandle) return info;
