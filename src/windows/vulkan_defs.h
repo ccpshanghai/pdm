@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <windows.h>
 
 namespace PDM
 {
@@ -749,8 +750,8 @@ namespace PDM
 		const char* const*          ppEnabledExtensionNames;
 	} VkInstanceCreateInfo;
 
-	typedef VkResult(*PFN_vkCreateInstance)(const VkInstanceCreateInfo* pCreateInfo, const void* pAllocator, VkInstance* pInstance);
-	typedef VkResult(*PFN_vkEnumeratePhysicalDevices)(VkInstance instance, uint32_t* pPhysicalDeviceCount, VkPhysicalDevice* pPhysicalDevices);
-	typedef void(*PFN_vkGetPhysicalDeviceProperties)(VkPhysicalDevice physicalDevice, VkPhysicalDeviceProperties* pProperties);
-	typedef void(*PFN_vkDestroyInstance)(VkInstance instance, const void* pAllocator);
+	typedef VkResult(STDAPICALLTYPE* PFN_vkCreateInstance)(const VkInstanceCreateInfo* pCreateInfo, const void* pAllocator, VkInstance* pInstance);
+	typedef VkResult(STDAPICALLTYPE* PFN_vkEnumeratePhysicalDevices)(VkInstance instance, uint32_t* pPhysicalDeviceCount, VkPhysicalDevice* pPhysicalDevices);
+	typedef void(STDAPICALLTYPE* PFN_vkGetPhysicalDeviceProperties)(VkPhysicalDevice physicalDevice, VkPhysicalDeviceProperties* pProperties);
+	typedef void(STDAPICALLTYPE* PFN_vkDestroyInstance)(VkInstance instance, const void* pAllocator);
 }

@@ -93,7 +93,7 @@ namespace PDM
 				PROCESS_SYSTEM_DPI_AWARE = 1,
 				PROCESS_PER_MONITOR_DPI_AWARE = 2
 			} PROCESS_DPI_AWARENESS;
-			typedef HRESULT(*LPSetProcessDpiAwareness)(_In_ PROCESS_DPI_AWARENESS value);
+			typedef HRESULT(STDAPICALLTYPE* LPSetProcessDpiAwareness)(_In_ PROCESS_DPI_AWARENESS value);
 
 			LPSetProcessDpiAwareness SetProcessDpiAwareness = reinterpret_cast<LPSetProcessDpiAwareness>(GetProcAddress(scalingModuleHandle, "SetProcessDpiAwareness"));
 			if (SetProcessDpiAwareness) SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);

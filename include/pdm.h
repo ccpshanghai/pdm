@@ -25,7 +25,7 @@ namespace PDM
 	unsigned GetMonitorCount();
 	uint64_t GetTotalMemory();
 	bool IsRemoteSession();
-	uint64_t GetTimingCycles();
+	size_t GetTimingCycles();
 	std::string GetMachineUuid();
 	std::vector<MonitorInfo> GetMonitorsInfo();
 	std::vector<GPUInfo> GetGPUInfo();

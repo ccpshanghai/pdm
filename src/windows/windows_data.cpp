@@ -128,7 +128,7 @@ namespace PDM
 	{
 		REGSAM access = KEY_READ;
 #if !_WIN64
-		if (GetOSBitnessInternal() != Bitness.BITNESS_32)
+		if (GetOSBitnessInternal() != Bitness::BITNESS_32)
 			access |= KEY_WOW64_64KEY;
 #endif
 

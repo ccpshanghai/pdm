@@ -79,14 +79,22 @@ namespace PDM
 		return { model, stepping, vendor, brand, bitness };
 	}
 
-	uint64_t GetTimingCycles()
+	size_t GetTimingCycles()
 	{
-		uint64_t time1 = 0;
-		uint64_t time2 = 0;
+		size_t time1 = 0;
+		size_t time2 = 0;
 
 #if _WIN64
 		time1 = __rdtsc();
 		time2 = __rdtsc();
+#elif _WIN32
+		__asm
+		{
+			RDTSC
+			MOV time1, EAX
+			RDTSC
+			MOV time2, EAX
+		}
 #else
 		asm volatile("RDTSC" : "=a" (time1));
 		asm volatile("RDTSC" : "=a" (time2));
