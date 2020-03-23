@@ -6,9 +6,6 @@
 #include <functional>
 #include <comdef.h>
 #include <dxgi1_6.h>
-#include <ShellScalingAPI.h>
-
-#pragma comment(lib, "shcore.lib")
 
 namespace PDM
 {
@@ -152,7 +149,7 @@ namespace PDM
 			FreeLibrary(dxgiModuleHandle);
 		);
 
-		SetProcessDpiAwareness(PROCESS_SYSTEM_DPI_AWARE); // Give us physical monitor resolutions
+		SetProcessDPIAware(); // Give us physical monitor resolutions
 
 		dxgiModuleHandle = LoadLibrary("dxgi.dll");
 		if (!dxgiModuleHandle) return info;
