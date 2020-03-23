@@ -56,19 +56,19 @@ namespace PDM
 		return [[[NSProcessInfo processInfo] operatingSystemVersionString] UTF8String];
 	}
 
-	unsigned GetOSMajorVersion()
+	std::string GetOSMajorVersion()
 	{
-		return [[NSProcessInfo processInfo] operatingSystemVersion].majorVersion;
+		return std::to_string([[NSProcessInfo processInfo] operatingSystemVersion].majorVersion);
 	}
 
-	unsigned GetOSMinorVersion()
+	std::string GetOSMinorVersion()
 	{
-		return [[NSProcessInfo processInfo] operatingSystemVersion].minorVersion;
+		return std::to_string([[NSProcessInfo processInfo] operatingSystemVersion].minorVersion);
 	}
 
-	unsigned GetOSBuildNumber()
+	std::string GetOSBuildNumber()
 	{
-		return [[NSProcessInfo processInfo] operatingSystemVersion].patchVersion;
+		return std::to_string([[NSProcessInfo processInfo] operatingSystemVersion].patchVersion);
 	}
 
 	std::string GetOSKernelVersion()

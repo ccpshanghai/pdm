@@ -71,19 +71,19 @@ namespace PDM
 		return IsWine() ? "" : GetStringFromReg(CURRENT_VERSION_KEY, L"ProductName");
 	}
 
-	unsigned GetOSMajorVersion()
+	std::string GetOSMajorVersion()
 	{
-		return IsWine() ? 0 : std::stoi(GetStringFromReg(CURRENT_VERSION_KEY, L"CurrentMajorVersionNumber"));
+		return IsWine() ? "" : GetStringFromReg(CURRENT_VERSION_KEY, L"CurrentMajorVersionNumber");
 	}
 
-	unsigned GetOSMinorVersion()
+	std::string GetOSMinorVersion()
 	{
-		return IsWine() ? 0 : std::stoi(GetStringFromReg(CURRENT_VERSION_KEY, L"CurrentMinorVersionNumber"));
+		return IsWine() ? "" : GetStringFromReg(CURRENT_VERSION_KEY, L"CurrentMinorVersionNumber");
 	}
 
-	unsigned GetOSBuildNumber()
+	std::string GetOSBuildNumber()
 	{
-		return IsWine() ? 0 : std::stoi(GetStringFromReg(CURRENT_VERSION_KEY, L"CurrentBuild"));
+		return IsWine() ? "" : GetStringFromReg(CURRENT_VERSION_KEY, L"CurrentBuild");
 	}
 
 	std::string GetOSKernelVersion()

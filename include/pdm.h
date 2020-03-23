@@ -14,9 +14,9 @@ namespace PDM
 
 	OS GetOSType();
 	std::string GetOSName();
-	unsigned GetOSMajorVersion();
-	unsigned GetOSMinorVersion();
-	unsigned GetOSBuildNumber();
+	std::string GetOSMajorVersion();
+	std::string GetOSMinorVersion();
+	std::string GetOSBuildNumber();
 	std::string GetOSKernelVersion();
 	std::string GetHardwareModel();
 	std::string GetMachineName();
