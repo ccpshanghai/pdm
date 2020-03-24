@@ -94,7 +94,15 @@ namespace PDM
 	std::string GetHardwareModel()
 	{
 		const CString SystemInformationKey = L"SYSTEM\\CurrentControlSet\\Control\\SystemInformation";
-		return GetStringFromReg(SystemInformationKey, L"SystemManufacturer") + " [" + GetStringFromReg(SystemInformationKey, L"SystemProductName") + "]";
+
+		std::string manu = GetStringFromReg(SystemInformationKey, L"SystemManufacturer");
+		if (manu == "System manufacturer") manu = "";
+
+		std::string prod = GetStringFromReg(SystemInformationKey, L"SystemProductName");
+		if (prod == "System Product Name") prod = "";
+		if (!manu.empty() && !prod.empty()) prod = " [" + prod + "]";
+
+		return manu + prod;
 	}
 
 	std::string GetMachineName()
@@ -146,6 +154,8 @@ namespace PDM
 
 	std::vector<NetworkAdapterInfo> GetNetworkAdapterInfo()
 	{
+		if (IsWine()) return {};
+
 		ULONG l = 0;
 		DWORD res = GetAdaptersInfo(0, &l);
 		if (res != ERROR_BUFFER_OVERFLOW) return {};
