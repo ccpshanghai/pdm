@@ -26,17 +26,16 @@ namespace PDM
 		return PROJECT_VER;
 	}
 
+	// Only works on x86/x64/IA32/IA64 architectures
 	CPUInfo GetCPUInfo()
 	{
-		// Only works on x86/x64/IA32/IA64 architectures
-
 		Bitness bitness;
 
-		CPUID id8(0x80000000);
-		if (id8.EAX() >= 0x80000001u)
+		CPUID id8(CPUID::CPUID_FLAG);
+		if (id8.EAX() >= CPUID::CPUID_EXTENDED_FLAG)
 		{
-			CPUID id81(0x80000001);
-			bitness = id81.EDX() & (1 << 29) ? Bitness::BITNESS_64 : Bitness::BITNESS_32;
+			CPUID id81(CPUID::CPUID_EXTENDED_FLAG);
+			bitness = id81.EDX() & CPUID::CPUID_X64_FLAG ? Bitness::BITNESS_64 : Bitness::BITNESS_32;
 		}
 		else
 		{
@@ -45,26 +44,20 @@ namespace PDM
 		
 		std::string brand;
 
-		if (id8.EAX() >= 0x80000004u)
+		if (id8.EAX() >= CPUID::CPUID_MODEL_NAME_FLAG)
 		{
 			for (unsigned i = 0; i < 3; i++)
 			{
-				CPUID id(0x80000002u + i);
-
-				brand += std::string(reinterpret_cast<const char*>(&id.EAX()), 4);
-				brand += std::string(reinterpret_cast<const char*>(&id.EBX()), 4);
-				brand += std::string(reinterpret_cast<const char*>(&id.ECX()), 4);
-				brand += std::string(reinterpret_cast<const char*>(&id.EDX()), 4);
+				CPUID id(CPUID::CPUID_MODEL_NAME_OFFSET_FLAG + i);
+				brand += id.get_eax_string() + id.get_ebx_string() + id.get_ecx_string() + id.get_edx_string();
 			}
 
 			trim(brand);
 		}
 
 		CPUID id0(0);
-		std::string vendor;
-		vendor += std::string(reinterpret_cast<const char*>(&id0.EBX()), 4);
-		vendor += std::string(reinterpret_cast<const char*>(&id0.EDX()), 4);
-		vendor += std::string(reinterpret_cast<const char*>(&id0.ECX()), 4);
+		std::string vendor = id0.get_ebx_string() + id0.get_edx_string() + id0.get_ecx_string();
+		trim(vendor);
 
 		int model = 0;
 		int stepping = 0;
@@ -102,11 +95,14 @@ namespace PDM
 		return time2 - time1;
 	}
 
-	bool IsVMExecutionTiming()
+	bool HasVMExecutionTiming()
 	{
-		// Both these values are arbitrary (needs investigation)
+		static bool _finished, _ret;
+		if (_finished) return _ret;
+		_finished = true;
+
 		// Average time on a modern processor natively is around 25 cycles
-		// Time on a hypevisor VM varies from 150 to 1000 cycles
+		// Time on paravirtualized VM is over 5000 cycles
 		const unsigned THRESHOLD_CYCLES = 100;
 		const unsigned RUNS = 1024;
 
@@ -117,17 +113,45 @@ namespace PDM
 			if (GetTimingCycles() > THRESHOLD_CYCLES) thresholdCrossings++;
 		}
 
-		return thresholdCrossings > (RUNS / 2);
+		_ret = thresholdCrossings > (RUNS / 2);
+		return _ret;
 	}
 
-	bool IsHypervisorGuestVM()
+	bool HasHypervisorBit()
 	{
-		return CPUID(1).ECX() & 0x80000000;
+		return CPUID(1).ECX() & CPUID::HYPERVISOR_PRESENT_FLAG;
 	}
 
-	bool IsRunningVM()
+	std::string GetHypervisorName()
 	{
-		return IsHypervisorGuestVM() || IsVMExecutionTiming();
+		if (!HasHypervisorBit()) return "";
+
+		CPUID id(CPUID::HYPERVISOR_INFO_FLAG);
+		auto str = id.get_ebx_string() + id.get_ecx_string() + id.get_edx_string();
+		trim(str);
+		return str;
+	}
+
+	bool IsHyperVGuestOS()
+	{
+		if (GetHypervisorName() != HYPER_V_NAME) return false;
+
+		// TODO: More checks?
+		if (CPUID(CPUID::HYPERVISOR_INFO_FLAG + 128).has_data() ||
+			CPUID(CPUID::HYPERVISOR_INFO_FLAG + 129).has_data() ||
+			CPUID(CPUID::HYPERVISOR_INFO_FLAG + 130).has_data())
+			return true;
+
+		return false;
+	}
+
+	bool IsSuspectedVM()
+	{
+		if (HasVMExecutionTiming() || IsHyperVGuestOS()) return true;
+		if (!HasHypervisorBit()) return false;
+		if (GetHypervisorName() != HYPER_V_NAME) return true;
+
+		return false;
 	}
 
 	constexpr Bitness GetProcessBitness()
@@ -349,6 +373,17 @@ namespace PDM
 										}
 									},
 									{
+										"VM",
+										{},
+										{
+											{"IS_SUSPECTED_VM",         IsSuspectedVM() ? "YES" : "NO"},
+											{"HAS_HYPERVISOR_BIT",      HasHypervisorBit() ? "YES" : "NO"},
+											{"HYPERVISOR_NAME",         GetHypervisorName()},
+											{"IS_HYPERV_GUEST_OS",      IsHyperVGuestOS() ? "YES" : "NO"},
+											{"HAS_VM_EXECUTION_TIMING", HasVMExecutionTiming() ? "YES" : "NO"},
+										}
+									},
+									{
 										"MONITORS",
 										monitors,
 										{},
@@ -365,12 +400,11 @@ namespace PDM
 									},
 								},
 								{
-									{"MODEL",          GetHardwareModel()},
-									{"NAME",           GetMachineName()},
-									{"UUID",           GetMachineUuid()},
-									{"TOTAL_MEMORY",   std::to_string(GetTotalMemory())},
-									{"MONITOR_COUNT",  std::to_string(GetMonitorCount())},
-									{"IS_VM",          IsRunningVM() ? "YES" : "NO"},
+									{"MODEL",         GetHardwareModel()},
+									{"NAME",          GetMachineName()},
+									{"UUID",          GetMachineUuid()},
+									{"TOTAL_MEMORY",  std::to_string(GetTotalMemory())},
+									{"MONITOR_COUNT", std::to_string(GetMonitorCount())},
 								}
 							},
 						},
