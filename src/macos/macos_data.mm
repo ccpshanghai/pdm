@@ -127,8 +127,14 @@ namespace PDM
 	{
 		auto val = CFDictionaryGetValue(dict, name);
 		if (val == nil) return 0;
-		uint32_t rev = *static_cast<const uint32_t*>([static_cast<NSData*>(val) bytes]);
-		return rev;
+		return *static_cast<const uint32_t*>([static_cast<NSData*>(val) bytes]);
+	}
+
+	uint64_t GetLongFromID(CFMutableDictionaryRef dict, NSString* name)
+	{
+		auto val = CFDictionaryGetValue(dict, name);
+		if (val == nil) return 0;
+		return *static_cast<const uint64_t*>([static_cast<NSData*>(val) bytes]);
 	}
 
 	std::vector<MonitorInfo> GetMonitorsInfo()
@@ -235,6 +241,7 @@ namespace PDM
 							GetIntFromID(serviceDictionary, @"vendor-id"),
 							GetIntFromID(serviceDictionary, @"device-id"),
 							GetIntFromID(serviceDictionary, @"revision-id"),
+							GetLongFromID(serviceDictionary, @"VRAM,totalsize"),
 						});
 					}
 				}
