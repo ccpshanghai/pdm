@@ -33,8 +33,8 @@ namespace PDM
 		std::string description;
 		uint32_t vendorID{};
 		uint32_t deviceID{};
-		uint32_t subSystemID{};
 		uint32_t revision{};
+		uint64_t memory{};
 		std::string driverVersionString;
 		std::string driverDate;
 		std::string driverVendor;

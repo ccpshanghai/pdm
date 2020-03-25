@@ -281,6 +281,7 @@ namespace PDM
 					{"VENDOR_ID",      std::to_string(gpu.vendorID)},
 					{"DEVICE_ID",      std::to_string(gpu.deviceID)},
 					{"REVISION",       std::to_string(gpu.revision)},
+					{"VIDEO_MEMORY",   std::to_string(gpu.memory)},
 					{"DRIVER_DATE",    gpu.driverDate},
 					{"DRIVER_VENDOR",  gpu.driverVendor},
 					{"DRIVER_VERSION", gpu.driverVersionString},

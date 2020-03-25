@@ -234,7 +234,6 @@ namespace PDM
 							modelStr,
 							GetIntFromID(serviceDictionary, @"vendor-id"),
 							GetIntFromID(serviceDictionary, @"device-id"),
-							GetIntFromID(serviceDictionary, @"subsystem-id"),
 							GetIntFromID(serviceDictionary, @"revision-id"),
 						});
 					}

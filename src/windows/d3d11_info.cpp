@@ -242,8 +242,8 @@ namespace PDM
 			adapter.description = description;
 			adapter.vendorID = desc.VendorId;
 			adapter.deviceID = desc.DeviceId;
-			adapter.subSystemID = desc.SubSysId;
 			adapter.revision = desc.Revision;
+			adapter.memory = desc.DedicatedVideoMemory;
 			PopulateAdapterDriverVersion(adapter);
 
 			info.adapters.push_back(adapter);
