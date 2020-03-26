@@ -145,9 +145,12 @@ namespace PDM
 		{
 			monitors.push_back
 			({
-				static_cast<uint32_t>(screen.frame.size.width),
-				static_cast<uint32_t>(screen.frame.size.height),
-				static_cast<uint32_t>(NSBitsPerSampleFromDepth(screen.depth))
+				[screen.localizedName UTF8String],
+				static_cast<uint32_t>(screen.frame.size.width  * screen.backingScaleFactor),
+				static_cast<uint32_t>(screen.frame.size.height * screen.backingScaleFactor),
+				static_cast<uint32_t>(NSBitsPerSampleFromDepth(screen.depth)),
+				0,
+				static_cast<uint32_t>(screen.backingScaleFactor * 100),
 			});
 		}
 		

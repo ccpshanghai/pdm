@@ -262,9 +262,12 @@ namespace PDM
 				"MONITOR",
 				{},
 				{
-					{"VERTICAL_RES",   std::to_string(monitor.width)},
-					{"HORIZONTAL_RES", std::to_string(monitor.height)},
-					{"BITS_PER_COLOR", std::to_string(monitor.bitsPerColor)},
+					{"NAME",                monitor.name},
+					{"HORIZONTAL_RES",      std::to_string(monitor.width)},
+					{"VERTICAL_RES",        std::to_string(monitor.height)},
+					{"BITS_PER_COLOR",      std::to_string(monitor.bitsPerColor)},
+					{"REFRESH_RATE",        std::to_string(monitor.refreshRate)},
+					{"DPI_SCALING_PERCENT", std::to_string(monitor.dpiScaling)},
 				}
 			});
 		}

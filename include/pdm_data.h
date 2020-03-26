@@ -23,9 +23,12 @@ namespace PDM
 
 	struct MonitorInfo
 	{
+		std::string name;
 		uint32_t width{};
 		uint32_t height{};
 		uint32_t bitsPerColor{};
+		uint32_t refreshRate{};
+		uint32_t dpiScaling{};
 	};
 
 	struct GPUInfo
