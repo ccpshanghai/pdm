@@ -83,9 +83,101 @@ namespace PDM
 		RegCloseKey(key);
 	}
 
-	void SetDPIScalingAware() // Give us physical monitor resolutions
+	std::string GetMonitorName(HMONITOR monitor)
 	{
-		HMODULE scalingModuleHandle = LoadLibrary("api-ms-win-shcore-scaling-l1-1-1.dll");
+		MONITORINFOEXW info;
+		info.cbSize = sizeof(info);
+		GetMonitorInfoW(monitor, &info);
+
+		UINT32 requiredPaths, requiredModes;
+		GetDisplayConfigBufferSizes(QDC_ONLY_ACTIVE_PATHS, &requiredPaths, &requiredModes);
+		std::vector<DISPLAYCONFIG_PATH_INFO> paths(requiredPaths);
+		std::vector<DISPLAYCONFIG_MODE_INFO> modes(requiredModes);
+		QueryDisplayConfig(QDC_ONLY_ACTIVE_PATHS, &requiredPaths, paths.data(), &requiredModes, modes.data(), nullptr);
+
+		for (auto& p : paths)
+		{
+			DISPLAYCONFIG_SOURCE_DEVICE_NAME sourceName;
+			sourceName.header.type = DISPLAYCONFIG_DEVICE_INFO_GET_SOURCE_NAME;
+			sourceName.header.size = sizeof(sourceName);
+			sourceName.header.adapterId = p.sourceInfo.adapterId;
+			sourceName.header.id = p.sourceInfo.id;
+			DisplayConfigGetDeviceInfo(&sourceName.header);
+
+			if (!wcscmp(info.szDevice, sourceName.viewGdiDeviceName))
+			{
+				DISPLAYCONFIG_TARGET_DEVICE_NAME name;
+				name.header.type = DISPLAYCONFIG_DEVICE_INFO_GET_TARGET_NAME;
+				name.header.size = sizeof(name);
+				name.header.adapterId = p.sourceInfo.adapterId;
+				name.header.id = p.targetInfo.id;
+				DisplayConfigGetDeviceInfo(&name.header);
+
+				return ws2s(name.monitorFriendlyDeviceName);
+			}
+		}
+
+		return "";
+	}
+
+	uint32_t GetMonitorBPC(CComPtr<IDXGIOutput>& pOutput)
+	{
+		if (CComQIPtr<IDXGIOutput6> pOutput6(pOutput); pOutput6)
+		{
+			pOutput = nullptr; // Need to do this explicitly
+			DXGI_OUTPUT_DESC1 outpDesc1;
+			pOutput6->GetDesc1(&outpDesc1);
+
+			return outpDesc1.BitsPerColor;
+		}
+
+		return 0;
+	}
+
+	uint32_t GetMonitorMaxRefreshRate(const CComPtr<IDXGIOutput>& pOutput)
+	{
+		uint32_t refreshRate = 0;
+		UINT pNumModes = 0;
+
+		if (SUCCEEDED(pOutput->GetDisplayModeList(DXGI_FORMAT_R8G8B8A8_UNORM, 0, &pNumModes, nullptr)) && pNumModes > 0)
+		{
+			std::vector<DXGI_MODE_DESC> pDesc(pNumModes);
+			if (SUCCEEDED(pOutput->GetDisplayModeList(DXGI_FORMAT_R8G8B8A8_UNORM, 0, &pNumModes, &pDesc[0])))
+			{
+				for (DXGI_MODE_DESC desc : pDesc)
+				{
+					uint32_t rate = static_cast<uint32_t>(std::round(static_cast<float>(desc.RefreshRate.Numerator) / desc.RefreshRate.Denominator));
+					if (rate > refreshRate) refreshRate = rate;
+				}
+			}
+		}
+
+		return refreshRate;
+	}
+
+	uint32_t GetMonitorDPIScalingPercent(HMONITOR monitor, HMODULE scalingModuleHandle)
+	{
+		if (!scalingModuleHandle) return 0;
+
+		typedef enum MONITOR_DPI_TYPE {
+			MDT_EFFECTIVE_DPI,
+			MDT_ANGULAR_DPI,
+			MDT_RAW_DPI,
+			MDT_DEFAULT
+		} MONITOR_DPI_TYPE;
+		typedef HRESULT(STDAPICALLTYPE* LPGetDpiForMonitor)(HMONITOR hmonitor, MONITOR_DPI_TYPE dpiType, UINT* dpiX, UINT* dpiY);
+
+		LPGetDpiForMonitor GetDpiForMonitor = reinterpret_cast<LPGetDpiForMonitor>(GetProcAddress(scalingModuleHandle, "GetDpiForMonitor"));
+		if (!GetDpiForMonitor) return 0;
+
+		UINT x, y;
+		GetDpiForMonitor(monitor, MDT_EFFECTIVE_DPI, &x, &y);
+
+		return x * 100 / 96;
+	}
+
+	void SetDPIScalingAware(HMODULE scalingModuleHandle) // Give us physical monitor resolutions
+	{
 		if (scalingModuleHandle)
 		{
 			typedef enum PROCESS_DPI_AWARENESS {
@@ -97,7 +189,6 @@ namespace PDM
 
 			LPSetProcessDpiAwareness SetProcessDpiAwareness = reinterpret_cast<LPSetProcessDpiAwareness>(GetProcAddress(scalingModuleHandle, "SetProcessDpiAwareness"));
 			if (SetProcessDpiAwareness) SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
-			FreeLibrary(scalingModuleHandle);
 		}
 		
 		SetProcessDPIAware(); // For older windows
@@ -169,7 +260,9 @@ namespace PDM
 			FreeLibrary(dxgiModuleHandle);
 		);
 
-		SetDPIScalingAware();
+		HMODULE scalingModuleHandle = LoadLibrary("api-ms-win-shcore-scaling-l1-1-1.dll");
+		SCOPE_EXIT(FreeLibrary(scalingModuleHandle); );
+		SetDPIScalingAware(scalingModuleHandle);
 
 		dxgiModuleHandle = LoadLibrary("dxgi.dll");
 		if (!dxgiModuleHandle) return info;
@@ -201,7 +294,7 @@ namespace PDM
 
 			uint32_t index = 0;
 			CComPtr<IDXGIOutput> pOutput;
-			while (SUCCEEDED(pAdapter->EnumOutputs(index, reinterpret_cast<IDXGIOutput**>(&pOutput))))
+			while (SUCCEEDED(pAdapter->EnumOutputs(index++, reinterpret_cast<IDXGIOutput**>(&pOutput))))
 			{
 				DXGI_OUTPUT_DESC outpDesc;
 				pOutput->GetDesc(&outpDesc);
@@ -212,24 +305,26 @@ namespace PDM
 				if (outpDesc.Rotation == DXGI_MODE_ROTATION_ROTATE90 || outpDesc.Rotation == DXGI_MODE_ROTATION_ROTATE270)
 					std::swap(width, height);
 
-				uint32_t bpc = 0;
-				if (CComQIPtr<IDXGIOutput6> pOutput6(pOutput); pOutput6)
-				{
-					pOutput = nullptr; // Need to do this explicitly
-					DXGI_OUTPUT_DESC1 outpDesc1;
-					pOutput6->GetDesc1(&outpDesc1);
-					bpc = outpDesc1.BitsPerColor;
-				}
+				std::string name = GetMonitorName(outpDesc.Monitor);
+				uint32_t maxRefreshRate = GetMonitorMaxRefreshRate(pOutput);
+				uint32_t bpc = GetMonitorBPC(pOutput); // Destroys handle
+				uint32_t scaling = GetMonitorDPIScalingPercent(outpDesc.Monitor, scalingModuleHandle);
 
-				MonitorInfo monitor{ width, height, bpc };
+				MonitorInfo monitor
+				{
+					name,
+					width,
+					height,
+					bpc,
+					maxRefreshRate,
+					scaling
+				};
 
 				bool isPrimary = outpDesc.Monitor == primaryMonitor;
 				if (isPrimary) // Always have primary monitor first
 					info.monitors.insert(info.monitors.begin(), monitor);
 				else
 					info.monitors.push_back(monitor);
-
-				index++;
 			}
 
 			DXGI_ADAPTER_DESC desc{ 0 };
