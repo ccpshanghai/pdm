@@ -139,17 +139,37 @@ namespace PDM
 
 	std::vector<MonitorInfo> GetMonitorsInfo()
 	{
+		uint32_t displayCount;
+		CGGetOnlineDisplayList(0, nullptr, &displayCount);
+		std::vector<CGDirectDisplayID> onlineDisplays(displayCount);
+		CGGetOnlineDisplayList(displayCount, &onlineDisplays[0], nullptr);
+		
 		std::vector<MonitorInfo> monitors;
 		
 		for (NSScreen* screen in [NSScreen screens])
 		{
+			uint32_t refreshRate = 0;
+			
+			if (id d = screen.deviceDescription[@"NSScreenNumber"]; d)
+			{
+				int nr = [d intValue];
+				for (CGDirectDisplayID display : onlineDisplays)
+				{
+					if (display == nr)
+					{
+						refreshRate = static_cast<uint32_t>(CGDisplayModeGetRefreshRate(CGDisplayCopyDisplayMode(display)));
+						break;
+					}
+				}
+			}
+			
 			monitors.push_back
 			({
 				[screen.localizedName UTF8String],
 				static_cast<uint32_t>(screen.frame.size.width  * screen.backingScaleFactor),
 				static_cast<uint32_t>(screen.frame.size.height * screen.backingScaleFactor),
 				static_cast<uint32_t>(NSBitsPerSampleFromDepth(screen.depth)),
-				0,
+				refreshRate,
 				static_cast<uint32_t>(screen.backingScaleFactor * 100),
 			});
 		}
