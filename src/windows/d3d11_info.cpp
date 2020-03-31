@@ -287,7 +287,7 @@ namespace PDM
 		{
 			D3D_FEATURE_LEVEL support = info.maxSupportedFeatureLevel;
 
-			if (FAILED(CreateDevice(createDevice, pAdapter, support))) continue;
+			CreateDevice(createDevice, pAdapter, support);
 
 			if (support > info.maxSupportedFeatureLevel)
 				info.maxSupportedFeatureLevel = support;
@@ -333,12 +333,14 @@ namespace PDM
 			std::string description(ws2s(desc.Description));
 			if (description == "Microsoft Basic Render Driver") continue;
 
-			GPUInfo adapter;
-			adapter.description = description;
-			adapter.vendorID = desc.VendorId;
-			adapter.deviceID = desc.DeviceId;
-			adapter.revision = desc.Revision;
-			adapter.memory = desc.DedicatedVideoMemory;
+			GPUInfo adapter
+			{
+				description,
+				desc.VendorId,
+				desc.DeviceId,
+				desc.Revision,
+				desc.DedicatedVideoMemory,
+			};
 			PopulateAdapterDriverVersion(adapter);
 
 			info.adapters.push_back(adapter);
