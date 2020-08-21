@@ -369,7 +369,7 @@ namespace PDM
 										{},
 										{
 											{"BITNESS",            BitnessToString(GetCPUBitness(cpuinfo))},
-											{"LOCIGAL_CORE_COUNT", std::to_string(std::thread::hardware_concurrency())},
+											{"LOGICAL_CORE_COUNT", std::to_string(std::thread::hardware_concurrency())},
 											{"BRAND",              cpuinfo.brand},
 											{"VENDOR",             cpuinfo.vendor},
 											{"MODEL",              std::to_string(cpuinfo.model)},
