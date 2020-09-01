@@ -102,7 +102,7 @@ auto Execute()
 {
 	try
 	{
-		const auto& data = RetrievePDMData();
+		const auto& data = RetrievePDMData("pdmCLI", "1.0");
 
 		std::fstream outfile;
 		std::string filename = "PDM_Output_" + GetMachineName() + "_" + TimestampToString(data.timestamp);

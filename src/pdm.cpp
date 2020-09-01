@@ -3,14 +3,14 @@
 
 namespace PDM
 {
-	const PDMData& RetrievePDMData()
+	const PDMData& RetrievePDMData(std::string applicationName, std::string applicationVersion)
 	{
 		static PDMData data{};
 		static bool hasData = false;
 
 		if (!hasData)
 		{
-			data = GatherData();
+			data = GatherData(applicationName, applicationVersion);
 			hasData = true;
 		}
 

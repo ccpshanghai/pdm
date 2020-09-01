@@ -10,7 +10,7 @@
 
 namespace PDM
 {
-	DllExport const PDMData& RetrievePDMData();
+	DllExport const PDMData& RetrievePDMData(std::string applicationName, std::string applicationVersion);
 
 	OS GetOSType();
 	std::string GetOSName();

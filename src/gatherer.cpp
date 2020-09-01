@@ -249,7 +249,7 @@ namespace PDM
 		return time;
 	}
 
-	PDMData GatherData()
+	PDMData GatherData(std::string applicationName, std::string applicationVersion)
 	{
 		TimeStamp timestamp = GetCurrentTime();
 		CPUInfo cpuinfo = GetCPUInfo();
@@ -317,6 +317,14 @@ namespace PDM
 					{
 						"GENERAL",
 						{
+							{
+								"APPLICATION",
+								{},
+								{
+									{"NAME",    applicationName},
+									{"VERSION", applicationVersion},
+								}
+							},
 							{
 								"PROCESS",
 								{},
