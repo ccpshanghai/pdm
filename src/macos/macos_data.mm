@@ -5,12 +5,12 @@
 #include <vector>
 #include <sys/sysctl.h>
 #include <sys/utsname.h>
-#include <IOKit/network/IOEthernetInterface.h>
-#include <IOKit/network/IOEthernetController.h>
 
 #import <AppKit/AppKit.h>
 #import <Metal/Metal.h>
-
+#import <IOKit/graphics/IOGraphicsLib.h>
+#import <IOKit/network/IOEthernetInterface.h>
+#import <IOKit/network/IOEthernetController.h>
 
 namespace PDM
 {
@@ -137,6 +137,23 @@ namespace PDM
 		return *static_cast<const uint64_t*>([static_cast<NSData*>(val) bytes]);
 	}
 
+	NSString* screenNameForDisplay(CGDirectDisplayID displayID)
+	{
+		NSString *screenName = @"";
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+		NSDictionary *deviceInfo = (NSDictionary *)IODisplayCreateInfoDictionary(CGDisplayIOServicePort(displayID), kIODisplayOnlyPreferredName);
+#pragma clang diagnostic pop
+
+		NSDictionary *localizedNames = [deviceInfo objectForKey:[NSString stringWithUTF8String:kDisplayProductName]];
+
+		if ([localizedNames count] > 0) screenName = [[localizedNames objectForKey:[[localizedNames allKeys] objectAtIndex:0]] retain];
+
+		[deviceInfo release];
+		return [screenName autorelease];
+	}
+
 	std::vector<MonitorInfo> GetMonitorsInfo()
 	{
 		uint32_t displayCount;
@@ -149,6 +166,7 @@ namespace PDM
 		for (NSScreen* screen in [NSScreen screens])
 		{
 			uint32_t refreshRate = 0;
+			NSString* screenName = [screen respondsToSelector:NSSelectorFromString(@"localizedName")] ? [(id)screen localizedName] : @"";
 			
 			if (id d = screen.deviceDescription[@"NSScreenNumber"]; d)
 			{
@@ -157,6 +175,7 @@ namespace PDM
 				{
 					if (display == nr)
 					{
+						if ([screenName isEqual:@""]) screenName = screenNameForDisplay(display);						
 						refreshRate = static_cast<uint32_t>(CGDisplayModeGetRefreshRate(CGDisplayCopyDisplayMode(display)));
 						break;
 					}
@@ -165,7 +184,7 @@ namespace PDM
 			
 			monitors.push_back
 			({
-				[screen.localizedName UTF8String],
+				[screenName UTF8String],
 				static_cast<uint32_t>(screen.frame.size.width  * screen.backingScaleFactor),
 				static_cast<uint32_t>(screen.frame.size.height * screen.backingScaleFactor),
 				static_cast<uint32_t>(NSBitsPerSampleFromDepth(screen.depth)),
