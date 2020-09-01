@@ -89,17 +89,24 @@ add_executable(pdmCLI
 	src/main.cpp
 )
 
-set_property(TARGET pdmCLI PROPERTY CXX_STANDARD 17)
-set_property(TARGET pdmCLI PROPERTY CXX_STANDARD_REQUIRED ON)
-set_property(TARGET pdm    PROPERTY CXX_STANDARD 17)
-set_property(TARGET pdm    PROPERTY CXX_STANDARD_REQUIRED ON)
-set_property(TARGET pdm    PROPERTY CXX_VISIBILITY_PRESET hidden)
-set_property(TARGET pdm    PROPERTY VISIBILITY_INLINES_HIDDEN YES)
+set_property(TARGET pdm pdmCLI PROPERTY CXX_STANDARD 17)
+set_property(TARGET pdm pdmCLI PROPERTY CXX_STANDARD_REQUIRED ON)
+set_property(TARGET pdm        PROPERTY CXX_VISIBILITY_PRESET hidden)
+set_property(TARGET pdm        PROPERTY VISIBILITY_INLINES_HIDDEN YES)
 
 if (APPLE)
-  find_library(IOKit IOKit)
-  find_library(AppKit AppKit)
-  find_library(Metal Metal)
-  target_link_libraries(pdmCLI ${IOKit} ${AppKit} ${Metal})
-  target_link_libraries(pdm    ${IOKit} ${AppKit} ${Metal})
+	find_library(IOKit IOKit)
+	find_library(AppKit AppKit)
+	find_library(Metal Metal)
+	target_link_libraries(pdmCLI ${IOKit} ${AppKit} ${Metal})
+	target_link_libraries(pdm    ${IOKit} ${AppKit} ${Metal})
+
+	# We don't actually need to go this low (we only support last 3 versions), but nice to get explicit warnings
+	set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9")
+
+	# Silence no symbol warnings
+	SET(CMAKE_C_ARCHIVE_CREATE   "<CMAKE_AR> Scr <TARGET> <LINK_FLAGS> <OBJECTS>")
+	SET(CMAKE_CXX_ARCHIVE_CREATE "<CMAKE_AR> Scr <TARGET> <LINK_FLAGS> <OBJECTS>")
+	SET(CMAKE_C_ARCHIVE_FINISH   "<CMAKE_RANLIB> -no_warning_for_no_symbols -c <TARGET>")
+	SET(CMAKE_CXX_ARCHIVE_FINISH "<CMAKE_RANLIB> -no_warning_for_no_symbols -c <TARGET>")
 endif()
