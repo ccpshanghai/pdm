@@ -13,7 +13,7 @@ namespace PDM
 	{
 		VulkanProperties properties;
 
-        HMODULE vulkanDll = LoadLibraryA("vulkan-1.dll");
+		HMODULE vulkanDll = LoadLibraryA("vulkan-1.dll");
 		if (!vulkanDll) return properties;
 		SCOPE_EXIT(FreeLibrary(vulkanDll));
 

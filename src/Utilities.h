@@ -4,7 +4,6 @@
 
 namespace PDM
 {
-
-    std::string ws2s(const std::wstring& s);
+	std::string ws2s(const std::wstring& s);
 }
 #endif // UTILITIES_H
