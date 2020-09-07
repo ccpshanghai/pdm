@@ -6,7 +6,7 @@
 #include "../../include/pdm_data.h"
 #include "../defines.h"
 #include "../gatherer.h"
-#include "../Utilities.h"
+#include "../utilities.h"
 
 #include <algorithm>
 #include <sstream>
@@ -166,7 +166,7 @@ namespace PDM
 
 		DWORD type;
 		char guid[256];
-		DWORD size = DWORD(sizeof(guid));
+		DWORD size = sizeof(guid);
 		LSTATUS status = RegQueryValueExA(key, "MachineGuid", nullptr, &type, reinterpret_cast<LPBYTE>(guid), &size);
 		RegCloseKey(key);
 
@@ -181,10 +181,10 @@ namespace PDM
 		DWORD res = GetAdaptersInfo(0, &l);
 		if (res != ERROR_BUFFER_OVERFLOW) return {};
 		std::vector<char> buf(l);
-		res = GetAdaptersInfo((IP_ADAPTER_INFO*)&buf[0], &l);
+		res = GetAdaptersInfo( reinterpret_cast<IP_ADAPTER_INFO*>(&buf[0]), &l);
 		if (res != ERROR_SUCCESS) return {};
 
-		IP_ADAPTER_INFO* pi = (IP_ADAPTER_INFO*)&buf[0];
+		auto pi = reinterpret_cast<IP_ADAPTER_INFO*>(&buf[0]);
 		std::vector<NetworkAdapterInfo> adapters;
 		for (; pi; pi = pi->Next)
 		{

@@ -22,16 +22,16 @@ namespace PDM
 
 	const char* GetWineVersion()
 	{
-		typedef const char* (CDECL* wine_get_version_t)(void);
+		using wine_get_version_t = const char* (CDECL*)(void);
 
 		static bool hasCached = false;
-		static char const* wineVersion = "";
+		static const char* wineVersion = "";
 
 		if (!hasCached)
 		{
 			HMODULE hMod = GetModuleHandleA("ntdll");
 			if (!hMod) return "";
-			wine_get_version_t wine_get_version = reinterpret_cast<wine_get_version_t>(GetProcAddress(hMod, "wine_get_version"));
+			auto wine_get_version = reinterpret_cast<wine_get_version_t>(GetProcAddress(hMod, "wine_get_version"));
 
 			if (wine_get_version)
 				wineVersion = _strdup(wine_get_version());
@@ -44,21 +44,21 @@ namespace PDM
 
 	const char* GetWineHostOs()
 	{
-		typedef void (CDECL* wine_get_host_version_t)(const char** sysname, const char** release);
+		using wine_get_host_version_t = void (CDECL*)(const char** sysname, const char** release);
 
 		static bool hasCached = false;
-		static char const* hostOs = "";
+		static const char* hostOs = "";
 
 		if (!hasCached)
 		{
 			HMODULE hMod = GetModuleHandleA("ntdll");
 			if (!hMod) return "";
-			wine_get_host_version_t wine_get_host_version = reinterpret_cast<wine_get_host_version_t>(GetProcAddress(hMod, "wine_get_host_version"));
+			auto wine_get_host_version = reinterpret_cast<wine_get_host_version_t>(GetProcAddress(hMod, "wine_get_host_version"));
 
 			if (wine_get_host_version)
 			{
-				const char* sys_name = NULL;
-				const char* release_name = NULL;
+				const char* sys_name = nullptr;
+				const char* release_name = nullptr;
 				wine_get_host_version(&sys_name, &release_name);
 
 				std::string hostOsA = sys_name;

@@ -10,7 +10,7 @@ void Output(const SubItem& item, std::ostream& stream, int indentation = 0);
 
 void Output(const std::vector<DataField>& items, std::ostream& stream, int indentation)
 {
-	if (!items.size()) return;
+	if (items.empty()) return;
 
 	auto maxlen = std::max_element(cbegin(items), cend(items), [](const DataField& item1, const DataField& item2)
 	{
@@ -39,7 +39,7 @@ void Output(const std::vector<SubItem>& items, std::ostream& stream, int indenta
 
 void Output(const SubItem& item, std::ostream& stream, int indentation)
 {
-	if (!item.items.size() && !item.subitems.size()) return;
+	if (item.items.empty() && item.subitems.empty()) return;
 
 	for (auto i = indentation; i--;) stream << '\t';
 	stream << "{" << item.name << "}\n";

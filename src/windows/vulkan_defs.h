@@ -134,7 +134,7 @@ namespace PDM
 		VkDeviceSize          nonCoherentAtomSize;
 	} VkPhysicalDeviceLimits;
 
-	typedef enum VkResult
+	using VkResult = enum
 	{
 		VK_SUCCESS = 0,
 		VK_NOT_READY = 1,
@@ -175,9 +175,9 @@ namespace PDM
 		VK_ERROR_INVALID_DEVICE_ADDRESS_EXT = VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS,
 		VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS_KHR = VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS,
 		VK_RESULT_MAX_ENUM = 0x7FFFFFFF
-	} VkResult;
+	};
 
-	typedef enum VkPhysicalDeviceType
+	using VkPhysicalDeviceType = enum
 	{
 		VK_PHYSICAL_DEVICE_TYPE_OTHER = 0,
 		VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU = 1,
@@ -185,18 +185,18 @@ namespace PDM
 		VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU = 3,
 		VK_PHYSICAL_DEVICE_TYPE_CPU = 4,
 		VK_PHYSICAL_DEVICE_TYPE_MAX_ENUM = 0x7FFFFFFF
-	} VkPhysicalDeviceType;
+	};
 
-	typedef struct VkPhysicalDeviceSparseProperties
+	using VkPhysicalDeviceSparseProperties = struct
 	{
 		VkBool32    residencyStandard2DBlockShape;
 		VkBool32    residencyStandard2DMultisampleBlockShape;
 		VkBool32    residencyStandard3DBlockShape;
 		VkBool32    residencyAlignedMipSize;
 		VkBool32    residencyNonResidentStrict;
-	} VkPhysicalDeviceSparseProperties;
+	};
 
-	typedef struct VkPhysicalDeviceProperties
+	using VkPhysicalDeviceProperties = struct
 	{
 		uint32_t                            apiVersion;
 		uint32_t                            driverVersion;
@@ -207,9 +207,9 @@ namespace PDM
 		uint8_t                             pipelineCacheUUID[VK_UUID_SIZE];
 		VkPhysicalDeviceLimits              limits;
 		VkPhysicalDeviceSparseProperties    sparseProperties;
-	} VkPhysicalDeviceProperties;
+	};
 
-	typedef enum VkStructureType
+	using VkStructureType = enum
 	{
 		VK_STRUCTURE_TYPE_APPLICATION_INFO = 0,
 		VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO = 1,
@@ -725,9 +725,9 @@ namespace PDM
 		VK_STRUCTURE_TYPE_DEVICE_MEMORY_OPAQUE_CAPTURE_ADDRESS_INFO_KHR = VK_STRUCTURE_TYPE_DEVICE_MEMORY_OPAQUE_CAPTURE_ADDRESS_INFO,
 		VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_HOST_QUERY_RESET_FEATURES_EXT = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_HOST_QUERY_RESET_FEATURES,
 		VK_STRUCTURE_TYPE_MAX_ENUM = 0x7FFFFFFF
-	} VkStructureType;
+	};
 
-	typedef struct VkApplicationInfo
+	using VkApplicationInfo = struct
 	{
 		VkStructureType    sType;
 		const void*        pNext;
@@ -736,9 +736,9 @@ namespace PDM
 		const char*        pEngineName;
 		uint32_t           engineVersion;
 		uint32_t           apiVersion;
-	} VkApplicationInfo;
+	};
 
-	typedef struct VkInstanceCreateInfo
+	using VkInstanceCreateInfo = struct
 	{
 		VkStructureType             sType;
 		const void*                 pNext;
@@ -748,10 +748,10 @@ namespace PDM
 		const char* const*          ppEnabledLayerNames;
 		uint32_t                    enabledExtensionCount;
 		const char* const*          ppEnabledExtensionNames;
-	} VkInstanceCreateInfo;
+	};
 
-	typedef VkResult(STDAPICALLTYPE* PFN_vkCreateInstance)(const VkInstanceCreateInfo* pCreateInfo, const void* pAllocator, VkInstance* pInstance);
-	typedef VkResult(STDAPICALLTYPE* PFN_vkEnumeratePhysicalDevices)(VkInstance instance, uint32_t* pPhysicalDeviceCount, VkPhysicalDevice* pPhysicalDevices);
-	typedef void(STDAPICALLTYPE* PFN_vkGetPhysicalDeviceProperties)(VkPhysicalDevice physicalDevice, VkPhysicalDeviceProperties* pProperties);
-	typedef void(STDAPICALLTYPE* PFN_vkDestroyInstance)(VkInstance instance, const void* pAllocator);
+	using PFN_vkCreateInstance = VkResult(STDAPICALLTYPE*)(const VkInstanceCreateInfo* pCreateInfo, const void* pAllocator, VkInstance* pInstance);
+	using PFN_vkEnumeratePhysicalDevices = VkResult(STDAPICALLTYPE*)(VkInstance instance, uint32_t* pPhysicalDeviceCount, VkPhysicalDevice* pPhysicalDevices);
+	using PFN_vkGetPhysicalDeviceProperties = void(STDAPICALLTYPE*)(VkPhysicalDevice physicalDevice, VkPhysicalDeviceProperties* pProperties);
+	using PFN_vkDestroyInstance = void(STDAPICALLTYPE*)(VkInstance instance, const void* pAllocator);
 }

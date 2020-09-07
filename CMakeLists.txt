@@ -1,14 +1,15 @@
 cmake_minimum_required(VERSION 3.7)
 
-project(pdm VERSION 1.0.6)
-list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake)
+file (STRINGS "BuildNumber.txt" BUILD_NUMBER)
+string(REPLACE "\"" "" BUILD_NUMBER ${BUILD_NUMBER})
+project(pdm VERSION ${BUILD_NUMBER})
 
-# Pass version info to code
-configure_file(include/version.h.in ${CMAKE_CURRENT_SOURCE_DIR}/include/version.h)
+list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake)
 
 set(SRC_FILES 
 	src/pdm.cpp
 	src/gatherer.cpp
+	src/utilities.cpp
 	src/wine/wine.cpp
 	src/windows/windows_data.cpp
 	src/windows/d3d11_info.cpp
@@ -17,7 +18,8 @@ set(SRC_FILES
 )
 
 # For IDE support
-set(HDR_FILES 
+set(HDR_FILES
+  include/version.h
   include/pdm.h
   include/pdm_data.h
   src/defines.h

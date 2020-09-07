@@ -5,7 +5,7 @@
 
 #include <string>
 #include <thread>
-#include <time.h>
+#include <ctime>
 
 namespace PDM
 {

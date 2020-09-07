@@ -314,14 +314,4 @@ namespace PDM
 	}
 }
 
-#else
-
-namespace PDM
-{
-	bool GetMetalSupported()
-	{
-		return false;
-	}
-}
-
 #endif

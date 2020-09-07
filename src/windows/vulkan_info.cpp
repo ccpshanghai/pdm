@@ -17,10 +17,10 @@ namespace PDM
 		if (!vulkanDll) return properties;
 		SCOPE_EXIT(FreeLibrary(vulkanDll));
 
-		PFN_vkCreateInstance vkCreateInstance = reinterpret_cast<PFN_vkCreateInstance>(GetProcAddress(vulkanDll, "vkCreateInstance"));
-		PFN_vkGetPhysicalDeviceProperties vkGetPhysicalDeviceProperties = reinterpret_cast<PFN_vkGetPhysicalDeviceProperties>(GetProcAddress(vulkanDll, "vkGetPhysicalDeviceProperties"));
-		PFN_vkEnumeratePhysicalDevices vkEnumeratePhysicalDevices = reinterpret_cast<PFN_vkEnumeratePhysicalDevices>(GetProcAddress(vulkanDll, "vkEnumeratePhysicalDevices"));
-		PFN_vkDestroyInstance vkDestroyInstance = reinterpret_cast<PFN_vkDestroyInstance>(GetProcAddress(vulkanDll, "vkDestroyInstance"));
+		auto vkCreateInstance = reinterpret_cast<PFN_vkCreateInstance>(GetProcAddress(vulkanDll, "vkCreateInstance"));
+		auto vkGetPhysicalDeviceProperties = reinterpret_cast<PFN_vkGetPhysicalDeviceProperties>(GetProcAddress(vulkanDll, "vkGetPhysicalDeviceProperties"));
+		auto vkEnumeratePhysicalDevices = reinterpret_cast<PFN_vkEnumeratePhysicalDevices>(GetProcAddress(vulkanDll, "vkEnumeratePhysicalDevices"));
+		auto vkDestroyInstance = reinterpret_cast<PFN_vkDestroyInstance>(GetProcAddress(vulkanDll, "vkDestroyInstance"));
 
 		if (!vkCreateInstance || !vkGetPhysicalDeviceProperties || !vkEnumeratePhysicalDevices || !vkDestroyInstance) return properties;
 

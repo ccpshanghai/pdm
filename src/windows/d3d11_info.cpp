@@ -31,10 +31,10 @@ namespace PDM
 
 	bool GetDeviceRegistryKey(uint32_t deviceId, std::string& keyPath)
 	{
-        DISPLAY_DEVICEA dd;
-        dd.cb = sizeof(DISPLAY_DEVICEA);
+		DISPLAY_DEVICEA dd;
+		dd.cb = sizeof(DISPLAY_DEVICEA);
 
-        for (int i = 0; EnumDisplayDevicesA(nullptr, i, &dd, 0); ++i)
+		for (int i = 0; EnumDisplayDevicesA(nullptr, i, &dd, 0); ++i)
 		{
 			uint32_t device;
 			if (GetHexIdFromDeviceId(dd.DeviceID, device) && device == deviceId)
@@ -51,8 +51,8 @@ namespace PDM
 		char buffer[256];
 		DWORD dwcb_data = sizeof(buffer);
 
-        if (LONG result = RegQueryValueExA(key, name, nullptr, nullptr, reinterpret_cast<LPBYTE>(buffer), &dwcb_data); result == ERROR_SUCCESS)
-        {
+		if (LONG result = RegQueryValueExA(key, name, nullptr, nullptr, reinterpret_cast<LPBYTE>(buffer), &dwcb_data); result == ERROR_SUCCESS)
+		{
 			value = buffer;
 			return true;
 		}
@@ -66,7 +66,7 @@ namespace PDM
 		if (!GetDeviceRegistryKey(adapter.deviceID, keyPath)) return;
 
 		HKEY key;
-        if (LONG result = RegOpenKeyExA(HKEY_LOCAL_MACHINE, keyPath.c_str(), 0, KEY_QUERY_VALUE, &key); result != ERROR_SUCCESS) return;
+		if (LONG result = RegOpenKeyExA(HKEY_LOCAL_MACHINE, keyPath.c_str(), 0, KEY_QUERY_VALUE, &key); result != ERROR_SUCCESS) return;
 
 		GetRegistryValue(key, "DriverVersion", adapter.driverVersionString);
 		GetRegistryValue(key, "DriverDate",    adapter.driverDate);
@@ -114,8 +114,8 @@ namespace PDM
 
 	uint32_t GetMonitorBPC(CComPtr<IDXGIOutput>& pOutput)
 	{
-        if (CComQIPtr<IDXGIOutput6> pOutput6(pOutput); pOutput6)
-        {
+		if (CComQIPtr<IDXGIOutput6> pOutput6(pOutput); pOutput6)
+		{
 			pOutput = nullptr; // Need to do this explicitly
 			DXGI_OUTPUT_DESC1 outpDesc1;
 			pOutput6->GetDesc1(&outpDesc1);
@@ -151,15 +151,16 @@ namespace PDM
 	{
 		if (!scalingModuleHandle) return 0;
 
-		typedef enum MONITOR_DPI_TYPE {
+		using MONITOR_DPI_TYPE = enum
+		{
 			MDT_EFFECTIVE_DPI,
 			MDT_ANGULAR_DPI,
 			MDT_RAW_DPI,
 			MDT_DEFAULT
-		} MONITOR_DPI_TYPE;
-		typedef HRESULT(STDAPICALLTYPE* LPGetDpiForMonitor)(HMONITOR hmonitor, MONITOR_DPI_TYPE dpiType, UINT* dpiX, UINT* dpiY);
+		};
+		using LPGetDpiForMonitor = HRESULT(STDAPICALLTYPE*)(HMONITOR hmonitor, MONITOR_DPI_TYPE dpiType, UINT* dpiX, UINT* dpiY);
 
-		LPGetDpiForMonitor GetDpiForMonitor = reinterpret_cast<LPGetDpiForMonitor>(GetProcAddress(scalingModuleHandle, "GetDpiForMonitor"));
+		auto GetDpiForMonitor = reinterpret_cast<LPGetDpiForMonitor>(GetProcAddress(scalingModuleHandle, "GetDpiForMonitor"));
 		if (!GetDpiForMonitor) return 0;
 
 		UINT x, y;
@@ -172,14 +173,15 @@ namespace PDM
 	{
 		if (scalingModuleHandle)
 		{
-			typedef enum PROCESS_DPI_AWARENESS {
+			using PROCESS_DPI_AWARENESS = enum
+			{
 				PROCESS_DPI_UNAWARE = 0,
 				PROCESS_SYSTEM_DPI_AWARE = 1,
 				PROCESS_PER_MONITOR_DPI_AWARE = 2
-			} PROCESS_DPI_AWARENESS;
-			typedef HRESULT(STDAPICALLTYPE* LPSetProcessDpiAwareness)(_In_ PROCESS_DPI_AWARENESS value);
+			};
+			using LPSetProcessDpiAwareness = HRESULT(STDAPICALLTYPE*)(_In_ PROCESS_DPI_AWARENESS value);
 
-			LPSetProcessDpiAwareness SetProcessDpiAwareness = reinterpret_cast<LPSetProcessDpiAwareness>(GetProcAddress(scalingModuleHandle, "SetProcessDpiAwareness"));
+			auto SetProcessDpiAwareness = reinterpret_cast<LPSetProcessDpiAwareness>(GetProcAddress(scalingModuleHandle, "SetProcessDpiAwareness"));
 			if (SetProcessDpiAwareness) SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
 		}
 		
@@ -213,7 +215,7 @@ namespace PDM
 			while ((hr = d3dCreateDevice(
 				adapter,
 				D3D_DRIVER_TYPE_UNKNOWN,
-				0, 0,
+				nullptr, 0,
 				&FeatureLevels[index++],
 				1,
 				D3D11_SDK_VERSION,
@@ -252,19 +254,19 @@ namespace PDM
 			FreeLibrary(dxgiModuleHandle);
 		);
 
-        HMODULE scalingModuleHandle = LoadLibraryA("api-ms-win-shcore-scaling-l1-1-1.dll");
+		HMODULE scalingModuleHandle = LoadLibraryA("api-ms-win-shcore-scaling-l1-1-1.dll");
 		SCOPE_EXIT(FreeLibrary(scalingModuleHandle); );
 		SetDPIScalingAware(scalingModuleHandle);
 
-        dxgiModuleHandle = LoadLibraryA("dxgi.dll");
+		dxgiModuleHandle = LoadLibraryA("dxgi.dll");
 		if (!dxgiModuleHandle) return info;
-        dx11ModuleHandle = LoadLibraryA("d3d11.dll");
-        if (!dx11ModuleHandle) return info;
+		dx11ModuleHandle = LoadLibraryA("d3d11.dll");
+		if (!dx11ModuleHandle) return info;
 
-		typedef HRESULT(WINAPI* LPCreateDXGIFactory)(REFIID riid, IDXGIFactory** ppFactory);
-		LPCreateDXGIFactory createDxgiFactory = reinterpret_cast<LPCreateDXGIFactory>(GetProcAddress(dxgiModuleHandle, "CreateDXGIFactory"));
+		using LPCreateDXGIFactory = HRESULT(WINAPI*)(REFIID riid, IDXGIFactory** ppFactory);
+		auto createDxgiFactory = reinterpret_cast<LPCreateDXGIFactory>(GetProcAddress(dxgiModuleHandle, "CreateDXGIFactory"));
 		if (!createDxgiFactory) return info;
-		PFN_D3D11_CREATE_DEVICE createDevice = reinterpret_cast<PFN_D3D11_CREATE_DEVICE>(GetProcAddress(dx11ModuleHandle, "D3D11CreateDevice"));
+		auto createDevice = reinterpret_cast<PFN_D3D11_CREATE_DEVICE>(GetProcAddress(dx11ModuleHandle, "D3D11CreateDevice"));
 		if (!createDevice) return info;
 		if (FAILED(createDxgiFactory(__uuidof(IDXGIFactory), &dxgiFactory.p))) return info;
 		
