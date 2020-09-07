@@ -12,7 +12,7 @@ namespace PDM
 
 		if (!hasCached)
 		{
-			HMODULE hMod = GetModuleHandle("ntdll");
+			HMODULE hMod = GetModuleHandleA("ntdll");
 			if (!hMod) return false;
 			wine = GetProcAddress(hMod, "wine_get_version") != nullptr;
 			hasCached = true;
@@ -25,11 +25,11 @@ namespace PDM
 		typedef const char* (CDECL* wine_get_version_t)(void);
 
 		static bool hasCached = false;
-		static char* wineVersion = "";
+		static char const* wineVersion = "";
 
 		if (!hasCached)
 		{
-			HMODULE hMod = GetModuleHandle("ntdll");
+			HMODULE hMod = GetModuleHandleA("ntdll");
 			if (!hMod) return "";
 			wine_get_version_t wine_get_version = reinterpret_cast<wine_get_version_t>(GetProcAddress(hMod, "wine_get_version"));
 
@@ -47,11 +47,11 @@ namespace PDM
 		typedef void (CDECL* wine_get_host_version_t)(const char** sysname, const char** release);
 
 		static bool hasCached = false;
-		static char* hostOs = "";
+		static char const* hostOs = "";
 
 		if (!hasCached)
 		{
-			HMODULE hMod = GetModuleHandle("ntdll");
+			HMODULE hMod = GetModuleHandleA("ntdll");
 			if (!hMod) return "";
 			wine_get_host_version_t wine_get_host_version = reinterpret_cast<wine_get_host_version_t>(GetProcAddress(hMod, "wine_get_host_version"));
 

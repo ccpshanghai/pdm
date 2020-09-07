@@ -6,6 +6,7 @@
 #include "../../include/pdm_data.h"
 #include "../defines.h"
 #include "../gatherer.h"
+#include "../Utilities.h"
 
 #include <algorithm>
 #include <sstream>
@@ -40,7 +41,13 @@ namespace PDM
 			str.ReleaseBuffer();
 
 			if (success)
+			{
+#ifdef _UNICODE
+				out = ws2s(str.GetString());
+#else
 				out = str.GetString();
+#endif
+			}
 			else if (key.QueryDWORDValue(keyValName, value) == ERROR_SUCCESS)
 				out = std::to_string(value);
 
@@ -122,16 +129,16 @@ namespace PDM
 	std::string GetMachineName()
 	{
 		constexpr auto INFO_BUFFER_SIZE = 1024;
-		TCHAR  infoBuf[INFO_BUFFER_SIZE];
+		char  infoBuf[INFO_BUFFER_SIZE];
 		DWORD  bufCharCount = INFO_BUFFER_SIZE;
-		return GetComputerName(infoBuf, &bufCharCount) ? infoBuf : "";
+		return GetComputerNameA(infoBuf, &bufCharCount) ? infoBuf : "";
 	}
 
 	std::string GetUsername()
 	{
 		char username[UNLEN + 1];
 		DWORD username_len = UNLEN + 1;
-		return GetUserName(username, &username_len) ? username : "";
+		return GetUserNameA(username, &username_len) ? username : "";
 	}
 
 	unsigned GetMonitorCount()
@@ -155,12 +162,12 @@ namespace PDM
 #endif
 
 		HKEY key;
-		if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Cryptography", 0, access, &key) != ERROR_SUCCESS) return "";
+		if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Cryptography", 0, access, &key) != ERROR_SUCCESS) return "";
 
 		DWORD type;
 		char guid[256];
 		DWORD size = DWORD(sizeof(guid));
-		LSTATUS status = RegQueryValueEx(key, "MachineGuid", nullptr, &type, reinterpret_cast<LPBYTE>(guid), &size);
+		LSTATUS status = RegQueryValueExA(key, "MachineGuid", nullptr, &type, reinterpret_cast<LPBYTE>(guid), &size);
 		RegCloseKey(key);
 
 		return status == ERROR_SUCCESS && type == REG_SZ ? toupper(std::string(guid)) : "";
@@ -189,11 +196,11 @@ namespace PDM
 				if (val <= 0xf) stream << "0";
 				stream << std::hex << val;
 			}
-			
+
 			std::string uuid = pi->AdapterName;
 			if (uuid.rfind("{") == 0 && uuid[uuid.size() - 1] == '}')
 				uuid = uuid.substr(1, uuid.size() - 2);
-			
+
 			adapters.push_back
 			({
 				pi->Description,

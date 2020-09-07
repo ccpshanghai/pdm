@@ -2,6 +2,7 @@
 
 #include "d3d11_info.h"
 #include "../defines.h"
+#include "../utilities.h"
 
 #include <functional>
 #include <comdef.h>
@@ -9,15 +10,6 @@
 
 namespace PDM
 {
-	std::string ws2s(const std::wstring& s)
-	{
-		auto slength = static_cast<int>(s.length());
-		auto len = WideCharToMultiByte(CP_ACP, 0, s.c_str(), slength, 0, 0, 0, 0);
-		std::string r(len, '\0');
-		WideCharToMultiByte(CP_ACP, 0, s.c_str(), slength, &r[0], len, 0, 0);
-		return r;
-	}
-
 	bool GetHexIdFromDeviceId(const char* deviceId, uint32_t& deviceIdHex)
 	{
 		constexpr auto deviceIdPrefix = "DEV_";
@@ -39,10 +31,10 @@ namespace PDM
 
 	bool GetDeviceRegistryKey(uint32_t deviceId, std::string& keyPath)
 	{
-		DISPLAY_DEVICE dd;
-		dd.cb = sizeof(DISPLAY_DEVICE);
+        DISPLAY_DEVICEA dd;
+        dd.cb = sizeof(DISPLAY_DEVICEA);
 
-		for (int i = 0; EnumDisplayDevices(nullptr, i, &dd, 0); ++i)
+        for (int i = 0; EnumDisplayDevicesA(nullptr, i, &dd, 0); ++i)
 		{
 			uint32_t device;
 			if (GetHexIdFromDeviceId(dd.DeviceID, device) && device == deviceId)
@@ -59,8 +51,8 @@ namespace PDM
 		char buffer[256];
 		DWORD dwcb_data = sizeof(buffer);
 
-		if (LONG result = RegQueryValueEx(key, name, nullptr, nullptr, reinterpret_cast<LPBYTE>(buffer), &dwcb_data); result == ERROR_SUCCESS)
-		{
+        if (LONG result = RegQueryValueExA(key, name, nullptr, nullptr, reinterpret_cast<LPBYTE>(buffer), &dwcb_data); result == ERROR_SUCCESS)
+        {
 			value = buffer;
 			return true;
 		}
@@ -74,7 +66,7 @@ namespace PDM
 		if (!GetDeviceRegistryKey(adapter.deviceID, keyPath)) return;
 
 		HKEY key;
-		if (LONG result = RegOpenKeyEx(HKEY_LOCAL_MACHINE, keyPath.c_str(), 0, KEY_QUERY_VALUE, &key); result != ERROR_SUCCESS) return;
+        if (LONG result = RegOpenKeyExA(HKEY_LOCAL_MACHINE, keyPath.c_str(), 0, KEY_QUERY_VALUE, &key); result != ERROR_SUCCESS) return;
 
 		GetRegistryValue(key, "DriverVersion", adapter.driverVersionString);
 		GetRegistryValue(key, "DriverDate",    adapter.driverDate);
@@ -122,8 +114,8 @@ namespace PDM
 
 	uint32_t GetMonitorBPC(CComPtr<IDXGIOutput>& pOutput)
 	{
-		if (CComQIPtr<IDXGIOutput6> pOutput6(pOutput); pOutput6)
-		{
+        if (CComQIPtr<IDXGIOutput6> pOutput6(pOutput); pOutput6)
+        {
 			pOutput = nullptr; // Need to do this explicitly
 			DXGI_OUTPUT_DESC1 outpDesc1;
 			pOutput6->GetDesc1(&outpDesc1);
@@ -260,14 +252,14 @@ namespace PDM
 			FreeLibrary(dxgiModuleHandle);
 		);
 
-		HMODULE scalingModuleHandle = LoadLibrary("api-ms-win-shcore-scaling-l1-1-1.dll");
+        HMODULE scalingModuleHandle = LoadLibraryA("api-ms-win-shcore-scaling-l1-1-1.dll");
 		SCOPE_EXIT(FreeLibrary(scalingModuleHandle); );
 		SetDPIScalingAware(scalingModuleHandle);
 
-		dxgiModuleHandle = LoadLibrary("dxgi.dll");
+        dxgiModuleHandle = LoadLibraryA("dxgi.dll");
 		if (!dxgiModuleHandle) return info;
-		dx11ModuleHandle = LoadLibrary("d3d11.dll");
-		if (!dx11ModuleHandle) return info;
+        dx11ModuleHandle = LoadLibraryA("d3d11.dll");
+        if (!dx11ModuleHandle) return info;
 
 		typedef HRESULT(WINAPI* LPCreateDXGIFactory)(REFIID riid, IDXGIFactory** ppFactory);
 		LPCreateDXGIFactory createDxgiFactory = reinterpret_cast<LPCreateDXGIFactory>(GetProcAddress(dxgiModuleHandle, "CreateDXGIFactory"));
