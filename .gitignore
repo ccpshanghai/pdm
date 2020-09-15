@@ -3,4 +3,3 @@
 out/
 build/
 CMakeSettings.json
-include/version.h
