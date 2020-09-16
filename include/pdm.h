@@ -12,6 +12,7 @@ namespace PDM
 {
 	DllExport const PDMData& RetrievePDMData(std::string applicationName, std::string applicationVersion);
 
+	std::string GetPDMVersion();
 	OS GetOSType();
 	std::string GetOSName();
 	std::string GetOSMajorVersion();
@@ -36,4 +37,12 @@ namespace PDM
 	bool IsWine();
 	const char* GetWineVersion();
 	const char* GetWineHostOs();
+	constexpr Bitness GetProcessBitness();
+	Bitness GetOSBitness();
+	CPUInfo GetCPUInfo();
+	bool HasVMExecutionTiming();
+	bool HasHypervisorBit();
+	std::string GetHypervisorName();
+	bool IsHyperVGuestOS();
+	bool IsSuspectedVM();
 }

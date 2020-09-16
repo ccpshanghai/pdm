@@ -9,19 +9,10 @@
 
 namespace PDM
 {
-	struct CPUInfo
-	{
-		int model{ 0 };
-		int stepping{ 0 };
-		std::string vendor;
-		std::string brand;
-		Bitness bitness;
-	};
-
 	Bitness GetOSBitnessInternal();
 
 
-	constexpr const char* GetVersion()
+	std::string GetPDMVersion()
 	{
 		return PROJECT_VER;
 	}
@@ -69,7 +60,9 @@ namespace PDM
 			stepping = id1.EAX() & 0xf;
 		}
 
-		return { model, stepping, vendor, brand, bitness };
+		unsigned logicalCoreCount = std::thread::hardware_concurrency();
+
+		return { model, stepping, vendor, brand, bitness, logicalCoreCount };
 	}
 
 	size_t GetTimingCycles()
@@ -278,16 +271,23 @@ namespace PDM
 			gpus.push_back
 			({
 				"GPU",
-				{},
+				{
+					{
+						"DRIVER",
+						{},
+						{
+							{"DATE",    gpu.driverDate},
+							{"VENDOR",  gpu.driverVendor},
+							{"VERSION", gpu.driverVersionString},
+						}
+					}
+				},
 				{
 					{"DESCRIPTION",    gpu.description},
 					{"VENDOR_ID",      std::to_string(gpu.vendorID)},
 					{"DEVICE_ID",      std::to_string(gpu.deviceID)},
 					{"REVISION",       std::to_string(gpu.revision)},
 					{"VIDEO_MEMORY",   std::to_string(gpu.memory)},
-					{"DRIVER_DATE",    gpu.driverDate},
-					{"DRIVER_VENDOR",  gpu.driverVendor},
-					{"DRIVER_VERSION", gpu.driverVersionString},
 				}
 			});
 		}
@@ -315,112 +315,108 @@ namespace PDM
 				"DATA",
 				{
 					{
-						"GENERAL",
 						{
+							"APPLICATION",
+							{},
 							{
-								"APPLICATION",
-								{},
-								{
-									{"NAME",    applicationName},
-									{"VERSION", applicationVersion},
-								}
-							},
-							{
-								"PROCESS",
-								{},
-								{
-									{"VERSION",   GetVersion()},
-									{"TIMESTAMP", TimestampToString(timestamp)},
-									{"BITNESS",   BitnessToString(GetProcessBitness())},
-								}
-							},
-							{
-								"OS",
-								{
-									{
-										"GRAPHICS_APIS",
-										{},
-										{
-											{"METAL_SUPPORTED",        GetMetalSupported() ? "YES" : "NO"},
-											{"VULKAN_SUPPORTED",       VulkanSupportToString(vulkanProperties.support)},
-											{"VULKAN_HIGHEST_SUPPORT", vulkanProperties.version},
-											{"D3D_HIGHEST_SUPPORT",    GetD3DHighestSupport()},
-										},
-									},
-									{
-										"WINE",
-										{},
-										{
-											{"VERSION", GetWineVersion()},
-											{"HOST_OS", GetWineHostOs()},
-										},
-									},
-								},
-								{
-									{"TYPE",              OSToString(GetOSType())},
-									{"NAME",              GetOSName()},
-									{"BITNESS",           BitnessToString(GetOSBitness())},
-									{"MAJOR_VERSION",     GetOSMajorVersion()},
-									{"MINOR_VERSION",     GetOSMinorVersion()},
-									{"BUILD_NUMBER",      GetOSBuildNumber()},
-									{"KERNEL_VERSION",    GetOSKernelVersion()},
-									{"USERNAME",          GetUsername()},
-									{"USER_LOCALE",       GetUserLocale()},
-									{"IS_REMOTE_SESSION", IsRemoteSession() ? "YES" : "NO"},
-								}
-							},
-							{
-								"MACHINE",
-								{
-									{
-										"CPU",
-										{},
-										{
-											{"BITNESS",            BitnessToString(GetCPUBitness(cpuinfo))},
-											{"LOGICAL_CORE_COUNT", std::to_string(std::thread::hardware_concurrency())},
-											{"BRAND",              cpuinfo.brand},
-											{"VENDOR",             cpuinfo.vendor},
-											{"MODEL",              std::to_string(cpuinfo.model)},
-											{"STEPPING",           std::to_string(cpuinfo.stepping)},
-										}
-									},
-									{
-										"VM",
-										{},
-										{
-											{"IS_SUSPECTED_VM",         IsSuspectedVM() ? "YES" : "NO"},
-											{"HAS_HYPERVISOR_BIT",      HasHypervisorBit() ? "YES" : "NO"},
-											{"HYPERVISOR_NAME",         GetHypervisorName()},
-											{"IS_HYPERV_GUEST_OS",      IsHyperVGuestOS() ? "YES" : "NO"},
-											{"HAS_VM_EXECUTION_TIMING", HasVMExecutionTiming() ? "YES" : "NO"},
-										}
-									},
-									{
-										"MONITORS",
-										monitors,
-										{},
-									},
-									{
-										"GPUS",
-										gpus,
-										{},
-									},
-									{
-										"NETWORK_ADAPTERS",
-										networkAdapters,
-										{},
-									},
-								},
-								{
-									{"MODEL",         GetHardwareModel()},
-									{"NAME",          GetMachineName()},
-									{"UUID",          GetMachineUuid()},
-									{"TOTAL_MEMORY",  std::to_string(GetTotalMemory())},
-									{"MONITOR_COUNT", std::to_string(GetMonitorCount())},
-								}
-							},
+								{"NAME",    applicationName},
+								{"VERSION", applicationVersion},
+							}
 						},
-						{}
+						{
+							"PROCESS",
+							{},
+							{
+								{"VERSION",   GetPDMVersion()},
+								{"TIMESTAMP", TimestampToString(timestamp)},
+								{"BITNESS",   BitnessToString(GetProcessBitness())},
+							}
+						},
+						{
+							"OS",
+							{
+								{
+									"GRAPHICS_APIS",
+									{},
+									{
+										{"METAL_SUPPORTED",        GetMetalSupported() ? "YES" : "NO"},
+										{"VULKAN_SUPPORTED",       VulkanSupportToString(vulkanProperties.support)},
+										{"VULKAN_HIGHEST_SUPPORT", vulkanProperties.version},
+										{"D3D_HIGHEST_SUPPORT",    GetD3DHighestSupport()},
+									},
+								},
+								{
+									"WINE",
+									{},
+									{
+										{"VERSION", GetWineVersion()},
+										{"HOST_OS", GetWineHostOs()},
+									},
+								},
+							},
+							{
+								{"TYPE",              OSToString(GetOSType())},
+								{"NAME",              GetOSName()},
+								{"BITNESS",           BitnessToString(GetOSBitness())},
+								{"MAJOR_VERSION",     GetOSMajorVersion()},
+								{"MINOR_VERSION",     GetOSMinorVersion()},
+								{"BUILD_NUMBER",      GetOSBuildNumber()},
+								{"KERNEL_VERSION",    GetOSKernelVersion()},
+								{"USERNAME",          GetUsername()},
+								{"USER_LOCALE",       GetUserLocale()},
+								{"IS_REMOTE_SESSION", IsRemoteSession() ? "YES" : "NO"},
+							}
+						},
+						{
+							"MACHINE",
+							{
+								{
+									"CPU",
+									{},
+									{
+										{"BITNESS",            BitnessToString(GetCPUBitness(cpuinfo))},
+										{"LOGICAL_CORE_COUNT", std::to_string(cpuinfo.logicalCoreCount)},
+										{"BRAND",              cpuinfo.brand},
+										{"VENDOR",             cpuinfo.vendor},
+										{"MODEL",              std::to_string(cpuinfo.model)},
+										{"STEPPING",           std::to_string(cpuinfo.stepping)},
+									}
+								},
+								{
+									"VM",
+									{},
+									{
+										{"IS_SUSPECTED_VM",         IsSuspectedVM() ? "YES" : "NO"},
+										{"HAS_HYPERVISOR_BIT",      HasHypervisorBit() ? "YES" : "NO"},
+										{"HYPERVISOR_NAME",         GetHypervisorName()},
+										{"IS_HYPERV_GUEST_OS",      IsHyperVGuestOS() ? "YES" : "NO"},
+										{"HAS_VM_EXECUTION_TIMING", HasVMExecutionTiming() ? "YES" : "NO"},
+									}
+								},
+								{
+									"MONITORS",
+									monitors,
+									{},
+								},
+								{
+									"GPUS",
+									gpus,
+									{},
+								},
+								{
+									"NETWORK_ADAPTERS",
+									networkAdapters,
+									{},
+								},
+							},
+							{
+								{"MODEL",         GetHardwareModel()},
+								{"NAME",          GetMachineName()},
+								{"UUID",          GetMachineUuid()},
+								{"TOTAL_MEMORY",  std::to_string(GetTotalMemory())},
+								{"MONITOR_COUNT", std::to_string(GetMonitorCount())},
+							}
+						},
 					},
 				},
 				{}

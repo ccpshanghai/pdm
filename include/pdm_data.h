@@ -21,6 +21,16 @@ namespace PDM
 		UNKNOWN
 	};
 
+	struct CPUInfo
+	{
+		int model{ 0 };
+		int stepping{ 0 };
+		std::string vendor;
+		std::string brand;
+		Bitness bitness;
+		unsigned logicalCoreCount{ 0 };
+	};
+
 	struct MonitorInfo
 	{
 		std::string name;
