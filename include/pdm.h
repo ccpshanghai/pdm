@@ -37,7 +37,7 @@ namespace PDM
 	bool IsWine();
 	const char* GetWineVersion();
 	const char* GetWineHostOs();
-	constexpr Bitness GetProcessBitness();
+	Bitness GetProcessBitness();
 	Bitness GetOSBitness();
 	CPUInfo GetCPUInfo();
 	bool HasVMExecutionTiming();

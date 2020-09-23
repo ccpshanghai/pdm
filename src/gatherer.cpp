@@ -147,7 +147,7 @@ namespace PDM
 		return false;
 	}
 
-	constexpr Bitness GetProcessBitness()
+	Bitness GetProcessBitness()
 	{
 		switch (sizeof(void*))
 		{
