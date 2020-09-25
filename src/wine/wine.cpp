@@ -1,3 +1,5 @@
+#include "../../include/pdm.h"
+
 #if _WIN32
 
 #include <atlbase.h>
