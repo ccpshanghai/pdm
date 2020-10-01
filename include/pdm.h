@@ -2,12 +2,6 @@
 
 #include "pdm_data.h"
 
-#if _WIN32
-#define DllExport __declspec( dllexport )
-#else
-#define DllExport __attribute__((visibility("default")))
-#endif
-
 namespace PDM
 {
 	DllExport const PDMData& RetrievePDMData(std::string applicationName, std::string applicationVersion);
