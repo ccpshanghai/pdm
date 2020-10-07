@@ -67,8 +67,8 @@ namespace PDM
 
 	size_t GetTimingCycles()
 	{
-		size_t time1 = 0;
-		size_t time2 = 0;
+		volatile size_t time1 = 0;
+		volatile size_t time2 = 0;
 
 #if _WIN64
 		time1 = __rdtsc();
@@ -99,9 +99,9 @@ namespace PDM
 		const unsigned THRESHOLD_CYCLES = 100;
 		const unsigned RUNS = 1024;
 
-		unsigned thresholdCrossings = 0;
+		volatile unsigned thresholdCrossings = 0;
 		
-		for (unsigned i = 0; i < RUNS; i++)
+		for (volatile unsigned i = 0; i < RUNS; i++)
 		{
 			if (GetTimingCycles() > THRESHOLD_CYCLES) thresholdCrossings++;
 		}
