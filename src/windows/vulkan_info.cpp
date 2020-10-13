@@ -9,7 +9,7 @@
 
 namespace PDM
 {
-	VulkanProperties GetVulkanProperties()
+	VulkanProperties GetVulkanProperties_internal()
 	{
 		VulkanProperties properties;
 
@@ -65,6 +65,30 @@ namespace PDM
 		properties.version = std::to_string(maxMajor) + "." + std::to_string(maxMinor) + "." + std::to_string(maxPatch);
 
 		return properties;
+	}
+
+	VulkanProperties _static_properties;
+
+	void SafeGetVulkanProperties_wrap()
+	{
+		// Roundabout nonsense because "Cannot use __try in functions that require object unwinding"
+		_static_properties = GetVulkanProperties_internal();
+	}
+
+	void SafeGetVulkanProperties()
+	{
+		// Catch 3rd party trash crashing on us
+		__try
+		{
+			SafeGetVulkanProperties_wrap();
+		}
+		__except(EXCEPTION_EXECUTE_HANDLER){}
+	}
+
+	VulkanProperties GetVulkanProperties()
+	{
+		SafeGetVulkanProperties();
+		return _static_properties;
 	}
 }
 
