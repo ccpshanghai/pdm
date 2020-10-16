@@ -46,7 +46,7 @@ namespace PDM
 		return false;
 	}
 
-	bool GetRegistryValue(HKEY key, const char* name, std::string& value)
+	bool GetRegistryValue(HKEY key, const char* name, UTF8String& value)
 	{
 		char buffer[256];
 		DWORD dwcb_data = sizeof(buffer);
@@ -75,7 +75,7 @@ namespace PDM
 		RegCloseKey(key);
 	}
 
-	std::string GetMonitorName(HMONITOR monitor)
+	UTF8String GetMonitorName(HMONITOR monitor)
 	{
 		MONITORINFOEXW info;
 		info.cbSize = sizeof(info);
@@ -105,7 +105,7 @@ namespace PDM
 				name.header.id = p.targetInfo.id;
 				DisplayConfigGetDeviceInfo(&name.header);
 
-				return ws2s(name.monitorFriendlyDeviceName);
+				return name.monitorFriendlyDeviceName;
 			}
 		}
 
@@ -299,7 +299,7 @@ namespace PDM
 				if (outpDesc.Rotation == DXGI_MODE_ROTATION_ROTATE90 || outpDesc.Rotation == DXGI_MODE_ROTATION_ROTATE270)
 					std::swap(width, height);
 
-				std::string name = GetMonitorName(outpDesc.Monitor);
+				UTF8String name = GetMonitorName(outpDesc.Monitor);
 				uint32_t maxRefreshRate = GetMonitorMaxRefreshRate(pOutput);
 				uint32_t bpc = GetMonitorBPC(pOutput); // Destroys handle
 				uint32_t scaling = GetMonitorDPIScalingPercent(outpDesc.Monitor, scalingModuleHandle);
@@ -324,7 +324,7 @@ namespace PDM
 			DXGI_ADAPTER_DESC desc{ 0 };
 			pAdapter->GetDesc(&desc);
 
-			std::string description(ws2s(desc.Description));
+			UTF8String description(desc.Description);
 			if (description == "Microsoft Basic Render Driver") continue;
 
 			GPUInfo adapter

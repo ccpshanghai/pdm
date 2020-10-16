@@ -24,6 +24,34 @@
 
 namespace PDM
 {
+	class UTF8String
+	{
+	public:
+		UTF8String();
+		UTF8String(const char* string);
+		UTF8String(const std::string& string);
+#if _WIN32
+		UTF8String(const wchar_t* string);
+		UTF8String(const std::wstring& string);
+		operator std::wstring();
+
+		std::wstring GetNativeString() const;
+#else
+		std::string GetNativeString() const;
+#endif
+
+		bool operator ==(const UTF8String& other) const;
+		bool operator !=(const UTF8String& other) const;
+		UTF8String operator +(const UTF8String& other) const;
+
+		size_t length() const;
+		bool empty() const;
+
+		std::string GetUTF8String() const;
+	private:
+		std::string _utf8String;
+	};
+
 	enum class Bitness
 	{
 		BITNESS_UNKNOWN =  0,
@@ -58,7 +86,7 @@ namespace PDM
 
 	struct DllExport MonitorInfo
 	{
-		std::string name;
+		UTF8String name;
 		uint32_t width{};
 		uint32_t height{};
 		uint32_t bitsPerColor{};
@@ -68,21 +96,21 @@ namespace PDM
 
 	struct DllExport GPUInfo
 	{
-		std::string description;
+		UTF8String description;
 		uint32_t vendorID{};
 		uint32_t deviceID{};
 		uint32_t revision{};
 		uint64_t memory{};
-		std::string driverVersionString;
-		std::string driverDate;
-		std::string driverVendor;
+		UTF8String driverVersionString;
+		UTF8String driverDate;
+		UTF8String driverVendor;
 	};
 
 	struct DllExport NetworkAdapterInfo
 	{
-		std::string name;
-		std::string macAddressString;
-		std::string uuid;
+		UTF8String name;
+		UTF8String macAddressString;
+		UTF8String uuid;
 		std::vector<std::byte> macAddress;
 	};
 
@@ -115,8 +143,8 @@ namespace PDM
 			return name == other.name && value == other.value;
 		}
 
-		std::string name;
-		std::string value;
+		UTF8String name;
+		UTF8String value;
 	};
 
 	struct DllExport SubItem
@@ -128,7 +156,7 @@ namespace PDM
 				items == other.items;
 		}
 
-		std::string name;
+		UTF8String name;
 		std::vector<SubItem> subitems;
 		std::vector<DataField> items;
 	};

@@ -13,7 +13,7 @@ namespace PDM
 	Bitness GetOSBitnessInternal();
 
 
-	std::string GetPDMVersion()
+	UTF8String GetPDMVersion()
 	{
 		return PROJECT_VER;
 	}
@@ -116,7 +116,7 @@ namespace PDM
 		return CPUID(1).ECX() & CPUID::HYPERVISOR_PRESENT_FLAG;
 	}
 
-	std::string GetHypervisorName()
+	UTF8String GetHypervisorName()
 	{
 		if (!HasHypervisorBit()) return "";
 
@@ -240,7 +240,7 @@ namespace PDM
 		}
 	}
 
-	std::string TimestampToString(const TimeStamp& timestamp)
+	UTF8String TimestampToString(const TimeStamp& timestamp)
 	{
 		const int MAX_SIZE = 20;
 		char time[MAX_SIZE];
@@ -248,7 +248,7 @@ namespace PDM
 		return time;
 	}
 
-	PDMData GatherData(std::string applicationName, std::string applicationVersion)
+	PDMData GatherData(UTF8String applicationName, UTF8String applicationVersion)
 	{
 		TimeStamp timestamp = GetCurrentTime();
 		CPUInfo cpuinfo = GetCPUInfo();

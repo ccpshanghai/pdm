@@ -73,46 +73,46 @@ namespace PDM
 		return IsWine() ? OS::WINE : OS::WINDOWS;
 	}
 
-	std::string GetOSName()
+	UTF8String GetOSName()
 	{
 		return IsWine() ? "" : GetStringFromReg(CURRENT_VERSION_KEY, L"ProductName");
 	}
 
-	std::string GetOSMajorVersion()
+	UTF8String GetOSMajorVersion()
 	{
 		if (IsWine()) return "";
 		std::string version = GetStringFromReg(CURRENT_VERSION_KEY, L"CurrentMajorVersionNumber");
 		if (!version.empty()) return version;
 
-		version = GetOSKernelVersion();
+		version = GetOSKernelVersion().GetUTF8String();
 		if (version.find('.') != -1) return version.substr(0, version.find('.'));
 
 		return "";
 	}
 
-	std::string GetOSMinorVersion()
+	UTF8String GetOSMinorVersion()
 	{
 		if (IsWine()) return "";
 		std::string version = GetStringFromReg(CURRENT_VERSION_KEY, L"CurrentMinorVersionNumber");
 		if (!version.empty()) return version;
 
-		version = GetOSKernelVersion();
+		version = GetOSKernelVersion().GetUTF8String();
 		if (version.find('.') != -1) return version.substr(version.find('.') + 1);
 
 		return "";
 	}
 
-	std::string GetOSBuildNumber()
+	UTF8String GetOSBuildNumber()
 	{
 		return IsWine() ? "" : GetStringFromReg(CURRENT_VERSION_KEY, L"CurrentBuild");
 	}
 
-	std::string GetOSKernelVersion()
+	UTF8String GetOSKernelVersion()
 	{
 		return IsWine() ? "" : GetStringFromReg(CURRENT_VERSION_KEY, L"CurrentVersion");
 	}
 
-	std::string GetHardwareModel()
+	UTF8String GetHardwareModel()
 	{
 		const CString SystemInformationKey = L"SYSTEM\\CurrentControlSet\\Control\\SystemInformation";
 
@@ -126,7 +126,7 @@ namespace PDM
 		return manu + prod;
 	}
 
-	std::string GetMachineName()
+	UTF8String GetMachineName()
 	{
 		constexpr auto INFO_BUFFER_SIZE = 1024;
 		char  infoBuf[INFO_BUFFER_SIZE];
@@ -134,7 +134,7 @@ namespace PDM
 		return GetComputerNameA(infoBuf, &bufCharCount) ? infoBuf : "";
 	}
 
-	std::string GetUsername()
+	UTF8String GetUsername()
 	{
 		char username[UNLEN + 1];
 		DWORD username_len = UNLEN + 1;
@@ -153,7 +153,7 @@ namespace PDM
 		return GlobalMemoryStatusEx(&status) ? status.ullTotalPhys : 0;
 	}
 
-	std::string GetMachineUuidString()
+	UTF8String GetMachineUuidString()
 	{
 		REGSAM access = KEY_READ;
 #if !_WIN64
@@ -216,7 +216,7 @@ namespace PDM
 		return adapters;
 	}
 
-	std::string GetUserLocale()
+	UTF8String GetUserLocale()
 	{
 		auto locale = std::setlocale(LC_ALL, "");
 		return locale ? locale : "";
@@ -268,7 +268,7 @@ namespace PDM
 		}
 	}
 
-	std::string GetD3DHighestSupport()
+	UTF8String GetD3DHighestSupport()
 	{
 		return D3DFeatureSupportToString(GetD3DInfo().maxSupportedFeatureLevel);
 	}

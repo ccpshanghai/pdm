@@ -4,15 +4,25 @@
 #include <algorithm>
 #include <fstream>
 
+#if _WIN32
+using outstream = std::wostream;
+using filestream = std::wfstream;
+#define OUT_STREAM std::wcout
+#else
+using outstream = std::ostream;
+using filestream = std::fstream;
+#define OUT_STREAM std::cout
+#endif
+
 using namespace PDM;
 
-void Output(const SubItem& item, std::ostream& stream, int indentation = 0);
+void Output(const SubItem& item, outstream& stream, int indentation = 0);
 
-void Output(const std::vector<DataField>& items, std::ostream& stream, int indentation)
+void Output(const std::vector<DataField>& items, outstream& stream, int indentation)
 {
 	if (items.empty()) return;
 
-	auto maxlen = std::max_element(cbegin(items), cend(items), [](const DataField& item1, const DataField& item2)
+	auto maxlen = std::max_element(begin(items), end(items), [](const DataField& item1, const DataField& item2)
 	{
 		return item1.name.length() < item2.name.length();
 	})->name.length();
@@ -21,15 +31,19 @@ void Output(const std::vector<DataField>& items, std::ostream& stream, int inden
 	{
 		for (auto i = indentation; i--;) stream << '\t';
 		auto& val = item.value.empty() ? "{EMPTY}" : item.value;
-		stream << item.name;
+		
+		auto out = item.name.GetNativeString();
+		stream << out.c_str();
+
+		out = val.GetNativeString();
 		for (auto i = item.name.length(); i < maxlen; i++) stream << ' ';
-		stream << ": " << val << '\n';
+		stream << ": " << out.c_str() << '\n';
 	});
 
 	stream << '\n';
 }
 
-void Output(const std::vector<SubItem>& items, std::ostream& stream, int indentation)
+void Output(const std::vector<SubItem>& items, outstream& stream, int indentation)
 {
 	std::for_each(cbegin(items), cend(items), [&stream, indentation](const SubItem& item)
 	{
@@ -37,24 +51,26 @@ void Output(const std::vector<SubItem>& items, std::ostream& stream, int indenta
 	});
 }
 
-void Output(const SubItem& item, std::ostream& stream, int indentation)
+void Output(const SubItem& item, outstream& stream, int indentation)
 {
 	if (item.items.empty() && item.subitems.empty()) return;
 
 	for (auto i = indentation; i--;) stream << '\t';
-	stream << "{" << item.name << "}\n";
+
+	auto out = item.name.GetNativeString();
+	stream << "{" << out.c_str() << "}\n";
 
 	Output(item.items, stream, indentation + 1);
 	Output(item.subitems, stream, indentation + 1);
 }
 
-void Output(const PDMData& data, std::ostream& stream)
+void Output(const PDMData& data, outstream& stream)
 {
 	Output(data.data, stream);
 	stream.flush();
 }
 
-std::string TimestampToString(const TimeStamp& timestamp)
+UTF8String TimestampToString(const TimeStamp& timestamp)
 {
 	const int MAX_SIZE = 20;
 	char time[MAX_SIZE];
@@ -62,7 +78,7 @@ std::string TimestampToString(const TimeStamp& timestamp)
 	return time;
 }
 
-void OutputExecutionTimings(std::string filename)
+void OutputExecutionTimings(UTF8String filename)
 {
 	std::fstream outfile;
 	outfile.open(filename, std::ios::out);
@@ -104,8 +120,8 @@ auto Execute()
 	{
 		const auto& data = RetrievePDMData("pdmCLI", "1.0");
 
-		std::fstream outfile;
-		std::string filename = "PDM_Output_" + GetMachineName() + "_" + TimestampToString(data.timestamp);
+		std::wfstream outfile;
+		UTF8String filename = UTF8String("PDM_Output_") + GetMachineName() + UTF8String("_") + TimestampToString(data.timestamp);
 
 		outfile.open(filename + ".txt", std::ios::out);
 
@@ -119,7 +135,7 @@ auto Execute()
 			outfile.close();
 		}
 
-		Output(data, std::cout);
+		Output(data, OUT_STREAM);
 
 		OutputExecutionTimings(filename + "_VM_Execution_Timings.txt");
 	}

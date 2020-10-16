@@ -1,14 +1,19 @@
+#if _WIN32
+#include <atlcomcli.h>
+#endif
+
 #include "utilities.h"
 #include "../include/pdm.h"
 
 #include <regex>
+#include <codecvt>
 
 namespace PDM
 {
-	std::vector<std::byte> HexStringToByteArray(std::string uuid, size_t byteCount)
+	std::vector<std::byte> HexStringToByteArray(UTF8String uuid, size_t byteCount)
 	{
-		uuid = std::regex_replace(uuid, std::regex("[:-]"), "");
-		if (uuid.length() != byteCount * 2)
+		auto str = std::regex_replace(uuid.GetUTF8String(), std::regex("[:-]"), "");
+		if (str.length() != byteCount * 2)
 			return {};
 
 		std::vector<std::byte> bytes;
@@ -16,7 +21,7 @@ namespace PDM
 		{
 			try
 			{
-				int c = std::stoi(uuid.substr(i*2, 2), nullptr, 16);
+				int c = std::stoi(str.substr(i*2, 2), nullptr, 16);
 				bytes.push_back(static_cast<std::byte>(c));
 			}
 			catch (std::invalid_argument&)
@@ -27,27 +32,78 @@ namespace PDM
 
 		return bytes;
 	}
-}
+
+	UTF8String::UTF8String() {}
+
+	UTF8String::UTF8String(const std::string& string)
+	{
+		_utf8String = string;
+	}
+
+	UTF8String::UTF8String(const char* string)
+	{
+		_utf8String = std::string(string);
+	}
+
+	std::string UTF8String::GetUTF8String() const
+	{
+		return _utf8String;
+	}
+
+	bool UTF8String::operator ==(const UTF8String& other) const
+	{
+		return _utf8String == other._utf8String;
+	}
+
+	bool UTF8String::operator !=(const UTF8String& other) const
+	{
+		return _utf8String != other._utf8String;
+	}
+
+	UTF8String UTF8String::operator +(const UTF8String& other) const
+	{
+		return UTF8String(_utf8String + other._utf8String);
+	}
+
+	size_t UTF8String::length() const
+	{
+		return _utf8String.length();
+	}
+
+	bool UTF8String::empty() const
+	{
+		return _utf8String.empty();
+	}
 
 #if _WIN32
-
-#include <atlcomcli.h>
-
-namespace PDM
-{
-	std::string ws2s(const std::wstring& s)
+	UTF8String::UTF8String(const std::wstring& string)
 	{
-		auto slength = static_cast<int>(s.length());
-		auto len = WideCharToMultiByte(CP_ACP, 0, s.c_str(), slength, nullptr, 0, nullptr, nullptr);
-		std::string r(len, '\0');
-		WideCharToMultiByte(CP_ACP, 0, s.c_str(), slength, &r[0], len, nullptr, nullptr);
-		return r;
+		_utf8String = std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(string);
+	}
+
+	UTF8String::UTF8String(const wchar_t* string)
+	{
+		_utf8String = std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(string);
+	}
+
+	UTF8String::operator std::wstring()
+	{
+		return std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(_utf8String);
+	}
+
+	std::wstring UTF8String::GetNativeString() const
+	{
+		return std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(_utf8String);
 	}
 
 	bool GetMetalSupported()
 	{
 		return false;
 	}
-}
-
+#else
+	std::string GetNativeString() const
+	{
+		return _utf8string;
+	}
 #endif
+}
