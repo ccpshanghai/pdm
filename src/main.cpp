@@ -80,8 +80,8 @@ UTF8String TimestampToString(const TimeStamp& timestamp)
 
 void OutputExecutionTimings(UTF8String filename)
 {
-	std::fstream outfile;
-	outfile.open(filename, std::ios::out);
+	filestream outfile;
+	outfile.open(filename.GetNativeString(), std::ios::out);
 
 	if (outfile)
 	{
@@ -120,10 +120,10 @@ auto Execute()
 	{
 		const auto& data = RetrievePDMData("pdmCLI", "1.0");
 
-		std::wfstream outfile;
+		filestream outfile;
 		UTF8String filename = UTF8String("PDM_Output_") + GetMachineName() + UTF8String("_") + TimestampToString(data.timestamp);
 
-		outfile.open(filename + ".txt", std::ios::out);
+		outfile.open((filename + ".txt").GetNativeString(), std::ios::out);
 
 		if (!outfile)
 		{

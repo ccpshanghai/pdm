@@ -101,9 +101,9 @@ namespace PDM
 		return false;
 	}
 #else
-	std::string GetNativeString() const
+	std::string UTF8String::GetNativeString() const
 	{
-		return _utf8string;
+		return _utf8String;
 	}
 #endif
 }

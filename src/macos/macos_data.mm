@@ -15,7 +15,7 @@
 
 namespace PDM
 {
-	std::string GetOSString(const char* name)
+	UTF8String GetOSString(const char* name)
 	{
 		char buffer[1024] = { 0 };
 		size_t size = sizeof(buffer);
@@ -52,37 +52,37 @@ namespace PDM
 		return OS::MACOS;
 	}
 
-	std::string GetOSName()
+	UTF8String GetOSName()
 	{
 		return [[[NSProcessInfo processInfo] operatingSystemVersionString] UTF8String];
 	}
 
-	std::string GetOSMajorVersion()
+	UTF8String GetOSMajorVersion()
 	{
 		return std::to_string([[NSProcessInfo processInfo] operatingSystemVersion].majorVersion);
 	}
 
-	std::string GetOSMinorVersion()
+	UTF8String GetOSMinorVersion()
 	{
 		return std::to_string([[NSProcessInfo processInfo] operatingSystemVersion].minorVersion);
 	}
 
-	std::string GetOSBuildNumber()
+	UTF8String GetOSBuildNumber()
 	{
 		return std::to_string([[NSProcessInfo processInfo] operatingSystemVersion].patchVersion);
 	}
 
-	std::string GetOSKernelVersion()
+	UTF8String GetOSKernelVersion()
 	{
 		return GetOSString("kern.osrelease");
 	}
 
-	std::string GetMachineName()
+	UTF8String GetMachineName()
 	{
 		return [[[NSProcessInfo processInfo] hostName] UTF8String];
 	}
 
-	std::string GetUsername()
+	UTF8String GetUsername()
 	{
 		return [[[NSProcessInfo processInfo] userName] UTF8String];
 	}
@@ -92,7 +92,7 @@ namespace PDM
 		return [[NSScreen screens] count];
 	}
 
-	std::string GetHardwareModel()
+	UTF8String GetHardwareModel()
 	{
 		return GetOSString("hw.model");
 	}
@@ -107,7 +107,7 @@ namespace PDM
 		return false;
 	}
 
-	std::string GetMachineUuidString()
+	UTF8String GetMachineUuidString()
 	{
 		char buffer[128] = { 0 };
 		io_registry_entry_t ioRegistryRoot = IORegistryEntryFromPath(kIOMasterPortDefault, "IOService:/");
@@ -119,7 +119,7 @@ namespace PDM
 		return buffer;
 	}
 
-	std::string GetUserLocale()
+	UTF8String GetUserLocale()
 	{
 		return [[[NSLocale currentLocale] localeIdentifier] UTF8String];
 	}
@@ -197,7 +197,7 @@ namespace PDM
 		return monitors;
 	}
 
-	std::string bytesToHexString(NSData* data)
+	UTF8String bytesToHexString(NSData* data)
 	{
 		auto result = [[NSMutableString alloc] initWithCapacity: [data length] << 1];
 		auto mbytes = static_cast<const UInt8*>([data bytes]);
