@@ -241,7 +241,7 @@ namespace PDM
 						[static_cast<NSString*>(BSDNameAsCFString) UTF8String],
 						str,
 						{},
-						HexStringToByteArray(str)
+						HexStringToByteArray(str, 6)
 					});
 				}
 				if (nil != BSDNameAsCFString) CFRelease(BSDNameAsCFString);
