@@ -139,6 +139,8 @@ void Wait()
 	std::cin.get();
 }
 
+#include "utilities.h"
+
 int main()
 {
 	auto code = Execute();

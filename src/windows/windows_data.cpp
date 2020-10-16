@@ -153,7 +153,7 @@ namespace PDM
 		return GlobalMemoryStatusEx(&status) ? status.ullTotalPhys : 0;
 	}
 
-	std::string GetMachineUuid()
+	std::string GetMachineUuidString()
 	{
 		REGSAM access = KEY_READ;
 #if !_WIN64
@@ -188,6 +188,7 @@ namespace PDM
 		std::vector<NetworkAdapterInfo> adapters;
 		for (; pi; pi = pi->Next)
 		{
+			std::vector<std::byte> macAddress;
 			std::stringstream stream;
 			for (unsigned i = 0; i < 6; i++)
 			{
@@ -195,6 +196,8 @@ namespace PDM
 				unsigned val = static_cast<unsigned>(pi->Address[i]);
 				if (val <= 0xf) stream << "0";
 				stream << std::hex << val;
+
+				macAddress.push_back(static_cast<std::byte>(val));
 			}
 
 			std::string uuid = pi->AdapterName;
@@ -206,6 +209,7 @@ namespace PDM
 				pi->Description,
 				toupper(std::string(stream.str())),
 				uuid,
+				macAddress
 			});
 		}
 

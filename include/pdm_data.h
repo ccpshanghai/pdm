@@ -81,8 +81,9 @@ namespace PDM
 	struct DllExport NetworkAdapterInfo
 	{
 		std::string name;
-		std::string macAddress;
+		std::string macAddressString;
 		std::string uuid;
+		std::vector<std::byte> macAddress;
 	};
 
 	struct DllExport VulkanProperties

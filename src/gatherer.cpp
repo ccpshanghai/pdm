@@ -1,5 +1,6 @@
 #include "gatherer.h"
 #include "defines.h"
+#include "utilities.h"
 #include "../include/pdm.h"
 #include "../include/version.h"
 
@@ -174,6 +175,11 @@ namespace PDM
 		return info.bitness;
 	}
 
+	std::vector<std::byte> GetMachineUuid()
+	{
+		return HexStringToByteArray(GetMachineUuidString(), 16);
+	}
+
 	TimeStamp GetCurrentTime()
 	{
 
@@ -301,7 +307,7 @@ namespace PDM
 				{},
 				{
 					{"NAME",        adapter.name},
-					{"MAC_ADDRESS", adapter.macAddress},
+					{"MAC_ADDRESS", adapter.macAddressString},
 					{"UUID",        adapter.uuid},
 				}
 			});
@@ -412,7 +418,7 @@ namespace PDM
 							{
 								{"MODEL",         GetHardwareModel()},
 								{"NAME",          GetMachineName()},
-								{"UUID",          GetMachineUuid()},
+								{"UUID",          GetMachineUuidString()},
 								{"TOTAL_MEMORY",  std::to_string(GetTotalMemory())},
 								{"MONITOR_COUNT", std::to_string(GetMonitorCount())},
 							}

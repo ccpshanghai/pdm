@@ -1,6 +1,7 @@
-#include "../../include/pdm.h"
-
 #if __APPLE__
+
+#include "../../include/pdm.h"
+#include "../utilities.h"
 
 #include <vector>
 #include <sys/sysctl.h>
@@ -106,7 +107,7 @@ namespace PDM
 		return false;
 	}
 
-	std::string GetMachineUuid()
+	std::string GetMachineUuidString()
 	{
 		char buffer[128] = { 0 };
 		io_registry_entry_t ioRegistryRoot = IORegistryEntryFromPath(kIOMasterPortDefault, "IOService:/");
@@ -234,10 +235,13 @@ namespace PDM
 				
 				if (MACAddrAsCFData && BSDNameAsCFString)
 				{
+					auto str = bytesToHexString(static_cast<NSData*>(MACAddrAsCFData));
 					adapters.push_back
 					({
 						[static_cast<NSString*>(BSDNameAsCFString) UTF8String],
-						bytesToHexString(static_cast<NSData*>(MACAddrAsCFData))
+						str,
+						{},
+						HexStringToByteArray(str)
 					});
 				}
 				if (nil != BSDNameAsCFString) CFRelease(BSDNameAsCFString);
