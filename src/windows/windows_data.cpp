@@ -1,4 +1,4 @@
-#include <string>
+﻿#include <string>
 
 #if _WIN32
 
@@ -22,39 +22,45 @@
 
 namespace PDM
 {
-	const CString CURRENT_VERSION_KEY = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
+	const std::wstring CURRENT_VERSION_KEY = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
 
-	std::string GetStringFromReg(CString keyName, CString keyValName)
+	std::string GetStringFromReg(const std::wstring& keyName, const std::wstring& keyValName)
 	{
 		const HKEY parent = HKEY_LOCAL_MACHINE;
 
-		CRegKey key;
-		std::string out;
+		wchar_t data[256]{1};
+		auto size = sizeof(data);
+		auto len = (LPDWORD)&size;
+		LONG retCode = RegGetValueW(
+			parent,
+			keyName.c_str(),
+			keyValName.c_str(),
+			RRF_RT_REG_SZ,
+			nullptr,
+			&data,
+			len
+		);
 
-		if (key.Open(parent, keyName, KEY_READ) == ERROR_SUCCESS)
-		{
-			ULONG len = 256;
-			CString str;
-			DWORD value;
+		if (retCode == ERROR_SUCCESS)
+			return WStringToUTF8(std::wstring(data, *len / 2 - 1));
 
-			bool success = key.QueryStringValue(keyValName, str.GetBuffer(len), &len) == ERROR_SUCCESS;
-			str.ReleaseBuffer();
+		DWORD number;
+		size = sizeof(DWORD);
+		len = (LPDWORD)&size;
+		retCode = RegGetValueW(
+			parent,
+			keyName.c_str(),
+			keyValName.c_str(),
+			RRF_RT_REG_DWORD,
+			nullptr,
+			&number,
+			len
+		);
+		
+		if (retCode == ERROR_SUCCESS)
+			return std::to_string(number);
 
-			if (success)
-			{
-#ifdef _UNICODE
-				out = ws2s(str.GetString());
-#else
-				out = str.GetString();
-#endif
-			}
-			else if (key.QueryDWORDValue(keyValName, value) == ERROR_SUCCESS)
-				out = std::to_string(value);
-
-			key.Close();
-		}
-
-		return out;
+		return "";
 	}
 
 	Bitness GetOSBitnessInternal()
@@ -73,48 +79,48 @@ namespace PDM
 		return IsWine() ? OS::WINE : OS::WINDOWS;
 	}
 
-	UTF8String GetOSName()
+	std::string GetOSName()
 	{
 		return IsWine() ? "" : GetStringFromReg(CURRENT_VERSION_KEY, L"ProductName");
 	}
 
-	UTF8String GetOSMajorVersion()
+	std::string GetOSMajorVersion()
 	{
 		if (IsWine()) return "";
 		std::string version = GetStringFromReg(CURRENT_VERSION_KEY, L"CurrentMajorVersionNumber");
 		if (!version.empty()) return version;
 
-		version = GetOSKernelVersion().GetUTF8String();
+		version = GetOSKernelVersion();
 		if (version.find('.') != -1) return version.substr(0, version.find('.'));
 
 		return "";
 	}
 
-	UTF8String GetOSMinorVersion()
+	std::string GetOSMinorVersion()
 	{
 		if (IsWine()) return "";
 		std::string version = GetStringFromReg(CURRENT_VERSION_KEY, L"CurrentMinorVersionNumber");
 		if (!version.empty()) return version;
 
-		version = GetOSKernelVersion().GetUTF8String();
+		version = GetOSKernelVersion();
 		if (version.find('.') != -1) return version.substr(version.find('.') + 1);
 
 		return "";
 	}
 
-	UTF8String GetOSBuildNumber()
+	std::string GetOSBuildNumber()
 	{
 		return IsWine() ? "" : GetStringFromReg(CURRENT_VERSION_KEY, L"CurrentBuild");
 	}
 
-	UTF8String GetOSKernelVersion()
+	std::string GetOSKernelVersion()
 	{
 		return IsWine() ? "" : GetStringFromReg(CURRENT_VERSION_KEY, L"CurrentVersion");
 	}
 
-	UTF8String GetHardwareModel()
+	std::string GetHardwareModel()
 	{
-		const CString SystemInformationKey = L"SYSTEM\\CurrentControlSet\\Control\\SystemInformation";
+		auto SystemInformationKey = L"SYSTEM\\CurrentControlSet\\Control\\SystemInformation";
 
 		std::string manu = GetStringFromReg(SystemInformationKey, L"SystemManufacturer");
 		if (manu == "System manufacturer") manu = "";
@@ -126,19 +132,19 @@ namespace PDM
 		return manu + prod;
 	}
 
-	UTF8String GetMachineName()
+	std::string GetMachineName()
 	{
 		constexpr auto INFO_BUFFER_SIZE = 1024;
-		char  infoBuf[INFO_BUFFER_SIZE];
+		wchar_t  infoBuf[INFO_BUFFER_SIZE];
 		DWORD  bufCharCount = INFO_BUFFER_SIZE;
-		return GetComputerNameA(infoBuf, &bufCharCount) ? infoBuf : "";
+		return WStringToUTF8(GetComputerNameW(infoBuf, &bufCharCount) ? infoBuf : L"");
 	}
 
-	UTF8String GetUsername()
+	std::string GetUsername()
 	{
-		char username[UNLEN + 1];
+		wchar_t username[UNLEN + 1];
 		DWORD username_len = UNLEN + 1;
-		return GetUserNameA(username, &username_len) ? username : "";
+		return WStringToUTF8(GetUserNameW(username, &username_len) ? username : L"");
 	}
 
 	unsigned GetMonitorCount()
@@ -153,7 +159,7 @@ namespace PDM
 		return GlobalMemoryStatusEx(&status) ? status.ullTotalPhys : 0;
 	}
 
-	UTF8String GetMachineUuidString()
+	std::string GetMachineUuidString()
 	{
 		REGSAM access = KEY_READ;
 #if !_WIN64
@@ -178,7 +184,7 @@ namespace PDM
 		if (IsWine()) return {};
 
 		ULONG l = 0;
-		DWORD res = GetAdaptersInfo(0, &l);
+		DWORD res = GetAdaptersInfo(nullptr, &l);
 		if (res != ERROR_BUFFER_OVERFLOW) return {};
 		std::vector<char> buf(l);
 		res = GetAdaptersInfo( reinterpret_cast<IP_ADAPTER_INFO*>(&buf[0]), &l);
@@ -193,7 +199,7 @@ namespace PDM
 			for (unsigned i = 0; i < 6; i++)
 			{
 				if (i) stream << ":";
-				unsigned val = static_cast<unsigned>(pi->Address[i]);
+				auto val = static_cast<unsigned>(pi->Address[i]);
 				if (val <= 0xf) stream << "0";
 				stream << std::hex << val;
 
@@ -216,9 +222,10 @@ namespace PDM
 		return adapters;
 	}
 
-	UTF8String GetUserLocale()
+	std::string GetUserLocale()
 	{
 		auto locale = std::setlocale(LC_ALL, "");
+		std::setlocale(LC_ALL, "C"); // Reset
 		return locale ? locale : "";
 	}
 
@@ -268,7 +275,7 @@ namespace PDM
 		}
 	}
 
-	UTF8String GetD3DHighestSupport()
+	std::string GetD3DHighestSupport()
 	{
 		return D3DFeatureSupportToString(GetD3DInfo().maxSupportedFeatureLevel);
 	}

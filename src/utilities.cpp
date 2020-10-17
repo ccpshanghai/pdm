@@ -1,7 +1,3 @@
-#if _WIN32
-#include <atlcomcli.h>
-#endif
-
 #include "utilities.h"
 #include "../include/pdm.h"
 
@@ -10,9 +6,9 @@
 
 namespace PDM
 {
-	std::vector<std::byte> HexStringToByteArray(UTF8String uuid, size_t byteCount)
+	std::vector<std::byte> HexStringToByteArray(std::string uuid, size_t byteCount)
 	{
-		auto str = std::regex_replace(uuid.GetUTF8String(), std::regex("[:-]"), "");
+		auto str = std::regex_replace(uuid, std::regex("[:-]"), "");
 		if (str.length() != byteCount * 2)
 			return {};
 
@@ -33,77 +29,25 @@ namespace PDM
 		return bytes;
 	}
 
-	UTF8String::UTF8String() {}
-
-	UTF8String::UTF8String(const std::string& string)
-	{
-		_utf8String = string;
-	}
-
-	UTF8String::UTF8String(const char* string)
-	{
-		_utf8String = std::string(string);
-	}
-
-	std::string UTF8String::GetUTF8String() const
-	{
-		return _utf8String;
-	}
-
-	bool UTF8String::operator ==(const UTF8String& other) const
-	{
-		return _utf8String == other._utf8String;
-	}
-
-	bool UTF8String::operator !=(const UTF8String& other) const
-	{
-		return _utf8String != other._utf8String;
-	}
-
-	UTF8String UTF8String::operator +(const UTF8String& other) const
-	{
-		return UTF8String(_utf8String + other._utf8String);
-	}
-
-	size_t UTF8String::length() const
-	{
-		return _utf8String.length();
-	}
-
-	bool UTF8String::empty() const
-	{
-		return _utf8String.empty();
-	}
-
 #if _WIN32
-	UTF8String::UTF8String(const std::wstring& string)
+	std::string WStringToUTF8(const wchar_t* string)
 	{
-		_utf8String = std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(string);
+		return std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(string);
 	}
 
-	UTF8String::UTF8String(const wchar_t* string)
+	std::string WStringToUTF8(const std::wstring& string)
 	{
-		_utf8String = std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(string);
+		return WStringToUTF8(string.c_str());
 	}
 
-	UTF8String::operator std::wstring()
+	std::wstring UTF8ToWString(const std::string& utf8)
 	{
-		return std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(_utf8String);
-	}
-
-	std::wstring UTF8String::GetNativeString() const
-	{
-		return std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(_utf8String);
+		return std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(utf8);
 	}
 
 	bool GetMetalSupported()
 	{
 		return false;
-	}
-#else
-	std::string UTF8String::GetNativeString() const
-	{
-		return _utf8String;
 	}
 #endif
 }
