@@ -1,24 +1,36 @@
-#include "../include/pdm.h"
+﻿#include "../include/pdm.h"
+#include "utilities.h"
 
 #include <iostream>
 #include <algorithm>
 #include <fstream>
 
 #if _WIN32
-using outstream = std::wostream;
-using filestream = std::wfstream;
-#define OUT_STREAM std::wcout
+
+#include <windows.h>
+#include <io.h>
+#include <fcntl.h>
+#include "utilities.h"
+
+std::wstring UTF8ToNative(const std::string& str)
+{
+	return PDM::UTF8ToWString(str);
+}
+
 #else
-using outstream = std::ostream;
-using filestream = std::fstream;
-#define OUT_STREAM std::cout
+
+std::string UTF8ToNative(const std::string& str)
+{
+	return str;
+}
+
 #endif
 
 using namespace PDM;
 
-void Output(const SubItem& item, outstream& stream, int indentation = 0);
+void Output(const SubItem& item, std::ostream& stream, int indentation = 0);
 
-void Output(const std::vector<DataField>& items, outstream& stream, int indentation)
+void Output(const std::vector<DataField>& items, std::ostream& stream, int indentation)
 {
 	if (items.empty()) return;
 
@@ -30,20 +42,17 @@ void Output(const std::vector<DataField>& items, outstream& stream, int indentat
 	std::for_each(cbegin(items), cend(items), [&stream, indentation, maxlen](const DataField& item)
 	{
 		for (auto i = indentation; i--;) stream << '\t';
-		auto& val = item.value.empty() ? "{EMPTY}" : item.value;
-		
-		auto out = item.name.GetNativeString();
-		stream << out.c_str();
+		stream << item.name;
 
-		out = val.GetNativeString();
 		for (auto i = item.name.length(); i < maxlen; i++) stream << ' ';
-		stream << ": " << out.c_str() << '\n';
+		auto& val = item.value.empty() ? "{EMPTY}" : item.value;
+		stream << ": " << val << '\n';
 	});
 
 	stream << '\n';
 }
 
-void Output(const std::vector<SubItem>& items, outstream& stream, int indentation)
+void Output(const std::vector<SubItem>& items, std::ostream& stream, int indentation)
 {
 	std::for_each(cbegin(items), cend(items), [&stream, indentation](const SubItem& item)
 	{
@@ -51,26 +60,24 @@ void Output(const std::vector<SubItem>& items, outstream& stream, int indentatio
 	});
 }
 
-void Output(const SubItem& item, outstream& stream, int indentation)
+void Output(const SubItem& item, std::ostream& stream, int indentation)
 {
 	if (item.items.empty() && item.subitems.empty()) return;
 
 	for (auto i = indentation; i--;) stream << '\t';
-
-	auto out = item.name.GetNativeString();
-	stream << "{" << out.c_str() << "}\n";
+	stream << "{" << item.name.c_str() << "}\n";
 
 	Output(item.items, stream, indentation + 1);
 	Output(item.subitems, stream, indentation + 1);
 }
 
-void Output(const PDMData& data, outstream& stream)
+void Output(const PDMData& data, std::ostream& stream)
 {
 	Output(data.data, stream);
 	stream.flush();
 }
 
-UTF8String TimestampToString(const TimeStamp& timestamp)
+std::string TimestampToString(const TimeStamp& timestamp)
 {
 	const int MAX_SIZE = 20;
 	char time[MAX_SIZE];
@@ -78,10 +85,10 @@ UTF8String TimestampToString(const TimeStamp& timestamp)
 	return time;
 }
 
-void OutputExecutionTimings(UTF8String filename)
+void OutputExecutionTimings(std::string filename)
 {
-	filestream outfile;
-	outfile.open(filename.GetNativeString(), std::ios::out);
+	std::fstream outfile;
+	outfile.open(UTF8ToNative(filename), std::ios::out);
 
 	if (outfile)
 	{
@@ -118,12 +125,16 @@ auto Execute()
 {
 	try
 	{
+#if _WIN32
+		SetConsoleOutputCP(CP_UTF8);
+		SetConsoleCP(CP_UTF8);
+#endif
 		const auto& data = RetrievePDMData("pdmCLI", "1.0");
 
-		filestream outfile;
-		UTF8String filename = UTF8String("PDM_Output_") + GetMachineName() + UTF8String("_") + TimestampToString(data.timestamp);
+		std::fstream outfile;
+		std::string filename = "PDM_Output_" + GetMachineName() + "_" + TimestampToString(data.timestamp);
 
-		outfile.open((filename + ".txt").GetNativeString(), std::ios::out);
+		outfile.open(UTF8ToNative(filename + ".txt"), std::ios::out);
 
 		if (!outfile)
 		{
@@ -135,11 +146,11 @@ auto Execute()
 			outfile.close();
 		}
 
-		Output(data, OUT_STREAM);
+		Output(data, std::cout);
 
 		OutputExecutionTimings(filename + "_VM_Execution_Timings.txt");
 	}
-	catch (std::exception & e)
+	catch (std::exception& e)
 	{
 		std::cout << "Unexpected exception: " << e.what() << std::endl;
 
@@ -154,8 +165,6 @@ void Wait()
 	std::cout << "Press Enter to exit...";
 	std::cin.get();
 }
-
-#include "utilities.h"
 
 int main()
 {

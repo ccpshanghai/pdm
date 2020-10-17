@@ -63,5 +63,5 @@ namespace PDM
 		static constexpr uint32_t HYPERVISOR_INFO_FLAG         = 0x40000000;
 	};
 
-	PDMData GatherData(UTF8String applicationName, UTF8String applicationVersion);
+	PDMData GatherData(const std::string& applicationName, const std::string& applicationVersion);
 }
