@@ -194,7 +194,7 @@ namespace PDM
 		std::vector<NetworkAdapterInfo> adapters;
 		for (; pi; pi = pi->Next)
 		{
-			std::vector<std::byte> macAddress;
+			std::vector<uint8_t> macAddress;
 			std::stringstream stream;
 			for (unsigned i = 0; i < 6; i++)
 			{
@@ -203,7 +203,7 @@ namespace PDM
 				if (val <= 0xf) stream << "0";
 				stream << std::hex << val;
 
-				macAddress.push_back(static_cast<std::byte>(val));
+				macAddress.push_back(val);
 			}
 
 			std::string uuid = pi->AdapterName;

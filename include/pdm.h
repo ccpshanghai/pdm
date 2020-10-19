@@ -22,7 +22,7 @@ namespace PDM
 	DllExport bool IsRemoteSession();
 	DllExport size_t GetTimingCycles();
 	DllExport std::string GetMachineUuidString();
-	DllExport std::vector<std::byte> GetMachineUuid();
+	DllExport std::vector<uint8_t> GetMachineUuid();
 	DllExport std::vector<MonitorInfo> GetMonitorsInfo();
 	DllExport std::vector<GPUInfo> GetGPUInfo();
 	DllExport std::vector<NetworkAdapterInfo> GetNetworkAdapterInfo();

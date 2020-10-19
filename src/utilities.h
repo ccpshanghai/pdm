@@ -6,7 +6,7 @@
 
 namespace PDM
 {
-	std::vector<std::byte> HexStringToByteArray(std::string uuid, size_t byteCount);
+	std::vector<uint8_t> HexStringToByteArray(std::string uuid, size_t byteCount);
 
 #if _WIN32
 	std::string WStringToUTF8(const wchar_t* string);

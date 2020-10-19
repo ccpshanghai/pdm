@@ -175,7 +175,7 @@ namespace PDM
 		return info.bitness;
 	}
 
-	std::vector<std::byte> GetMachineUuid()
+	std::vector<uint8_t> GetMachineUuid()
 	{
 		return HexStringToByteArray(GetMachineUuidString(), 16);
 	}

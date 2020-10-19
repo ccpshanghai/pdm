@@ -6,19 +6,19 @@
 
 namespace PDM
 {
-	std::vector<std::byte> HexStringToByteArray(std::string uuid, size_t byteCount)
+	std::vector<uint8_t> HexStringToByteArray(std::string uuid, size_t byteCount)
 	{
 		auto str = std::regex_replace(uuid, std::regex("[:-]"), "");
 		if (str.length() != byteCount * 2)
 			return {};
 
-		std::vector<std::byte> bytes;
+		std::vector<uint8_t> bytes;
 		for (size_t i = 0; i < byteCount; i++)
 		{
 			try
 			{
 				int c = std::stoi(str.substr(i*2, 2), nullptr, 16);
-				bytes.push_back(static_cast<std::byte>(c));
+				bytes.push_back(c);
 			}
 			catch (std::invalid_argument&)
 			{
