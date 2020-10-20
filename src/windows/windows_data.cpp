@@ -2,6 +2,8 @@
 
 #if _WIN32
 
+#include <winsock2.h>
+
 #include "d3d11_info.h"
 #include "../../include/pdm_data.h"
 #include "../defines.h"
@@ -183,41 +185,48 @@ namespace PDM
 	{
 		if (IsWine()) return {};
 
-		ULONG l = 0;
-		DWORD res = GetAdaptersInfo(nullptr, &l);
-		if (res != ERROR_BUFFER_OVERFLOW) return {};
-		std::vector<char> buf(l);
-		res = GetAdaptersInfo( reinterpret_cast<IP_ADAPTER_INFO*>(&buf[0]), &l);
-		if (res != ERROR_SUCCESS) return {};
+		IP_ADAPTER_ADDRESSES address[32];
+		ULONG size = sizeof(address);
+		if (GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_INCLUDE_PREFIX, nullptr, address, &size) != ERROR_SUCCESS) return {};
 
-		auto pi = reinterpret_cast<IP_ADAPTER_INFO*>(&buf[0]);
+		PIP_ADAPTER_ADDRESSES addr = address;
 		std::vector<NetworkAdapterInfo> adapters;
-		for (; pi; pi = pi->Next)
+		do
 		{
+
 			std::vector<uint8_t> macAddress;
 			std::stringstream stream;
+			bool hasPhysical = false;
 			for (unsigned i = 0; i < 6; i++)
 			{
 				if (i) stream << ":";
-				auto val = static_cast<unsigned>(pi->Address[i]);
+				auto val = static_cast<unsigned>(addr->PhysicalAddress[i]);
 				if (val <= 0xf) stream << "0";
 				stream << std::hex << val;
 
 				macAddress.push_back(val);
+
+				if (val) hasPhysical = true;
 			}
 
-			std::string uuid = pi->AdapterName;
+			std::string uuid = addr->AdapterName;
 			if (uuid.rfind("{") == 0 && uuid[uuid.size() - 1] == '}')
 				uuid = uuid.substr(1, uuid.size() - 2);
+			
+			if (hasPhysical && std::wstring(addr->Description).find(L"Software Loopback Interface") != 0)
+			{
+				adapters.push_back
+				({
+					WStringToUTF8(addr->Description),
+					toupper(std::string(stream.str())),
+					uuid,
+					macAddress
+				});
+			}
 
-			adapters.push_back
-			({
-				pi->Description,
-				toupper(std::string(stream.str())),
-				uuid,
-				macAddress
-			});
+			addr = addr->Next;
 		}
+		while(addr);
 
 		return adapters;
 	}
