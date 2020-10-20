@@ -237,7 +237,7 @@ namespace PDM
 		return hr;
 	}
 
-	D3D11Info& GetD3DInfo()
+	D3D11Info& GetD3DInfo_internal()
 	{
 		static D3D11Info info;
 		static bool initialized = false;
@@ -341,6 +341,32 @@ namespace PDM
 		}
 
 		return info;
+	}
+
+	D3D11Info _static_info;
+
+	void SafeGetD3DInfo_wrap()
+	{
+		try
+		{
+			_static_info = GetD3DInfo_internal();
+		}
+		catch(std::exception& e){}
+	}
+
+	void SafeGetD3DInfo()
+	{
+		__try
+		{
+			SafeGetD3DInfo_wrap();
+		}
+		__except(EXCEPTION_EXECUTE_HANDLER){}
+	}
+
+	D3D11Info& GetD3DInfo()
+	{
+		SafeGetD3DInfo();
+		return _static_info;
 	}
 }
 

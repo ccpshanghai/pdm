@@ -72,7 +72,11 @@ namespace PDM
 	void SafeGetVulkanProperties_wrap()
 	{
 		// Roundabout nonsense because "Cannot use __try in functions that require object unwinding"
-		_static_properties = GetVulkanProperties_internal();
+		try
+		{
+			_static_properties = GetVulkanProperties_internal();
+		}
+		catch(std::exception& e){}
 	}
 
 	void SafeGetVulkanProperties()
