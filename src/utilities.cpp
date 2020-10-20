@@ -2,7 +2,11 @@
 #include "../include/pdm.h"
 
 #include <regex>
+
+#if _WIN32
 #include <codecvt>
+#include <Windows.h>
+#endif
 
 namespace PDM
 {
@@ -43,6 +47,14 @@ namespace PDM
 	std::wstring UTF8ToWString(const std::string& utf8)
 	{
 		return std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(utf8);
+	}
+
+	std::wstring AnsiToWString(const std::string& str)
+	{
+		int count = MultiByteToWideChar(CP_ACP, 0, str.c_str(), str.length(), nullptr, 0);
+		std::wstring wstr(count, 0);
+		MultiByteToWideChar(CP_ACP, 0, str.c_str(), str.length(), &wstr[0], count);
+		return wstr;
 	}
 
 	bool GetMetalSupported()

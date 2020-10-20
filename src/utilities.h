@@ -12,5 +12,6 @@ namespace PDM
 	std::string WStringToUTF8(const wchar_t* string);
 	std::string WStringToUTF8(const std::wstring& string);
 	std::wstring UTF8ToWString(const std::string& utf8);
+	std::wstring AnsiToWString(const std::string& str);
 #endif
 }
