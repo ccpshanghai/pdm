@@ -308,7 +308,7 @@ namespace PDM
 				{
 					{"NAME",        adapter.name},
 					{"MAC_ADDRESS", adapter.macAddressString},
-					{"UUID",        adapter.uuid},
+					{"UUID",        adapter.uuidString},
 				}
 			});
 		}

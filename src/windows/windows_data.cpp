@@ -220,7 +220,8 @@ namespace PDM
 					WStringToUTF8(addr->Description),
 					toupper(std::string(stream.str())),
 					uuid,
-					macAddress
+					macAddress,
+					HexStringToByteArray(uuid, 16)
 				});
 			}
 

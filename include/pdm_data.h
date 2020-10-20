@@ -82,8 +82,9 @@ namespace PDM
 	{
 		std::string name;
 		std::string macAddressString;
-		std::string uuid;
+		std::string uuidString;
 		std::vector<uint8_t> macAddress;
+		std::vector<uint8_t> uuid;
 	};
 
 	struct DllExport VulkanProperties
