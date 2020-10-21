@@ -185,15 +185,16 @@ namespace PDM
 	{
 		if (IsWine()) return {};
 
-		IP_ADAPTER_ADDRESSES address[32];
-		ULONG size = sizeof(address);
-		if (GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_INCLUDE_PREFIX, nullptr, address, &size) != ERROR_SUCCESS) return {};
+		ULONG size = 0;
+		if (GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_INCLUDE_PREFIX, nullptr, nullptr, &size) != ERROR_BUFFER_OVERFLOW) return {};
 
-		PIP_ADAPTER_ADDRESSES addr = address;
+		std::vector<uint8_t> data(size);
+		auto addr = reinterpret_cast<PIP_ADAPTER_ADDRESSES>(data.data());
+		if (GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_INCLUDE_PREFIX, nullptr, addr, &size) != ERROR_SUCCESS) return {};
+
 		std::vector<NetworkAdapterInfo> adapters;
 		do
 		{
-
 			std::vector<uint8_t> macAddress;
 			std::stringstream stream;
 			bool hasPhysical = false;
