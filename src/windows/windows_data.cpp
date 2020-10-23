@@ -30,7 +30,7 @@ namespace PDM
 	{
 		const HKEY parent = HKEY_LOCAL_MACHINE;
 
-		wchar_t data[256]{1};
+		wchar_t data[256] = {0};
 		auto size = sizeof(data);
 		auto len = (LPDWORD)&size;
 		LONG retCode = RegGetValueW(
@@ -137,14 +137,14 @@ namespace PDM
 	std::string GetMachineName()
 	{
 		constexpr auto INFO_BUFFER_SIZE = 1024;
-		wchar_t  infoBuf[INFO_BUFFER_SIZE];
-		DWORD  bufCharCount = INFO_BUFFER_SIZE;
+		wchar_t infoBuf[INFO_BUFFER_SIZE] = {0};
+		DWORD bufCharCount = INFO_BUFFER_SIZE;
 		return WStringToUTF8(GetComputerNameW(infoBuf, &bufCharCount) ? infoBuf : L"");
 	}
 
 	std::string GetUsername()
 	{
-		wchar_t username[UNLEN + 1];
+		wchar_t username[UNLEN + 1] = {0};
 		DWORD username_len = UNLEN + 1;
 		return WStringToUTF8(GetUserNameW(username, &username_len) ? username : L"");
 	}
@@ -173,7 +173,7 @@ namespace PDM
 		if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Cryptography", 0, access, &key) != ERROR_SUCCESS) return "";
 
 		DWORD type;
-		char guid[256];
+		char guid[256] = {0};
 		DWORD size = sizeof(guid);
 		LSTATUS status = RegQueryValueExA(key, "MachineGuid", nullptr, &type, reinterpret_cast<LPBYTE>(guid), &size);
 		RegCloseKey(key);
