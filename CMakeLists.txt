@@ -45,7 +45,7 @@ target_include_directories(pdm
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
-target_compile_definitions(pdm PRIVATE DLL_EXPORT UNICODE _UNICODE)
+target_compile_definitions(pdm PRIVATE DLL_EXPORT)
 
 include(GNUInstallDirs)
 set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/pdm)
