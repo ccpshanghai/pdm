@@ -1,0 +1,108 @@
+﻿#include "gtest/gtest.h"
+#include "../include/pdm.h"
+#include "../src/utilities.h"
+
+TEST(DataCollection, GetEqualMetrics)
+{
+	auto metrics1 = PDM::RetrievePDMData("Tests", "1.0");
+	auto metrics2 = PDM::RetrievePDMData("Tests", "1.0");
+	EXPECT_EQ(metrics1.data, metrics2.data);
+}
+
+TEST(DataCollection, CanGetMetrics)
+{
+	auto data = PDM::RetrievePDMData("Tests", "1.0");
+	EXPECT_FALSE(data.data.name.empty());
+	EXPECT_FALSE(data.data.subitems.empty());
+}
+
+bool isValidUTF8(std::string_view str)
+{
+	for (unsigned long long i = 0, len = str.length(); i < len; i++)
+	{
+		unsigned char c = str[i];
+		int n = 0;
+		if (0x00 <= c && c <= 0x7f) n=0;  // 0bbbbbbb
+		else if ((c & 0xE0) == 0xC0) n=1; // 110bbbbb
+		else if ( c ==0xED && i < (len-1) && (str[i+1] & 0xa0) == 0xa0) return false; //U+d800 to U+dfff
+		else if ((c & 0xF0) == 0xE0) n=2; // 1110bbbb
+		else if ((c & 0xF8) == 0xF0) n=3; // 11110bbb
+		else return false;
+		for (int j = 0; j < n && i < len; j++)
+		{
+			// n bytes matching 10bbbbbb follow ?
+			if ((++i == len) || ((str[i] & 0xC0) != 0x80)) return false;
+		}
+	}
+	return true;
+}
+
+bool isValidUTF8(const PDM::SubItem& item)
+{
+	for (auto subitem : item.items)
+	{
+		if (!isValidUTF8(subitem.name)) return false;
+		if (!isValidUTF8(subitem.value)) return false;
+	}
+	for (auto subitem : item.subitems)
+	{
+		if (!isValidUTF8(subitem)) return false;
+	}
+
+	return true;
+}
+
+TEST(Unicode, DataIsValidUTF8)
+{
+	auto data = PDM::RetrievePDMData("Tests", "1.0");
+	EXPECT_TRUE(isValidUTF8(data.data));
+}
+
+#if _WIN32
+TEST(Unicode, CanConvertValidWString)
+{
+	std::vector<std::wstring> validStrings
+	{
+		L"The quick brown fox jumps over the lazy dog",
+		L"Wolther spillede på xylofon.",
+		L"Zwölf Boxkämpfer jagten Eva quer über den Sylter Deich",
+		L"Γαζέες καὶ μυρτιὲς δὲν θὰ βρῶ πιὰ στὸ χρυσαφὶ ξέφωτο",
+		L"El pingüino Wenceslao hizo kilómetros bajo exhaustiva lluvia y frío, añoraba a su querido cachorro.",
+		L"Le cœur déçu mais l'âme plutôt naïve, Louÿs rêva de crapaüter en canoë au delà des îles, près du mälström où brûlent les novæ.",
+		L"D'fhuascail Íosa, Úrmhac na hÓighe Beannaithe, pór Éava agus Ádhaimh",
+		L"Árvíztűrő tükörfúrógép",
+		L"Sævör grét áðan því úlpan var ónýt",
+		L"いろはにほへとちりぬる イロハニホヘト",
+		L"Pchnąć w tę łódź jeża lub ośm skrzyń fig",
+		L"В чащах юга жил бы цитрус? Да, но фальшивый экземпляр!",
+		L"๏ เป็นมนุษย์สุดประเสริฐเลิศคุณค่า  กว่าบรรดาฝูงสัตว์เดรัจฉาน",
+		L"Pijamalı hasta, yağız şoföre çabucak güvendi.",
+		L"∮ E⋅da = Q,  n → ∞, ∑ f(i) = ∏ g(i),      ⎧⎡⎛┌─────┐⎞⎤⎫",
+		L"ði ıntəˈnæʃənəl fəˈnɛtık əsoʊsiˈeıʃn",
+		L"((V⍳V)=⍳⍴V)/V←,V    ⌷←⍳→⍴∆∇⊃‾⍎⍕⌈",
+		L"STARGΛ̊TE SG-1, a = v̇ = r̈, a⃑ ⊥ b⃑",
+		L"გთხოვთ ახლავე გაიაროთ რეგისტრაცია Unicode-ის მეათე საერთაშორისო",
+		L"ሰማይ አይታረስ ንጉሥ አይከሰስ።",
+		L"ᚻᛖ ᚳᚹᚫᚦ ᚦᚫᛏ ᚻᛖ ᛒᚢᛞᛖ ᚩᚾ ᚦᚫᛗ ᛚᚪᚾᛞᛖ ᚾᚩᚱᚦᚹᛖᚪᚱᛞᚢᛗ ᚹᛁᚦ ᚦᚪ ᚹᛖᛥᚫ",
+		L"⡌⠁⠧⠑ ⠼⠁⠒  ⡍⠜⠇⠑⠹⠰⠎ ⡣⠕⠌",
+		L"∀∂∈ℝ∧∪≡∞ ↑↗↨↻⇣ ┐┼╔╘░►☺♀ ﬁ�⑀₂ἠḂӥẄɐː⍎אԱა",
+		L"╠╡ ╳ ╞╣  ├╢   ╟┤  ├┼─┼─┼┤  ├╫─╂─╫┤  ┣┿╾┼╼┿┫  ┕┛┖┚     ┌┄┄┐ ╎ ┏┅┅┓ ┋ ▍ ╲╱╲╱╳╳╳",
+		L"爱吃鱼的在我家",
+		L"🐱", // Surrogate pair in UTF-16
+	};
+
+	for (auto str : validStrings)
+	{
+		auto utf8 = PDM::WStringToUTF8(str);
+		EXPECT_TRUE(isValidUTF8(utf8));
+		EXPECT_EQ(str, PDM::UTF8ToWString(utf8));
+	}
+}
+
+#endif
+
+int main(int argc, char** argv)
+{
+	::testing::InitGoogleTest(&argc, argv);
+	return RUN_ALL_TESTS();
+}
