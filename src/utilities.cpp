@@ -34,19 +34,63 @@ namespace PDM
 	}
 
 #if _WIN32
-	std::string WStringToUTF8(const wchar_t* string)
+	std::string WStringToUTF8(std::wstring_view wideString)
 	{
-		return std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(string);
+		if (wideString.empty())
+		{
+			return std::string();
+		}
+		const int size_needed = WideCharToMultiByte
+		(
+			CP_UTF8,
+			0,                                   // flags
+			wideString.data(),                   // from
+			static_cast<int>(wideString.size()), // from char count
+			nullptr,                             // to
+			0,                                   // to byte count
+			nullptr,
+			nullptr
+		);
+		std::string result(size_needed, 0);
+		WideCharToMultiByte(
+			CP_UTF8,
+			0,                                   // flags
+			wideString.data(),                   // from
+			static_cast<int>(wideString.size()), // from char count
+			result.data(),                       // to
+			static_cast<int>(result.size()),     // to byte count
+			nullptr,
+			nullptr
+		);
+		return result;
 	}
 
-	std::string WStringToUTF8(const std::wstring& string)
+	std::wstring UTF8ToWString(std::string_view utf8String)
 	{
-		return WStringToUTF8(string.c_str());
-	}
-
-	std::wstring UTF8ToWString(const std::string& utf8)
-	{
-		return std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(utf8);
+		if (utf8String.empty())
+		{
+			return std::wstring();
+		}
+		const int size_needed = MultiByteToWideChar
+		(
+			CP_UTF8,
+			0,                                   // flags
+			utf8String.data(),                   // from
+			static_cast<int>(utf8String.size()), // from byte count
+			nullptr,                             // to
+			0                                    // to char count
+		);
+		std::wstring result(size_needed, 0);
+		MultiByteToWideChar
+		(
+			CP_UTF8,
+			0,                                   // flags
+			utf8String.data(),                   // from
+			static_cast<int>(utf8String.size()), // from byte count
+			result.data(),                       // to
+			static_cast<int>(result.size())      // to char count
+		);
+		return result;
 	}
 
 	std::wstring AnsiToWString(const std::string& str)
