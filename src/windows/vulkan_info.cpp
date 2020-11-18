@@ -1,8 +1,8 @@
 #if _WIN32
 
-#include "vulkan_defs.h"
 #include "../defines.h"
 #include "../../include/pdm.h"
+#include "vulkan/vulkan.h"
 
 #include <string>
 #include <windows.h>
@@ -25,7 +25,8 @@ namespace PDM
 		if (!vkCreateInstance || !vkGetPhysicalDeviceProperties || !vkEnumeratePhysicalDevices || !vkDestroyInstance) return properties;
 
 		VkInstance instance;
-		VkInstanceCreateInfo vkCreate{ VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO, nullptr, 0, nullptr, 0, nullptr, 0, nullptr };
+		VkApplicationInfo info{ VK_STRUCTURE_TYPE_APPLICATION_INFO, nullptr, "pdm", 0, nullptr, 0, VK_API_VERSION_1_0 };
+		VkInstanceCreateInfo vkCreate{ VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO, nullptr, 0, &info, 0, nullptr, 0, nullptr };
 
 		if (vkCreateInstance(&vkCreate, nullptr, &instance) != VK_SUCCESS)
 		{

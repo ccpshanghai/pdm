@@ -28,7 +28,6 @@ set(HDR_FILES
   src/defines.h
   src/gatherer.h
   src/windows/d3d11_info.h
-  src/windows/vulkan_defs.h
 )
 
 add_library(pdm STATIC
