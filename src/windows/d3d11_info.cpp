@@ -254,9 +254,14 @@ namespace PDM
 			FreeLibrary(dxgiModuleHandle);
 		);
 
-		HMODULE scalingModuleHandle = LoadLibraryA("api-ms-win-shcore-scaling-l1-1-1.dll");
-		SCOPE_EXIT(FreeLibrary(scalingModuleHandle); );
-		SetDPIScalingAware(scalingModuleHandle);
+		HMODULE scalingModuleHandle{};
+		// The scaling dll can crash on wine, and the data isn't useful there anyway
+		if (!IsWine())
+		{
+			scalingModuleHandle = LoadLibraryA("api-ms-win-shcore-scaling-l1-1-1.dll");
+			SCOPE_EXIT(FreeLibrary(scalingModuleHandle););
+			SetDPIScalingAware(scalingModuleHandle);
+		}
 
 		dxgiModuleHandle = LoadLibraryA("dxgi.dll");
 		if (!dxgiModuleHandle) return info;
