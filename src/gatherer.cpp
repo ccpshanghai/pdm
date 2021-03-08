@@ -192,7 +192,7 @@ namespace PDM
 		std::optional<std::string> service = GetEnvironmentVariable("streamingservice");
 		if (service.has_value())
 		{
-			std::string s = tolower(service.value());
+			std::string s = tolower(*service);
 			if (s == "intel")
 				return StreamingService::INTEL;
 			return StreamingService::UNKNOWN;
