@@ -7,6 +7,7 @@
 #include <string>
 #include <thread>
 #include <ctime>
+#include <optional>
 
 namespace PDM
 {
@@ -180,6 +181,26 @@ namespace PDM
 		return HexStringToByteArray(GetMachineUuidString(), 16);
 	}
 
+	std::optional<std::string> GetEnvironmentVariable(std::string name)
+	{
+		auto ret = std::getenv(name.c_str());
+		return ret ? ret : std::optional<std::string>();
+	}
+
+	StreamingService GetStreamingService()
+	{
+		std::optional<std::string> service = GetEnvironmentVariable("streamingservice");
+		if (service.has_value())
+		{
+			std::string s = tolower(service.value());
+			if (s == "intel")
+				return StreamingService::INTEL;
+			return StreamingService::UNKNOWN;
+		}
+
+		return StreamingService::NONE;
+	}
+
 	TimeStamp GetCurrentTime()
 	{
 
@@ -206,7 +227,7 @@ namespace PDM
 			return "x32";
 		case Bitness::BITNESS_UNKNOWN:
 		default:
-			return "Unknown";
+			return "UNKNOWN";
 		}
 	}
 
@@ -222,7 +243,21 @@ namespace PDM
 			return "Wine";
 		case OS::UNKNOWN:
 		default:
-			return "Unknown";
+			return "UNKNOWN";
+		}
+	}
+
+	constexpr const char* StreamingServiceToString(StreamingService streamingService)
+	{
+		switch (streamingService)
+		{
+		case StreamingService::NONE:
+			return "NONE";
+		case StreamingService::INTEL:
+			return "Intel";
+		case StreamingService::UNKNOWN:
+		default:
+			return "UNKNOWN";
 		}
 	}
 
@@ -357,6 +392,13 @@ namespace PDM
 									{
 										{"VERSION", GetWineVersion()},
 										{"HOST_OS", GetWineHostOs()},
+									},
+								},
+								{
+									"STREAMING_SERVICE",
+									{},
+									{
+										{"PROVIDER", StreamingServiceToString(GetStreamingService())},
 									},
 								},
 							},

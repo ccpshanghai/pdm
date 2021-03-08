@@ -32,6 +32,12 @@ namespace PDM
 
 		return bytes;
 	}
+	
+	std::string tolower(std::string str)
+	{
+		transform(str.begin(), str.end(), str.begin(), ::tolower);
+		return str;
+	}
 
 #if _WIN32
 	std::string WStringToUTF8(std::wstring_view wideString)
