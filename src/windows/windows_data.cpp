@@ -18,6 +18,7 @@
 #include <intrin.h>
 #include <iomanip>
 #include <Iphlpapi.h>
+#include <sysinfoapi.h>
 
 #pragma comment(lib, "IPHLPAPI.lib")
 
@@ -156,9 +157,8 @@ namespace PDM
 
 	uint64_t GetTotalMemory()
 	{
-		MEMORYSTATUSEX status;
-		status.dwLength = DWORD(sizeof(status));
-		return GlobalMemoryStatusEx(&status) ? status.ullTotalPhys : 0;
+		ULONGLONG kbytes;
+		return GetPhysicallyInstalledSystemMemory(&kbytes) ? kbytes * 1024 : 0;
 	}
 
 	std::string GetMachineUuidString()
