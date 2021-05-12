@@ -310,12 +310,15 @@ namespace PDM
 
 	VulkanProperties GetVulkanProperties()
 	{
-		return
-		{
-			// We can safely assume that metal support implies vulkan support (but we might want to probe this in the future anyway)
-			GetMetalSupported() ? VulkanSupport::SUPPORTED : VulkanSupport::UNSUPPORTED,
-			""
-		};
+		// We can safely assume that metal support implies vulkan support (but we might want to probe this in the future anyway)
+		return {GetMetalSupported() ? VulkanSupport::SUPPORTED : VulkanSupport::UNSUPPORTED};
+	}
+
+	std::wstring UTF8ToWString(const std::string_view utf8String)
+	{
+		NSString* str = [[NSString alloc] initWithBytes:utf8String.data() length:utf8String.size() encoding:NSUTF8StringEncoding];
+		NSData* data = [str dataUsingEncoding: CFStringConvertEncodingToNSStringEncoding(kCFStringEncodingUTF32LE)];
+		return std::wstring(static_cast<const wchar_t*>([data bytes]), [data length] / sizeof(wchar_t));   
 	}
 }
 

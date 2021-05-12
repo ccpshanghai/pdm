@@ -238,7 +238,7 @@ namespace PDM
 		auto locale = std::setlocale(LC_ALL, "");
 		std::string loc(locale ? locale : "");
 		std::setlocale(LC_ALL, "C"); // Reset
-		return WStringToUTF8(AnsiToWString(loc));
+		return WStringToUTF8(NativeToWString(loc));
 	}
 
 	bool IsRemoteSession()

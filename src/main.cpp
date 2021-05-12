@@ -12,14 +12,14 @@
 #include <fcntl.h>
 #include "utilities.h"
 
-std::wstring UTF8ToNative(const std::string& str)
+std::wstring UTF8ToWStringOrString(const std::string& str)
 {
 	return PDM::UTF8ToWString(str);
 }
 
 #else
 
-std::string UTF8ToNative(const std::string& str)
+std::string UTF8ToWStringOrString(const std::string& str)
 {
 	return str;
 }
@@ -88,7 +88,7 @@ std::string TimestampToString(const TimeStamp& timestamp)
 void OutputExecutionTimings(std::string filename)
 {
 	std::fstream outfile;
-	outfile.open(UTF8ToNative(filename), std::ios::out);
+	outfile.open(UTF8ToWStringOrString(filename), std::ios::out);
 
 	if (outfile)
 	{
@@ -134,7 +134,7 @@ auto Execute()
 		std::fstream outfile;
 		std::string filename = "PDM_Output_" + GetMachineName() + "_" + TimestampToString(data.timestamp);
 
-		outfile.open(UTF8ToNative(filename + ".txt"), std::ios::out);
+		outfile.open(UTF8ToWStringOrString(filename + ".txt"), std::ios::out);
 
 		if (!outfile)
 		{

@@ -41,4 +41,8 @@ namespace PDM
 	DllExport std::string GetHypervisorName();
 	DllExport bool IsHyperVGuestOS();
 	DllExport bool IsSuspectedVM();
+
+	// Utility functions
+	DllExport std::string UTF8ToNative(const std::string_view utf8String);
+	DllExport std::wstring UTF8ToWString(const std::string_view utf8String);
 }

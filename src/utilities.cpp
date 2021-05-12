@@ -40,76 +40,68 @@ namespace PDM
 	}
 
 #if _WIN32
-	std::string WStringToUTF8(std::wstring_view wideString)
+	std::string WStringToUTF8(const std::wstring_view wideString)
 	{
 		if (wideString.empty())
-		{
-			return std::string();
-		}
-		const int size_needed = WideCharToMultiByte
-		(
-			CP_UTF8,
-			0,                                   // flags
-			wideString.data(),                   // from
-			static_cast<int>(wideString.size()), // from char count
-			nullptr,                             // to
-			0,                                   // to byte count
-			nullptr,
-			nullptr
-		);
+			return {};
+
+		const int size_needed = WideCharToMultiByte(CP_UTF8, 0, wideString.data(), wideString.size(), nullptr, 0, nullptr, nullptr);
 		std::string result(size_needed, 0);
-		WideCharToMultiByte(
-			CP_UTF8,
-			0,                                   // flags
-			wideString.data(),                   // from
-			static_cast<int>(wideString.size()), // from char count
-			result.data(),                       // to
-			static_cast<int>(result.size()),     // to byte count
-			nullptr,
-			nullptr
-		);
+		WideCharToMultiByte(CP_UTF8, 0, wideString.data(), wideString.size(), result.data(), result.size(), nullptr, nullptr);
 		return result;
 	}
 
-	std::wstring UTF8ToWString(std::string_view utf8String)
+	std::wstring UTF8ToWString(const std::string_view utf8String)
 	{
 		if (utf8String.empty())
-		{
-			return std::wstring();
-		}
-		const int size_needed = MultiByteToWideChar
-		(
-			CP_UTF8,
-			0,                                   // flags
-			utf8String.data(),                   // from
-			static_cast<int>(utf8String.size()), // from byte count
-			nullptr,                             // to
-			0                                    // to char count
-		);
+			return {};
+
+		const int size_needed = MultiByteToWideChar(CP_UTF8, 0, utf8String.data(), utf8String.size(), nullptr, 0);
 		std::wstring result(size_needed, 0);
-		MultiByteToWideChar
-		(
-			CP_UTF8,
-			0,                                   // flags
-			utf8String.data(),                   // from
-			static_cast<int>(utf8String.size()), // from byte count
-			result.data(),                       // to
-			static_cast<int>(result.size())      // to char count
-		);
+		MultiByteToWideChar(CP_UTF8, 0, utf8String.data(), utf8String.size(), result.data(), result.size());
 		return result;
 	}
 
-	std::wstring AnsiToWString(const std::string& str)
+	std::wstring NativeToWString(const std::string_view str)
 	{
-		int count = MultiByteToWideChar(CP_ACP, 0, str.c_str(), str.length(), nullptr, 0);
+		if (str.empty())
+			return {};
+
+		int count = MultiByteToWideChar(CP_ACP, 0, str.data(), str.size(), nullptr, 0);
 		std::wstring wstr(count, 0);
-		MultiByteToWideChar(CP_ACP, 0, str.c_str(), str.length(), &wstr[0], count);
+		MultiByteToWideChar(CP_ACP, 0, str.data(), str.size(), &wstr[0], count);
 		return wstr;
+	}
+
+	std::string WStringToNative(const std::wstring_view wideString)
+	{
+		if (wideString.empty())
+			return {};
+
+		const int size_needed = WideCharToMultiByte(CP_ACP, 0, wideString.data(), wideString.size(), nullptr, 0, nullptr, nullptr);
+		std::string result(size_needed, 0);
+		WideCharToMultiByte(CP_ACP, 0, wideString.data(), wideString.size(), result.data(), result.size(), nullptr, nullptr);
+		return result;
+	}
+
+	std::string UTF8ToNative(const std::string_view utf8String)
+	{
+		return WStringToNative(UTF8ToWString(utf8String));
 	}
 
 	bool GetMetalSupported()
 	{
 		return false;
 	}
+
+#elif __APPLE__
+
+	std::string UTF8ToNative(const std::string_view utf8String)
+	{
+		return std::string(utf8String);
+	}
+
+	// macOS implementation of UTF8ToWString is in macos_data.mm
+	
 #endif
 }

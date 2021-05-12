@@ -16,7 +16,7 @@ TEST(DataCollection, CanGetMetrics)
 	EXPECT_FALSE(data.data.subitems.empty());
 }
 
-bool isValidUTF8(std::string_view str)
+bool isValidUTF8(const std::string_view str)
 {
 	for (unsigned long long i = 0, len = str.length(); i < len; i++)
 	{
@@ -58,7 +58,6 @@ TEST(Unicode, DataIsValidUTF8)
 	EXPECT_TRUE(isValidUTF8(data.data));
 }
 
-#if _WIN32
 std::vector<std::pair<std::wstring, std::string>> validUnicodeStrings
 {
 	{L"The quick brown fox jumps over the lazy dog", u8"The quick brown fox jumps over the lazy dog"},
@@ -89,25 +88,35 @@ std::vector<std::pair<std::wstring, std::string>> validUnicodeStrings
 	{L"🐱", u8"🐱"},// Surrogate pair in UTF-16
 };
 
-TEST(Unicode, CanConvertStringsToUTF8)
+TEST(Unicode, CanConvertUTF8ToWStrings)
 {
-	for (auto [utf16, utf8] : validUnicodeStrings)
-		EXPECT_EQ(PDM::WStringToUTF8(utf16), utf8);
+	for (auto [wstr, utf8] : validUnicodeStrings)
+		EXPECT_EQ(PDM::UTF8ToWString(utf8), wstr);
 }
-TEST(Unicode, CanConvertStringsToUTF16)
+
+#if _WIN32
+
+TEST(Unicode, CanConvertWStringsToUTF8)
 {
-	for (auto [utf16, utf8] : validUnicodeStrings)
-		EXPECT_EQ(PDM::UTF8ToWString(utf8), utf16);
+	for (auto [wstr, utf8] : validUnicodeStrings)
+		EXPECT_EQ(PDM::WStringToUTF8(wstr), utf8);
 }
 
 TEST(Unicode, ConvertingStringsTwiceLeavesThemUnchanged)
 {
-	for (auto [utf16, utf8] : validUnicodeStrings)
+	for (auto [wstr, utf8] : validUnicodeStrings)
 	{
 		EXPECT_EQ(PDM::WStringToUTF8(PDM::UTF8ToWString(utf8)), utf8);
-		EXPECT_EQ(PDM::UTF8ToWString(PDM::WStringToUTF8(utf16)), utf16);
+		EXPECT_EQ(PDM::UTF8ToWString(PDM::WStringToUTF8(wstr)), wstr);
 	}
 }
+
+TEST(Unicode, CanConvertUTF8AndWStringsToNative)
+{
+	for (auto [wstr, utf8] : validUnicodeStrings)
+		EXPECT_EQ(PDM::UTF8ToNative(utf8), PDM::WStringToNative(wstr));
+}
+
 #endif
 
 int main(int argc, char** argv)
