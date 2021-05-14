@@ -1,20 +1,16 @@
 #pragma once
 
-#ifndef DllExport
-
-#ifdef DLL_EXPORT
+#ifdef PDM_DLL_EXPORT
 
 #if _WIN32
-#define DllExport __declspec( dllexport )
+#define PDMDllExport __declspec( dllexport )
 #else
-#define DllExport __attribute__(( visibility( "default" ) ))
+#define PDMDllExport __attribute__(( visibility( "default" ) ))
 #endif
 
 #else
 
-#define DllExport
-
-#endif
+#define PDMDllExport
 
 #endif
 
@@ -53,7 +49,7 @@ namespace PDM
 		UNSUPPORTED,
 	};
 
-	struct DllExport CPUInfo
+	struct PDMDllExport CPUInfo
 	{
 		int model{ 0 };
 		int stepping{ 0 };
@@ -63,7 +59,7 @@ namespace PDM
 		unsigned logicalCoreCount{ 0 };
 	};
 
-	struct DllExport MonitorInfo
+	struct PDMDllExport MonitorInfo
 	{
 		std::string name;
 		uint32_t width{};
@@ -73,7 +69,7 @@ namespace PDM
 		uint32_t dpiScaling{};
 	};
 
-	struct DllExport GPUInfo
+	struct PDMDllExport GPUInfo
 	{
 		std::string description;
 		uint32_t vendorID{};
@@ -85,7 +81,7 @@ namespace PDM
 		std::string driverVendor;
 	};
 
-	struct DllExport NetworkAdapterInfo
+	struct PDMDllExport NetworkAdapterInfo
 	{
 		std::string name;
 		std::string macAddressString;
@@ -94,13 +90,13 @@ namespace PDM
 		std::vector<uint8_t> uuid;
 	};
 
-	struct DllExport VulkanProperties
+	struct PDMDllExport VulkanProperties
 	{
 		VulkanSupport support{ VulkanSupport::UNKNOWN };
 		std::string version;
 	};
 
-	struct DllExport TimeStamp : tm
+	struct PDMDllExport TimeStamp : tm
 	{
 		bool operator ==(const TimeStamp& other) const
 		{
@@ -116,7 +112,7 @@ namespace PDM
 		}
 	};
 
-	struct DllExport DataField
+	struct PDMDllExport DataField
 	{
 		bool operator ==(const DataField& other) const
 		{
@@ -127,7 +123,7 @@ namespace PDM
 		std::string value;
 	};
 
-	struct DllExport SubItem
+	struct PDMDllExport SubItem
 	{
 		bool operator ==(const SubItem& other) const
 		{
@@ -141,7 +137,7 @@ namespace PDM
 		std::vector<DataField> items;
 	};
 
-	struct DllExport PDMData
+	struct PDMDllExport PDMData
 	{
 		bool operator ==(const PDMData& other) const
 		{

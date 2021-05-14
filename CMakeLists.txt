@@ -7,6 +7,8 @@ file (STRINGS "BuildNumber.txt" BUILD_NUMBER)
 string(REPLACE "\"" "" BUILD_NUMBER ${BUILD_NUMBER})
 project(pdm VERSION ${BUILD_NUMBER})
 
+option(DLL_EXPORT "Export symbols (for building DLL)" OFF)
+
 list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake)
 
 set(SRC_FILES 
@@ -44,7 +46,9 @@ target_include_directories(pdm
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
-target_compile_definitions(pdm PRIVATE DLL_EXPORT)
+if(DLL_EXPORT)
+	target_compile_definitions(pdm PRIVATE PDM_DLL_EXPORT)
+endif()
 
 include(GNUInstallDirs)
 set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/pdm)

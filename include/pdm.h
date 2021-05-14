@@ -4,45 +4,45 @@
 
 namespace PDM
 {
-	DllExport const PDMData& RetrievePDMData(std::string applicationName, std::string applicationVersion);
+	PDMDllExport const PDMData& RetrievePDMData(std::string applicationName, std::string applicationVersion);
 
-	DllExport std::string GetPDMVersion();
-	DllExport OS GetOSType();
-	DllExport std::string GetOSName();
-	DllExport std::string GetOSMajorVersion();
-	DllExport std::string GetOSMinorVersion();
-	DllExport std::string GetOSBuildNumber();
-	DllExport std::string GetOSKernelVersion();
-	DllExport std::string GetHardwareModel();
-	DllExport std::string GetMachineName();
-	DllExport std::string GetUsername();
-	DllExport std::string GetUserLocale();
-	DllExport unsigned GetMonitorCount();
-	DllExport uint64_t GetTotalMemory();
-	DllExport StreamingService GetStreamingService();
-	DllExport bool IsRemoteSession();
-	DllExport size_t GetTimingCycles();
-	DllExport std::string GetMachineUuidString();
-	DllExport std::vector<uint8_t> GetMachineUuid();
-	DllExport std::vector<MonitorInfo> GetMonitorsInfo();
-	DllExport std::vector<GPUInfo> GetGPUInfo();
-	DllExport std::vector<NetworkAdapterInfo> GetNetworkAdapterInfo();
-	DllExport bool GetMetalSupported();
-	DllExport VulkanProperties GetVulkanProperties();
-	DllExport std::string GetD3DHighestSupport();
-	DllExport bool IsWine();
-	DllExport const char* GetWineVersion();
-	DllExport const char* GetWineHostOs();
-	DllExport Bitness GetProcessBitness();
-	DllExport Bitness GetOSBitness();
-	DllExport CPUInfo GetCPUInfo();
-	DllExport bool HasVMExecutionTiming();
-	DllExport bool HasHypervisorBit();
-	DllExport std::string GetHypervisorName();
-	DllExport bool IsHyperVGuestOS();
-	DllExport bool IsSuspectedVM();
+	PDMDllExport std::string GetPDMVersion();
+	PDMDllExport OS GetOSType();
+	PDMDllExport std::string GetOSName();
+	PDMDllExport std::string GetOSMajorVersion();
+	PDMDllExport std::string GetOSMinorVersion();
+	PDMDllExport std::string GetOSBuildNumber();
+	PDMDllExport std::string GetOSKernelVersion();
+	PDMDllExport std::string GetHardwareModel();
+	PDMDllExport std::string GetMachineName();
+	PDMDllExport std::string GetUsername();
+	PDMDllExport std::string GetUserLocale();
+	PDMDllExport unsigned GetMonitorCount();
+	PDMDllExport uint64_t GetTotalMemory();
+	PDMDllExport StreamingService GetStreamingService();
+	PDMDllExport bool IsRemoteSession();
+	PDMDllExport size_t GetTimingCycles();
+	PDMDllExport std::string GetMachineUuidString();
+	PDMDllExport std::vector<uint8_t> GetMachineUuid();
+	PDMDllExport std::vector<MonitorInfo> GetMonitorsInfo();
+	PDMDllExport std::vector<GPUInfo> GetGPUInfo();
+	PDMDllExport std::vector<NetworkAdapterInfo> GetNetworkAdapterInfo();
+	PDMDllExport bool GetMetalSupported();
+	PDMDllExport VulkanProperties GetVulkanProperties();
+	PDMDllExport std::string GetD3DHighestSupport();
+	PDMDllExport bool IsWine();
+	PDMDllExport const char* GetWineVersion();
+	PDMDllExport const char* GetWineHostOs();
+	PDMDllExport Bitness GetProcessBitness();
+	PDMDllExport Bitness GetOSBitness();
+	PDMDllExport CPUInfo GetCPUInfo();
+	PDMDllExport bool HasVMExecutionTiming();
+	PDMDllExport bool HasHypervisorBit();
+	PDMDllExport std::string GetHypervisorName();
+	PDMDllExport bool IsHyperVGuestOS();
+	PDMDllExport bool IsSuspectedVM();
 
 	// Utility functions
-	DllExport std::string UTF8ToNative(const std::string_view utf8String);
-	DllExport std::wstring UTF8ToWString(const std::string_view utf8String);
+	PDMDllExport std::string UTF8ToNative(const std::string_view utf8String);
+	PDMDllExport std::wstring UTF8ToWString(const std::string_view utf8String);
 }
