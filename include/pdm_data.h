@@ -67,6 +67,7 @@ namespace PDM
 		Bitness bitness;
 		uint32_t logicalCoreCount{ 0 };
 		CPUArchitecture architecture{ CPUArchitecture::UNKNOWN };
+		std::vector<std::string> extensions;
 	};
 
 	struct PDMDllExport MonitorInfo

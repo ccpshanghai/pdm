@@ -29,13 +29,14 @@ set(HDR_FILES
   include/pdm_data.h
   src/defines.h
   src/gatherer.h
+  src/x86_extensions.h
   src/windows/d3d11_info.h
 )
 
 add_library(pdm STATIC
 	${SRC_FILES}
 	${HDR_FILES}
-)
+ )
 add_library(ccp::pdm ALIAS pdm)
 
 target_include_directories(pdm
@@ -97,7 +98,7 @@ add_executable(pdmCLI
 	${SRC_FILES}
 	${HDR_FILES}
 	src/main.cpp
-)
+ )
 
 set_property(TARGET pdm pdmCLI PROPERTY CXX_STANDARD 17)
 set_property(TARGET pdm pdmCLI PROPERTY CXX_STANDARD_REQUIRED ON)

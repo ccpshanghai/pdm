@@ -3,6 +3,7 @@
 #include "utilities.h"
 #include "../include/pdm.h"
 #include "../include/version.h"
+#include "x86_extensions.h"
 
 #include <string>
 #include <thread>
@@ -79,7 +80,9 @@ namespace PDM
 #endif
 		;
 
-		return { model, stepping, vendor, brand, bitness, logicalCoreCount, architecture };
+		std::vector<std::string> extensions = GetX86Extensions();
+
+		return { model, stepping, vendor, brand, bitness, logicalCoreCount, architecture, extensions };
 	}
 
 	size_t GetTimingCycles()
@@ -380,6 +383,9 @@ namespace PDM
 				}
 			});
 		}
+
+		std::string cpuExtensions;
+		for (auto& extension : cpuinfo.extensions) cpuExtensions += (cpuExtensions.empty() ? "" : " ") + extension;
 		
 		VulkanProperties vulkanProperties = GetVulkanProperties();
 
@@ -462,6 +468,7 @@ namespace PDM
 										{"MODEL",              std::to_string(cpuinfo.model)},
 										{"STEPPING",           std::to_string(cpuinfo.stepping)},
 										{"ARCHITECTURE",       CPUArchitectureToString(cpuinfo.architecture)},
+										{"EXTENSIONS",         cpuExtensions },
 									}
 								},
 								{
