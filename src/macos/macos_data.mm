@@ -87,7 +87,7 @@ namespace PDM
 		return [[[NSProcessInfo processInfo] userName] UTF8String];
 	}
 
-	unsigned GetMonitorCount()
+	uint32_t GetMonitorCount()
 	{
 		return [[NSScreen screens] count];
 	}

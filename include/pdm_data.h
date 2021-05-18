@@ -27,6 +27,15 @@ namespace PDM
 		BITNESS_64      = 64
 	};
 
+	enum class CPUArchitecture
+	{
+		UNKNOWN = 0,
+		X86,
+		X86_64,
+		ARM,
+		ARM64,
+	};
+
 	enum class OS
 	{
 		UNKNOWN = 0,
@@ -51,12 +60,13 @@ namespace PDM
 
 	struct PDMDllExport CPUInfo
 	{
-		int model{ 0 };
-		int stepping{ 0 };
+		int32_t model{ 0 };
+		int32_t stepping{ 0 };
 		std::string vendor;
 		std::string brand;
 		Bitness bitness;
-		unsigned logicalCoreCount{ 0 };
+		uint32_t logicalCoreCount{ 0 };
+		CPUArchitecture architecture{ CPUArchitecture::UNKNOWN };
 	};
 
 	struct PDMDllExport MonitorInfo

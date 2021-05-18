@@ -150,7 +150,7 @@ namespace PDM
 		return WStringToUTF8(GetUserNameW(username, &username_len) ? username : L"");
 	}
 
-	unsigned GetMonitorCount()
+	uint32_t GetMonitorCount()
 	{
 		return GetSystemMetrics(SM_CMONITORS);
 	}

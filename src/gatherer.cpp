@@ -52,8 +52,8 @@ namespace PDM
 		std::string vendor = id0.get_ebx_string() + id0.get_edx_string() + id0.get_ecx_string();
 		trim(vendor);
 
-		int model = 0;
-		int stepping = 0;
+		int32_t model = 0;
+		int32_t stepping = 0;
 
 		if (id0.EAX() > 0)
 		{
@@ -64,7 +64,22 @@ namespace PDM
 
 		unsigned logicalCoreCount = std::thread::hardware_concurrency();
 
-		return { model, stepping, vendor, brand, bitness, logicalCoreCount };
+		CPUArchitecture architecture =
+#if _M_IX86 || __i386
+		CPUArchitecture::X86
+#elif _M_AMD64 || __amd64
+		CPUArchitecture::X86_64
+#elif _M_ARM || __arm__
+		CPUArchitecture::ARM
+#elif __aarch64__
+		CPUArchitecture::ARM64
+#else
+		CPUArchitecture::UNKNOWN
+#error Unknown CPU architecture
+#endif
+		;
+
+		return { model, stepping, vendor, brand, bitness, logicalCoreCount, architecture };
 	}
 
 	size_t GetTimingCycles()
@@ -226,6 +241,24 @@ namespace PDM
 		case Bitness::BITNESS_32:
 			return "x32";
 		case Bitness::BITNESS_UNKNOWN:
+		default:
+			return "UNKNOWN";
+		}
+	}
+
+	constexpr const char* CPUArchitectureToString(CPUArchitecture architecture)
+	{
+		switch (architecture)
+		{
+		case CPUArchitecture::X86:
+			return "x86";
+		case CPUArchitecture::X86_64:
+			return "x86_64";
+		case CPUArchitecture::ARM:
+			return "ARM";
+		case CPUArchitecture::ARM64:
+			return "ARM64";
+		case CPUArchitecture::UNKNOWN:
 		default:
 			return "UNKNOWN";
 		}
@@ -428,6 +461,7 @@ namespace PDM
 										{"VENDOR",             cpuinfo.vendor},
 										{"MODEL",              std::to_string(cpuinfo.model)},
 										{"STEPPING",           std::to_string(cpuinfo.stepping)},
+										{"ARCHITECTURE",       CPUArchitectureToString(cpuinfo.architecture)},
 									}
 								},
 								{
