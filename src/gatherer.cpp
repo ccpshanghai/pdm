@@ -10,6 +10,8 @@
 #include <ctime>
 #include <optional>
 
+constexpr auto HYPER_V_NAME = "Microsoft Hv";
+
 namespace PDM
 {
 	Bitness GetOSBitnessInternal();
@@ -36,27 +38,13 @@ namespace PDM
 			bitness = Bitness::BITNESS_32;
 		}
 		
-		std::string brand;
-
-		if (id8.EAX() >= CPUID::CPUID_MODEL_NAME_FLAG)
-		{
-			for (unsigned i = 0; i < 3; i++)
-			{
-				CPUID id(CPUID::CPUID_MODEL_NAME_OFFSET_FLAG + i);
-				brand += id.get_eax_string() + id.get_ebx_string() + id.get_ecx_string() + id.get_edx_string();
-			}
-
-			trim(brand);
-		}
-
-		CPUID id0(0);
-		std::string vendor = id0.get_ebx_string() + id0.get_edx_string() + id0.get_ecx_string();
-		trim(vendor);
+		std::string brand = CPUID::GetBrand();
+		std::string vendor = CPUID::GetVendor();
 
 		int32_t model = 0;
 		int32_t stepping = 0;
 
-		if (id0.EAX() > 0)
+		if (CPUID(0).EAX() > 0)
 		{
 			CPUID id1(1);
 			model = (id1.EAX() >> 4) & 0xf;

@@ -1,3 +1,5 @@
+#pragma once
+
 #include <bitset>
 #include <array>
 #include <string>
@@ -7,84 +9,93 @@
 #include <intrin.h>
 #endif
 
-// Official Microsoft code from https://docs.microsoft.com/en-us/cpp/intrinsics/cpuid-cpuidex
-class InstructionSet
+#include "utilities.h"
+
+namespace PDM
 {
-    // forward declarations
-    class InstructionSet_Internal;
+    class CPUID
+    {
+        uint32_t regs[4];
 
-public:
-    // getters
-    static std::string Vendor() { return CPU_Rep.vendor_; }
-    static std::string Brand() { return CPU_Rep.brand_; }
+    public:
+        explicit CPUID(unsigned funcId)
+        {
+        #if _WIN32
+            __cpuidex(reinterpret_cast<int*>(regs), static_cast<int>(funcId), 0);
+        #else
+            asm volatile
+            (
+                "cpuid" :
+                "=a" (regs[0]),
+                "=b" (regs[1]),
+                "=c" (regs[2]),
+                "=d" (regs[3]) :
+                "a" (funcId),
+                "c" (0)
+            );
+        #endif
+        }
 
-    static bool SSE3() { return CPU_Rep.f_1_ECX_[0]; }
-    static bool PCLMULQDQ() { return CPU_Rep.f_1_ECX_[1]; }
-    static bool MONITOR() { return CPU_Rep.f_1_ECX_[3]; }
-    static bool SSSE3() { return CPU_Rep.f_1_ECX_[9]; }
-    static bool FMA() { return CPU_Rep.f_1_ECX_[12]; }
-    static bool CMPXCHG16B() { return CPU_Rep.f_1_ECX_[13]; }
-    static bool SSE41() { return CPU_Rep.f_1_ECX_[19]; }
-    static bool SSE42() { return CPU_Rep.f_1_ECX_[20]; }
-    static bool MOVBE() { return CPU_Rep.f_1_ECX_[22]; }
-    static bool POPCNT() { return CPU_Rep.f_1_ECX_[23]; }
-    static bool AES() { return CPU_Rep.f_1_ECX_[25]; }
-    static bool XSAVE() { return CPU_Rep.f_1_ECX_[26]; }
-    static bool OSXSAVE() { return CPU_Rep.f_1_ECX_[27]; }
-    static bool AVX() { return CPU_Rep.f_1_ECX_[28]; }
-    static bool F16C() { return CPU_Rep.f_1_ECX_[29]; }
-    static bool RDRAND() { return CPU_Rep.f_1_ECX_[30]; }
+        const uint32_t& EAX() const { return regs[0]; }
+        const uint32_t& EBX() const { return regs[1]; }
+        const uint32_t& ECX() const { return regs[2]; }
+        const uint32_t& EDX() const { return regs[3]; }
 
-    static bool MSR() { return CPU_Rep.f_1_EDX_[5]; }
-    static bool CX8() { return CPU_Rep.f_1_EDX_[8]; }
-    static bool SEP() { return CPU_Rep.f_1_EDX_[11]; }
-    static bool CMOV() { return CPU_Rep.f_1_EDX_[15]; }
-    static bool CLFSH() { return CPU_Rep.f_1_EDX_[19]; }
-    static bool MMX() { return CPU_Rep.f_1_EDX_[23]; }
-    static bool FXSR() { return CPU_Rep.f_1_EDX_[24]; }
-    static bool SSE() { return CPU_Rep.f_1_EDX_[25]; }
-    static bool SSE2() { return CPU_Rep.f_1_EDX_[26]; }
+        bool has_data() const
+        {
+            return EAX() || EBX() || ECX() || EDX();
+        }
 
-    static bool FSGSBASE() { return CPU_Rep.f_7_EBX_[0]; }
-    static bool BMI1() { return CPU_Rep.f_7_EBX_[3]; }
-    static bool HLE() { return CPU_Rep.isIntel_ && CPU_Rep.f_7_EBX_[4]; }
-    static bool AVX2() { return CPU_Rep.f_7_EBX_[5]; }
-    static bool BMI2() { return CPU_Rep.f_7_EBX_[8]; }
-    static bool ERMS() { return CPU_Rep.f_7_EBX_[9]; }
-    static bool INVPCID() { return CPU_Rep.f_7_EBX_[10]; }
-    static bool RTM() { return CPU_Rep.isIntel_ && CPU_Rep.f_7_EBX_[11]; }
-    static bool AVX512F() { return CPU_Rep.f_7_EBX_[16]; }
-    static bool RDSEED() { return CPU_Rep.f_7_EBX_[18]; }
-    static bool ADX() { return CPU_Rep.f_7_EBX_[19]; }
-    static bool AVX512PF() { return CPU_Rep.f_7_EBX_[26]; }
-    static bool AVX512ER() { return CPU_Rep.f_7_EBX_[27]; }
-    static bool AVX512CD() { return CPU_Rep.f_7_EBX_[28]; }
-    static bool SHA() { return CPU_Rep.f_7_EBX_[29]; }
+        std::string register_to_string(uint32_t reg) const
+        {
+            return std::string(reinterpret_cast<const char*>(&reg), 4);
+        }
 
-    static bool PREFETCHWT1() { return CPU_Rep.f_7_ECX_[0]; }
+        static std::string GetVendor()
+        {
+            CPUID id0(0);
+            std::string vendor = id0.get_ebx_string() + id0.get_edx_string() + id0.get_ecx_string();
+            trim(vendor);
+            return vendor;
+        }
 
-    static bool LAHF() { return CPU_Rep.f_81_ECX_[0]; }
-    static bool LZCNT() { return CPU_Rep.isIntel_ && CPU_Rep.f_81_ECX_[5]; }
-    static bool ABM() { return CPU_Rep.isAMD_ && CPU_Rep.f_81_ECX_[5]; }
-    static bool SSE4a() { return CPU_Rep.isAMD_ && CPU_Rep.f_81_ECX_[6]; }
-    static bool XOP() { return CPU_Rep.isAMD_ && CPU_Rep.f_81_ECX_[11]; }
-    static bool TBM() { return CPU_Rep.isAMD_ && CPU_Rep.f_81_ECX_[21]; }
+        static std::string GetBrand()
+        {
+            std::string brand;
 
-    static bool SYSCALL() { return CPU_Rep.isIntel_ && CPU_Rep.f_81_EDX_[11]; }
-    static bool MMXEXT() { return CPU_Rep.isAMD_ && CPU_Rep.f_81_EDX_[22]; }
-    static bool RDTSCP() { return CPU_Rep.isIntel_ && CPU_Rep.f_81_EDX_[27]; }
-    static bool _3DNOWEXT() { return CPU_Rep.isAMD_ && CPU_Rep.f_81_EDX_[30]; }
-    static bool _3DNOW() { return CPU_Rep.isAMD_ && CPU_Rep.f_81_EDX_[31]; }
+            if (CPUID(CPUID_FLAG).EAX() >= CPUID_MODEL_NAME_FLAG)
+            {
+                for (unsigned i = 0; i < 3; i++)
+                {
+                    CPUID id(CPUID_MODEL_NAME_OFFSET_FLAG + i);
+                    brand += id.get_eax_string() + id.get_ebx_string() + id.get_ecx_string() + id.get_edx_string();
+                }
 
-private:
-    static const InstructionSet_Internal CPU_Rep;
+                trim(brand);
+            }
 
-    class InstructionSet_Internal
+            return brand;
+        }
+
+        std::string get_eax_string() const { return register_to_string(EAX()); }
+        std::string get_ebx_string() const { return register_to_string(EBX()); }
+        std::string get_ecx_string() const { return register_to_string(ECX()); }
+        std::string get_edx_string() const { return register_to_string(EDX()); }
+
+        static constexpr uint32_t CPUID_FLAG                   = 0x80000000;
+        static constexpr uint32_t CPUID_EXTENDED_FLAG          = 0x80000001;
+        static constexpr uint32_t CPUID_X64_FLAG               = 0x20000000;
+        static constexpr uint32_t CPUID_MODEL_NAME_FLAG        = 0x80000004;
+        static constexpr uint32_t CPUID_MODEL_NAME_OFFSET_FLAG = 0x80000002;
+        static constexpr uint32_t HYPERVISOR_PRESENT_FLAG      = 0x80000000;
+        static constexpr uint32_t HYPERVISOR_INFO_FLAG         = 0x40000000;
+    };
+
+    // Extension checking taken from https://docs.microsoft.com/en-us/cpp/intrinsics/cpuid-cpuidex
+    class InstructionSet
     {
     public:
-        InstructionSet_Internal()
-            : nIds_{ 0 },
-            nExIds_{ 0 },
+        InstructionSet() :
             isIntel_{ false },
             isAMD_{ false },
             f_1_ECX_{ 0 },
@@ -92,164 +103,167 @@ private:
             f_7_EBX_{ 0 },
             f_7_ECX_{ 0 },
             f_81_ECX_{ 0 },
-            f_81_EDX_{ 0 },
-            data_{},
-            extdata_{}
+            f_81_EDX_{ 0 }
         {
-            //int cpuInfo[4] = {-1};
-            std::array<int, 4> cpui;
-
-            // Calling __cpuid with 0x0 as the function_id argument
-            // gets the number of the highest valid function ID.
-            __cpuid(cpui.data(), 0);
-            nIds_ = cpui[0];
-
-            for (int i = 0; i <= nIds_; ++i)
-            {
-                __cpuidex(cpui.data(), i, 0);
-                data_.push_back(cpui);
-            }
-
-            // Capture vendor string
-            char vendor[0x20];
-            memset(vendor, 0, sizeof(vendor));
-            *reinterpret_cast<int*>(vendor) = data_[0][1];
-            *reinterpret_cast<int*>(vendor + 4) = data_[0][3];
-            *reinterpret_cast<int*>(vendor + 8) = data_[0][2];
-            vendor_ = vendor;
-            if (vendor_ == "GenuineIntel")
-            {
+            std::string vendor = CPUID::GetVendor();
+            if (vendor == "GenuineIntel")
                 isIntel_ = true;
-            }
-            else if (vendor_ == "AuthenticAMD")
-            {
+            else if (vendor == "AuthenticAMD")
                 isAMD_ = true;
-            }
-
-            // load bitset with flags for function 0x00000001
-            if (nIds_ >= 1)
+            
+            uint32_t ids = CPUID(0).EAX();
+            if (ids >= 1)
             {
-                f_1_ECX_ = data_[1][2];
-                f_1_EDX_ = data_[1][3];
+                CPUID id1(1);
+                f_1_ECX_ = id1.ECX();
+                f_1_EDX_ = id1.EDX();
             }
-
-            // load bitset with flags for function 0x00000007
-            if (nIds_ >= 7)
+            if (ids >= 7)
             {
-                f_7_EBX_ = data_[7][1];
-                f_7_ECX_ = data_[7][2];
+                CPUID id7(7);
+                f_7_EBX_ = id7.EBX();
+                f_7_ECX_ = id7.ECX();
             }
-
-            // Calling __cpuid with 0x80000000 as the function_id argument
-            // gets the number of the highest valid extended ID.
-            __cpuid(cpui.data(), 0x80000000);
-            nExIds_ = cpui[0];
-
-            char brand[0x40];
-            memset(brand, 0, sizeof(brand));
-
-            for (int i = 0x80000000; i <= nExIds_; ++i)
+            if (CPUID(CPUID::CPUID_FLAG).EAX() >= CPUID::CPUID_EXTENDED_FLAG)
             {
-                __cpuidex(cpui.data(), i, 0);
-                extdata_.push_back(cpui);
-            }
-
-            // load bitset with flags for function 0x80000001
-            if (nExIds_ >= 0x80000001)
-            {
-                f_81_ECX_ = extdata_[1][2];
-                f_81_EDX_ = extdata_[1][3];
-            }
-
-            // Interpret CPU brand string if reported
-            if (nExIds_ >= 0x80000004)
-            {
-                memcpy(brand, extdata_[2].data(), sizeof(cpui));
-                memcpy(brand + 16, extdata_[3].data(), sizeof(cpui));
-                memcpy(brand + 32, extdata_[4].data(), sizeof(cpui));
-                brand_ = brand;
+                CPUID ext(CPUID::CPUID_EXTENDED_FLAG);
+                f_81_ECX_ = ext.ECX();
+                f_81_EDX_ = ext.EDX();
             }
         };
 
-        int nIds_;
-        int nExIds_;
-        std::string vendor_;
-        std::string brand_;
+        bool SSE3() { return f_1_ECX_[0]; }
+        bool PCLMULQDQ() { return f_1_ECX_[1]; }
+        bool MONITOR() { return f_1_ECX_[3]; }
+        bool SSSE3() { return f_1_ECX_[9]; }
+        bool FMA() { return f_1_ECX_[12]; }
+        bool CMPXCHG16B() { return f_1_ECX_[13]; }
+        bool SSE41() { return f_1_ECX_[19]; }
+        bool SSE42() { return f_1_ECX_[20]; }
+        bool MOVBE() { return f_1_ECX_[22]; }
+        bool POPCNT() { return f_1_ECX_[23]; }
+        bool AES() { return f_1_ECX_[25]; }
+        bool XSAVE() { return f_1_ECX_[26]; }
+        bool OSXSAVE() { return f_1_ECX_[27]; }
+        bool AVX() { return f_1_ECX_[28]; }
+        bool F16C() { return f_1_ECX_[29]; }
+        bool RDRAND() { return f_1_ECX_[30]; }
+
+        bool MSR() { return f_1_EDX_[5]; }
+        bool CX8() { return f_1_EDX_[8]; }
+        bool SEP() { return f_1_EDX_[11]; }
+        bool CMOV() { return f_1_EDX_[15]; }
+        bool CLFSH() { return f_1_EDX_[19]; }
+        bool MMX() { return f_1_EDX_[23]; }
+        bool FXSR() { return f_1_EDX_[24]; }
+        bool SSE() { return f_1_EDX_[25]; }
+        bool SSE2() { return f_1_EDX_[26]; }
+
+        bool FSGSBASE() { return f_7_EBX_[0]; }
+        bool BMI1() { return f_7_EBX_[3]; }
+        bool HLE() { return isIntel_ && f_7_EBX_[4]; }
+        bool AVX2() { return f_7_EBX_[5]; }
+        bool BMI2() { return f_7_EBX_[8]; }
+        bool ERMS() { return f_7_EBX_[9]; }
+        bool INVPCID() { return f_7_EBX_[10]; }
+        bool RTM() { return isIntel_ && f_7_EBX_[11]; }
+        bool AVX512F() { return f_7_EBX_[16]; }
+        bool RDSEED() { return f_7_EBX_[18]; }
+        bool ADX() { return f_7_EBX_[19]; }
+        bool AVX512PF() { return f_7_EBX_[26]; }
+        bool AVX512ER() { return f_7_EBX_[27]; }
+        bool AVX512CD() { return f_7_EBX_[28]; }
+        bool SHA() { return f_7_EBX_[29]; }
+
+        bool PREFETCHWT1() { return f_7_ECX_[0]; }
+
+        bool LAHF() { return f_81_ECX_[0]; }
+        bool LZCNT() { return isIntel_ && f_81_ECX_[5]; }
+        bool ABM() { return isAMD_ && f_81_ECX_[5]; }
+        bool SSE4a() { return isAMD_ && f_81_ECX_[6]; }
+        bool XOP() { return isAMD_ && f_81_ECX_[11]; }
+        bool TBM() { return isAMD_ && f_81_ECX_[21]; }
+
+        bool SYSCALL() { return isIntel_ && f_81_EDX_[11]; }
+        bool MMXEXT() { return isAMD_ && f_81_EDX_[22]; }
+        bool RDTSCP() { return isIntel_ && f_81_EDX_[27]; }
+        bool _3DNOWEXT() { return isAMD_ && f_81_EDX_[30]; }
+        bool _3DNOW() { return isAMD_ && f_81_EDX_[31]; }
+
+    private:
         bool isIntel_;
         bool isAMD_;
-        std::bitset<32> f_1_ECX_;
+        std::bitset<32> f_1_ECX_;   
         std::bitset<32> f_1_EDX_;
         std::bitset<32> f_7_EBX_;
         std::bitset<32> f_7_ECX_;
         std::bitset<32> f_81_ECX_;
         std::bitset<32> f_81_EDX_;
-        std::vector<std::array<int, 4>> data_;
-        std::vector<std::array<int, 4>> extdata_;
     };
-};
 
-const InstructionSet::InstructionSet_Internal InstructionSet::CPU_Rep;
-
-std::vector<std::string> GetX86Extensions()
-{
-    std::vector<std::string> extensions;
-
-	auto add_extension = [&extensions](std::string isa_feature, bool is_supported)
+    std::vector<std::string> GetX86Extensions()
     {
-        if (is_supported) extensions.push_back(isa_feature);
-    };
+        std::vector<std::string> extensions;
 
-    add_extension("3DNOW",       InstructionSet::_3DNOW());
-    add_extension("3DNOWEXT",    InstructionSet::_3DNOWEXT());
-    add_extension("ABM",         InstructionSet::ABM());
-    add_extension("ADX",         InstructionSet::ADX());
-    add_extension("AES",         InstructionSet::AES());
-    add_extension("AVX",         InstructionSet::AVX());
-    add_extension("AVX2",        InstructionSet::AVX2());
-    add_extension("AVX512CD",    InstructionSet::AVX512CD());
-    add_extension("AVX512ER",    InstructionSet::AVX512ER());
-    add_extension("AVX512F",     InstructionSet::AVX512F());
-    add_extension("AVX512PF",    InstructionSet::AVX512PF());
-    add_extension("BMI1",        InstructionSet::BMI1());
-    add_extension("BMI2",        InstructionSet::BMI2());
-    add_extension("CLFSH",       InstructionSet::CLFSH());
-    add_extension("CMPXCHG16B",  InstructionSet::CMPXCHG16B());
-    add_extension("CX8",         InstructionSet::CX8());
-    add_extension("ERMS",        InstructionSet::ERMS());
-    add_extension("F16C",        InstructionSet::F16C());
-    add_extension("FMA",         InstructionSet::FMA());
-    add_extension("FSGSBASE",    InstructionSet::FSGSBASE());
-    add_extension("FXSR",        InstructionSet::FXSR());
-    add_extension("HLE",         InstructionSet::HLE());
-    add_extension("INVPCID",     InstructionSet::INVPCID());
-    add_extension("LAHF",        InstructionSet::LAHF());
-    add_extension("LZCNT",       InstructionSet::LZCNT());
-    add_extension("MMX",         InstructionSet::MMX());
-    add_extension("MMXEXT",      InstructionSet::MMXEXT());
-    add_extension("MONITOR",     InstructionSet::MONITOR());
-    add_extension("MOVBE",       InstructionSet::MOVBE());
-    add_extension("MSR",         InstructionSet::MSR());
-    add_extension("OSXSAVE",     InstructionSet::OSXSAVE());
-    add_extension("PCLMULQDQ",   InstructionSet::PCLMULQDQ());
-    add_extension("POPCNT",      InstructionSet::POPCNT());
-    add_extension("PREFETCHWT1", InstructionSet::PREFETCHWT1());
-    add_extension("RDRAND",      InstructionSet::RDRAND());
-    add_extension("RDSEED",      InstructionSet::RDSEED());
-    add_extension("RDTSCP",      InstructionSet::RDTSCP());
-    add_extension("RTM",         InstructionSet::RTM());
-    add_extension("SEP",         InstructionSet::SEP());
-    add_extension("SHA",         InstructionSet::SHA());
-    add_extension("SSE",         InstructionSet::SSE());
-    add_extension("SSE2",        InstructionSet::SSE2());
-    add_extension("SSE3",        InstructionSet::SSE3());
-    add_extension("SSE4.1",      InstructionSet::SSE41());
-    add_extension("SSE4.2",      InstructionSet::SSE42());
-    add_extension("SSE4a",       InstructionSet::SSE4a());
-    add_extension("SSSE3",       InstructionSet::SSSE3());
-    add_extension("SYSCALL",     InstructionSet::SYSCALL());
-    add_extension("TBM",         InstructionSet::TBM());
-    add_extension("XOP",         InstructionSet::XOP());
-    add_extension("XSAVE",       InstructionSet::XSAVE());
+        auto add_extension = [&extensions](std::string isa_feature, bool is_supported)
+        {
+            if (is_supported) extensions.push_back(isa_feature);
+        };
 
-    return extensions;
+        InstructionSet instructionSet;
+
+        add_extension("3DNOW",       instructionSet._3DNOW());
+        add_extension("3DNOWEXT",    instructionSet._3DNOWEXT());
+        add_extension("ABM",         instructionSet.ABM());
+        add_extension("ADX",         instructionSet.ADX());
+        add_extension("AES",         instructionSet.AES());
+        add_extension("AVX",         instructionSet.AVX());
+        add_extension("AVX2",        instructionSet.AVX2());
+        add_extension("AVX512CD",    instructionSet.AVX512CD());
+        add_extension("AVX512ER",    instructionSet.AVX512ER());
+        add_extension("AVX512F",     instructionSet.AVX512F());
+        add_extension("AVX512PF",    instructionSet.AVX512PF());
+        add_extension("BMI1",        instructionSet.BMI1());
+        add_extension("BMI2",        instructionSet.BMI2());
+        add_extension("CLFSH",       instructionSet.CLFSH());
+        add_extension("CMPXCHG16B",  instructionSet.CMPXCHG16B());
+        add_extension("CX8",         instructionSet.CX8());
+        add_extension("ERMS",        instructionSet.ERMS());
+        add_extension("F16C",        instructionSet.F16C());
+        add_extension("FMA",         instructionSet.FMA());
+        add_extension("FSGSBASE",    instructionSet.FSGSBASE());
+        add_extension("FXSR",        instructionSet.FXSR());
+        add_extension("HLE",         instructionSet.HLE());
+        add_extension("INVPCID",     instructionSet.INVPCID());
+        add_extension("LAHF",        instructionSet.LAHF());
+        add_extension("LZCNT",       instructionSet.LZCNT());
+        add_extension("MMX",         instructionSet.MMX());
+        add_extension("MMXEXT",      instructionSet.MMXEXT());
+        add_extension("MONITOR",     instructionSet.MONITOR());
+        add_extension("MOVBE",       instructionSet.MOVBE());
+        add_extension("MSR",         instructionSet.MSR());
+        add_extension("OSXSAVE",     instructionSet.OSXSAVE());
+        add_extension("PCLMULQDQ",   instructionSet.PCLMULQDQ());
+        add_extension("POPCNT",      instructionSet.POPCNT());
+        add_extension("PREFETCHWT1", instructionSet.PREFETCHWT1());
+        add_extension("RDRAND",      instructionSet.RDRAND());
+        add_extension("RDSEED",      instructionSet.RDSEED());
+        add_extension("RDTSCP",      instructionSet.RDTSCP());
+        add_extension("RTM",         instructionSet.RTM());
+        add_extension("SEP",         instructionSet.SEP());
+        add_extension("SHA",         instructionSet.SHA());
+        add_extension("SSE",         instructionSet.SSE());
+        add_extension("SSE2",        instructionSet.SSE2());
+        add_extension("SSE3",        instructionSet.SSE3());
+        add_extension("SSE4.1",      instructionSet.SSE41());
+        add_extension("SSE4.2",      instructionSet.SSE42());
+        add_extension("SSE4a",       instructionSet.SSE4a());
+        add_extension("SSSE3",       instructionSet.SSSE3());
+        add_extension("SYSCALL",     instructionSet.SYSCALL());
+        add_extension("TBM",         instructionSet.TBM());
+        add_extension("XOP",         instructionSet.XOP());
+        add_extension("XSAVE",       instructionSet.XSAVE());
+
+        return extensions;
+    }
 }
