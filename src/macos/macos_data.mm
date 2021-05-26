@@ -308,6 +308,13 @@ namespace PDM
 		return [MTLCopyAllDevices() count] > 0;
 	}
 
+	bool IsRosetta()
+	{
+		int ret = 0;
+		size_t size = sizeof(ret);
+		return sysctlbyname("sysctl.proc_translated", &ret, &size, NULL, 0) == -1 ? false : ret;
+	}
+
 	VulkanProperties GetVulkanProperties()
 	{
 		// We can safely assume that metal support implies vulkan support (but we might want to probe this in the future anyway)

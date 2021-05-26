@@ -94,6 +94,11 @@ namespace PDM
 		return false;
 	}
 
+	bool IsRosetta()
+	{
+		return false;
+	}
+
 #elif __APPLE__
 
 	std::string UTF8ToNative(const std::string_view utf8String)

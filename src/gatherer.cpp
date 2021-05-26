@@ -395,9 +395,10 @@ namespace PDM
 							"PROCESS",
 							{},
 							{
-								{"VERSION",   GetPDMVersion()},
-								{"TIMESTAMP", TimestampToString(timestamp)},
-								{"BITNESS",   BitnessToString(GetProcessBitness())},
+								{"VERSION",    GetPDMVersion()},
+								{"TIMESTAMP",  TimestampToString(timestamp)},
+								{"BITNESS",    BitnessToString(GetProcessBitness())},
+								{"IS_ROSETTA", IsRosetta() ? "YES" : "NO"},
 							}
 						},
 						{
