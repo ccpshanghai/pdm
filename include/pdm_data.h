@@ -48,7 +48,7 @@ namespace PDM
 	{
 		NONE = 0,
 		UNKNOWN,
-		INTEL,
+		INTEL_STREAM,
 	};
 
 	enum class VulkanSupport

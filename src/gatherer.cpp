@@ -200,7 +200,7 @@ namespace PDM
 		{
 			std::string s = tolower(*service);
 			if (s == "intel")
-				return StreamingService::INTEL;
+				return StreamingService::INTEL_STREAM;
 			return StreamingService::UNKNOWN;
 		}
 
@@ -277,7 +277,7 @@ namespace PDM
 		{
 		case StreamingService::NONE:
 			return "NONE";
-		case StreamingService::INTEL:
+		case StreamingService::INTEL_STREAM:
 			return "Intel";
 		case StreamingService::UNKNOWN:
 		default:
