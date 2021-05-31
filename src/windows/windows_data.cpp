@@ -183,8 +183,6 @@ namespace PDM
 
 	std::vector<NetworkAdapterInfo> GetNetworkAdapterInfo()
 	{
-		if (IsWine()) return {};
-
 		ULONG size = 0;
 		if (GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_INCLUDE_PREFIX, nullptr, nullptr, &size) != ERROR_BUFFER_OVERFLOW) return {};
 
