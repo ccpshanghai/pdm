@@ -29,7 +29,7 @@ set(HDR_FILES
   include/pdm_data.h
   src/defines.h
   src/gatherer.h
-  src/x86_extensions.h
+  src/cpu_extensions.h
   src/windows/d3d11_info.h
 )
 

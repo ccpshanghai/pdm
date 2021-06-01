@@ -4,6 +4,7 @@
 #include <array>
 #include <string>
 #include <vector>
+#include <thread>
 
 #if _WIN32
 #include <intrin.h>
@@ -13,6 +14,26 @@
 
 namespace PDM
 {
+    constexpr CPUArchitecture GetCPUArchitecture()
+    {
+#if _M_IX86 || __i386
+		return CPUArchitecture::X86;
+#elif _M_AMD64 || __amd64
+		return CPUArchitecture::X86_64;
+#elif _M_ARM || __arm__
+		return CPUArchitecture::ARM;
+#elif __aarch64__
+		return CPUArchitecture::ARM64;
+#else
+		return CPUArchitecture::UNKNOWN;
+#error Unknown CPU architecture
+#endif
+    }
+
+// Assume x86
+#if !__aarch64__
+    constexpr auto HYPER_V_NAME = "Microsoft Hv";
+
     class CPUID
     {
         uint32_t regs[4];
@@ -77,6 +98,51 @@ namespace PDM
             return brand;
         }
 
+        static Bitness GetBitness()
+        {
+            Bitness bitness;
+
+            CPUID id8(CPUID::CPUID_FLAG);
+            if (id8.EAX() >= CPUID::CPUID_EXTENDED_FLAG)
+            {
+                CPUID id81(CPUID::CPUID_EXTENDED_FLAG);
+                bitness = id81.EDX() & CPUID::CPUID_X64_FLAG ? Bitness::BITNESS_64 : Bitness::BITNESS_32;
+            }
+            else
+            {
+                bitness = Bitness::BITNESS_32;
+            }
+
+            return bitness;
+        }
+
+        static std::tuple<int32_t, int32_t> GetCPUModelStepping()
+        {
+            int32_t model = 0;
+            int32_t stepping = 0;
+
+            if (CPUID(0).EAX() > 0)
+            {
+                CPUID id1(1);
+                model = (id1.EAX() >> 4) & 0xf;
+                stepping = id1.EAX() & 0xf;
+            }
+
+            return {model, stepping};
+        }
+
+        static int32_t GetModel()
+        {
+            auto [model, stepping] = GetCPUModelStepping();
+            return model;
+        }
+
+        static int32_t GetStepping()
+        {
+            auto [model, stepping] = GetCPUModelStepping();
+            return stepping;
+        }
+
         std::string get_eax_string() const { return register_to_string(EAX()); }
         std::string get_ebx_string() const { return register_to_string(EBX()); }
         std::string get_ecx_string() const { return register_to_string(ECX()); }
@@ -90,6 +156,43 @@ namespace PDM
         static constexpr uint32_t HYPERVISOR_PRESENT_FLAG      = 0x80000000;
         static constexpr uint32_t HYPERVISOR_INFO_FLAG         = 0x40000000;
     };
+
+	bool HasHypervisorBit()
+	{
+		return CPUID(1).ECX() & CPUID::HYPERVISOR_PRESENT_FLAG;
+	}
+
+	std::string GetHypervisorName()
+	{
+		if (!HasHypervisorBit()) return "";
+
+		CPUID id(CPUID::HYPERVISOR_INFO_FLAG);
+		auto str = id.get_ebx_string() + id.get_ecx_string() + id.get_edx_string();
+		trim(str);
+		return str;
+	}
+
+	bool IsHyperVGuestOS()
+	{
+		if (GetHypervisorName() != HYPER_V_NAME) return false;
+
+		// TODO: More checks?
+		if (CPUID(CPUID::HYPERVISOR_INFO_FLAG + 128).has_data() ||
+			CPUID(CPUID::HYPERVISOR_INFO_FLAG + 129).has_data() ||
+			CPUID(CPUID::HYPERVISOR_INFO_FLAG + 130).has_data())
+			return true;
+
+		return false;
+	}
+
+	bool IsSuspectedVM()
+	{
+		if (HasVMExecutionTiming() || IsHyperVGuestOS()) return true;
+		if (!HasHypervisorBit()) return false;
+		if (GetHypervisorName() != HYPER_V_NAME) return true;
+
+		return false;
+	}
 
     // Extension checking taken from https://docs.microsoft.com/en-us/cpp/intrinsics/cpuid-cpuidex
     class InstructionSet
@@ -201,7 +304,7 @@ namespace PDM
         std::bitset<32> f_81_EDX_;
     };
 
-    std::vector<std::string> GetX86Extensions()
+    std::vector<std::string> GetCPUExtensions()
     {
         std::vector<std::string> extensions;
 
@@ -266,4 +369,92 @@ namespace PDM
 
         return extensions;
     }
+// ARM64, currently only supported on macOS
+#else
+    class CPUID
+    {
+    public:
+		static Bitness GetBitness()
+        {
+            return Bitness::BITNESS_64;
+        }
+
+		static std::string GetBrand()
+        {
+            return GetOSString("machdep.cpu.brand_string");
+        }
+
+		static std::string GetVendor()
+        {
+            return "Apple";
+        }
+
+		static int32_t GetModel()
+        {
+            return GetOSInteger("hw.cpufamily");
+        }
+
+		static int32_t GetStepping()
+        {
+            return GetOSInteger("hw.cpusubfamily");
+        }
+    };
+
+    bool HasHypervisorBit()
+	{
+        return GetOSInteger("kern.hv_vmm_present");
+	}
+
+	std::string GetHypervisorName()
+	{
+        // Model name will always contain 'mac' on original hardware
+		std::string hw = GetOSString("hw.model");
+        return tolower(hw).find("mac") == std::string::npos ? hw : "";
+	}
+
+	bool IsHyperVGuestOS()
+    {
+        return false;
+    }
+
+    std::vector<std::string> GetCPUExtensions()
+    {
+        // TODO: Query extensions
+        return {"AES", "CRC32", "PMULL", "SHA1", "SHA2"};
+    }
+
+	bool IsSuspectedVM()
+	{
+		return
+            HasVMExecutionTiming() ||
+            HasHypervisorBit() ||
+            GetHypervisorName() != "";
+	}
+#endif
+
+    size_t GetTimingCycles()
+	{
+		volatile size_t time1 = 0;
+		volatile size_t time2 = 0;
+
+#if _WIN64
+		time1 = __rdtsc();
+		time2 = __rdtsc();
+#elif _WIN32
+		__asm
+		{
+			RDTSC
+			MOV time1, EAX
+			RDTSC
+			MOV time2, EAX
+		}
+#elif __aarch64__
+		asm volatile("mrs %0, cntvct_el0" : "=r" (time1));
+		asm volatile("mrs %0, cntvct_el0" : "=r" (time2));
+#else
+		asm volatile("RDTSC" : "=a" (time1));
+		asm volatile("RDTSC" : "=a" (time2));
+#endif
+		return time2 - time1;
+	}
 }

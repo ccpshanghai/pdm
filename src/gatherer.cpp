@@ -3,97 +3,33 @@
 #include "utilities.h"
 #include "../include/pdm.h"
 #include "../include/version.h"
-#include "x86_extensions.h"
+#include "cpu_extensions.h"
 
 #include <string>
-#include <thread>
 #include <ctime>
 #include <optional>
-
-constexpr auto HYPER_V_NAME = "Microsoft Hv";
 
 namespace PDM
 {
 	Bitness GetOSBitnessInternal();
-
 
 	std::string GetPDMVersion()
 	{
 		return PROJECT_VER;
 	}
 
-	// Only works on x86/x64/IA32/IA64 architectures
 	CPUInfo GetCPUInfo()
 	{
-		Bitness bitness;
-
-		CPUID id8(CPUID::CPUID_FLAG);
-		if (id8.EAX() >= CPUID::CPUID_EXTENDED_FLAG)
-		{
-			CPUID id81(CPUID::CPUID_EXTENDED_FLAG);
-			bitness = id81.EDX() & CPUID::CPUID_X64_FLAG ? Bitness::BITNESS_64 : Bitness::BITNESS_32;
-		}
-		else
-		{
-			bitness = Bitness::BITNESS_32;
-		}
-		
+		Bitness bitness = CPUID::GetBitness();
 		std::string brand = CPUID::GetBrand();
 		std::string vendor = CPUID::GetVendor();
-
-		int32_t model = 0;
-		int32_t stepping = 0;
-
-		if (CPUID(0).EAX() > 0)
-		{
-			CPUID id1(1);
-			model = (id1.EAX() >> 4) & 0xf;
-			stepping = id1.EAX() & 0xf;
-		}
-
+		int32_t model = CPUID::GetModel();
+		int32_t stepping = CPUID::GetStepping();
 		unsigned logicalCoreCount = std::thread::hardware_concurrency();
-
-		CPUArchitecture architecture =
-#if _M_IX86 || __i386
-		CPUArchitecture::X86
-#elif _M_AMD64 || __amd64
-		CPUArchitecture::X86_64
-#elif _M_ARM || __arm__
-		CPUArchitecture::ARM
-#elif __aarch64__
-		CPUArchitecture::ARM64
-#else
-		CPUArchitecture::UNKNOWN
-#error Unknown CPU architecture
-#endif
-		;
-
-		std::vector<std::string> extensions = GetX86Extensions();
+		CPUArchitecture architecture = GetCPUArchitecture();
+		std::vector<std::string> extensions = GetCPUExtensions();
 
 		return { model, stepping, vendor, brand, bitness, logicalCoreCount, architecture, extensions };
-	}
-
-	size_t GetTimingCycles()
-	{
-		volatile size_t time1 = 0;
-		volatile size_t time2 = 0;
-
-#if _WIN64
-		time1 = __rdtsc();
-		time2 = __rdtsc();
-#elif _WIN32
-		__asm
-		{
-			RDTSC
-			MOV time1, EAX
-			RDTSC
-			MOV time2, EAX
-		}
-#else
-		asm volatile("RDTSC" : "=a" (time1));
-		asm volatile("RDTSC" : "=a" (time2));
-#endif
-		return time2 - time1;
 	}
 
 	bool HasVMExecutionTiming()
@@ -116,43 +52,6 @@ namespace PDM
 
 		_ret = thresholdCrossings > (RUNS / 2);
 		return _ret;
-	}
-
-	bool HasHypervisorBit()
-	{
-		return CPUID(1).ECX() & CPUID::HYPERVISOR_PRESENT_FLAG;
-	}
-
-	std::string GetHypervisorName()
-	{
-		if (!HasHypervisorBit()) return "";
-
-		CPUID id(CPUID::HYPERVISOR_INFO_FLAG);
-		auto str = id.get_ebx_string() + id.get_ecx_string() + id.get_edx_string();
-		trim(str);
-		return str;
-	}
-
-	bool IsHyperVGuestOS()
-	{
-		if (GetHypervisorName() != HYPER_V_NAME) return false;
-
-		// TODO: More checks?
-		if (CPUID(CPUID::HYPERVISOR_INFO_FLAG + 128).has_data() ||
-			CPUID(CPUID::HYPERVISOR_INFO_FLAG + 129).has_data() ||
-			CPUID(CPUID::HYPERVISOR_INFO_FLAG + 130).has_data())
-			return true;
-
-		return false;
-	}
-
-	bool IsSuspectedVM()
-	{
-		if (HasVMExecutionTiming() || IsHyperVGuestOS()) return true;
-		if (!HasHypervisorBit()) return false;
-		if (GetHypervisorName() != HYPER_V_NAME) return true;
-
-		return false;
 	}
 
 	Bitness GetProcessBitness()

@@ -35,6 +35,9 @@ namespace PDM
 
 	Bitness GetOSBitnessInternal()
 	{
+#if __aarch64__
+		return Bitness::BITNESS_64;
+#else
 		struct utsname un;
 		int res = uname(&un);
 		if (res >= 0)
@@ -45,6 +48,7 @@ namespace PDM
 		}
 		
 		return Bitness::BITNESS_UNKNOWN;
+#endif
 	}
 
 	OS GetOSType()
