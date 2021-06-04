@@ -9,6 +9,9 @@ namespace PDM
 	std::vector<uint8_t> HexStringToByteArray(std::string uuid, size_t byteCount);
 	std::string tolower(std::string str);
 
+	std::string UTF8ToNative(const std::string_view utf8String);
+	std::wstring UTF8ToWString(const std::string_view utf8String);
+
 #if _WIN32
 	std::string WStringToUTF8(const std::wstring_view wideString);
 	std::string WStringToNative(const std::wstring_view wideString);
