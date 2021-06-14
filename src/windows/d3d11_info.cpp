@@ -194,9 +194,10 @@ namespace PDM
 	HRESULT CreateDevice(PFN_D3D11_CREATE_DEVICE d3dCreateDevice, IDXGIAdapter* adapter, D3D_FEATURE_LEVEL& maxSupport)
 #pragma warning(default:26812)
 	{
-		D3D_FEATURE_LEVEL FeatureLevels[] = {
+		const D3D_FEATURE_LEVEL FEATURE_LEVELS[] = {
 			D3D_FEATURE_LEVEL_12_1,
 			D3D_FEATURE_LEVEL_12_0,
+			D3D_FEATURE_LEVEL_11_1,
 			D3D_FEATURE_LEVEL_11_0,
 			D3D_FEATURE_LEVEL_10_1,
 			D3D_FEATURE_LEVEL_10_0,
@@ -208,23 +209,25 @@ namespace PDM
 		ID3D11Device* device = nullptr;
 		ID3D11DeviceContext* context = nullptr;
 
-		HRESULT hr = E_INVALIDARG;
+		HRESULT hr;
 		__try
 		{
-			int index = 0;
-			while ((hr = d3dCreateDevice(
-				adapter,
-				D3D_DRIVER_TYPE_UNKNOWN,
-				nullptr, 0,
-				&FeatureLevels[index++],
-				1,
-				D3D11_SDK_VERSION,
-				&device,
-				&maxSupport,
-				&context
-			)) != S_OK)
+			for (auto featureLevel : FEATURE_LEVELS)
 			{
-				if (index >= ARRAYSIZE(FeatureLevels)) break;
+				if ((hr = d3dCreateDevice(
+					adapter,
+					D3D_DRIVER_TYPE_UNKNOWN,
+					nullptr, 0,
+					&featureLevel,
+					1,
+					D3D11_SDK_VERSION,
+					&device,
+					&maxSupport,
+					&context
+				)) == S_OK)
+				{
+					break;
+				}
 			}
 		}
 		__except (EXCEPTION_EXECUTE_HANDLER)
@@ -284,12 +287,22 @@ namespace PDM
 
 		while (dxgiFactory->EnumAdapters(count++, reinterpret_cast<IDXGIAdapter**>(&pAdapter)) != DXGI_ERROR_NOT_FOUND)
 		{
+			DXGI_ADAPTER_DESC desc{ 0 };
+			pAdapter->GetDesc(&desc);
+
+			std::string description(WStringToUTF8(desc.Description));
+			// Fallback MS software device which gives us bogus data
+			if (description == "Microsoft Basic Render Driver" ||
+				(desc.VendorId == 5140 && desc.DeviceId == 140))
+				continue;
+
 			D3D_FEATURE_LEVEL support = info.maxSupportedFeatureLevel;
 
-			CreateDevice(createDevice, pAdapter, support);
-
-			if (support > info.maxSupportedFeatureLevel)
-				info.maxSupportedFeatureLevel = support;
+			if (CreateDevice(createDevice, pAdapter, support) == S_OK)
+			{
+				if (support > info.maxSupportedFeatureLevel)
+					info.maxSupportedFeatureLevel = support;
+			}
 
 			uint32_t index = 0;
 			CComPtr<IDXGIOutput> pOutput;
@@ -325,12 +338,6 @@ namespace PDM
 				else
 					info.monitors.push_back(monitor);
 			}
-
-			DXGI_ADAPTER_DESC desc{ 0 };
-			pAdapter->GetDesc(&desc);
-
-			std::string description(WStringToUTF8(desc.Description));
-			if (description == "Microsoft Basic Render Driver") continue;
 
 			GPUInfo adapter
 			{
