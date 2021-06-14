@@ -222,7 +222,7 @@ namespace PDM
 				&device,
 				&maxSupport,
 				&context
-			)) == E_INVALIDARG)
+			)) != S_OK)
 			{
 				if (index >= ARRAYSIZE(FeatureLevels)) break;
 			}
