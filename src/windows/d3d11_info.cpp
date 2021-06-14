@@ -349,6 +349,9 @@ namespace PDM
 			};
 			PopulateAdapterDriverVersion(adapter);
 
+			// Eliminate duplicates
+			if (std::find(info.adapters.begin(), info.adapters.end(), adapter) != info.adapters.end()) continue;
+
 			info.adapters.push_back(adapter);
 		}
 

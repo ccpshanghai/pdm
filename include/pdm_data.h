@@ -90,6 +90,20 @@ namespace PDM
 		std::string driverVersionString;
 		std::string driverDate;
 		std::string driverVendor;
+
+		bool operator==(const GPUInfo& rhs)
+		{
+			return
+				description == rhs.description &&
+				vendorID == rhs.vendorID &&
+				deviceID == rhs.deviceID &&
+				revision == rhs.revision &&
+				memory == rhs.memory &&
+				driverVersionString == rhs.driverVersionString &&
+				driverDate == rhs.driverDate &&
+				driverVendor == rhs.driverVendor
+				;
+		}
 	};
 
 	struct PDMDllExport NetworkAdapterInfo
