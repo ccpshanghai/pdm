@@ -198,6 +198,20 @@ namespace PDM
 		}
 	}
 
+    constexpr const char* BatteryStatusToString(BatteryStatus status)
+    {
+        switch (status)
+        {
+        case BatteryStatus::DETECTED:
+            return "YES";
+        case BatteryStatus::NOT_DETECTED:
+            return "NO";
+        case BatteryStatus::UNKNOWN:
+        default:
+            return "UNKNOWN";
+        }
+    }
+
 	std::string TimestampToString(const TimeStamp& timestamp)
 	{
 		const int MAX_SIZE = 20;
@@ -392,6 +406,7 @@ namespace PDM
 								{"UUID",          GetMachineUuidString()},
 								{"TOTAL_MEMORY",  std::to_string(GetTotalMemory())},
 								{"MONITOR_COUNT", std::to_string(GetMonitorCount())},
+								{"HAS_BATTERY",   BatteryStatusToString(GetBatteryStatus())},
 							}
 						},
 					},

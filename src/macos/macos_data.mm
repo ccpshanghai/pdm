@@ -111,6 +111,28 @@ namespace PDM
 		return false;
 	}
 
+	BatteryStatus GetBatteryStatus()
+	{
+		auto blob = IOPSCopyPowerSourcesInfo();
+		SCOPE_EXIT(CFRelease(blob));
+		auto sources = IOPSCopyPowerSourcesList(blob);
+		SCOPE_EXIT(CFRelease(sources));
+		int keyCount = CFArrayGetCount(sources);
+		if (!keyCount) return BatteryStatus::UNKNOWN;
+
+		for (int i = 0; i < keyCount; i++)
+		{
+			auto ps = CFArrayGetValueAtIndex(sources, i);
+			auto dict = IOPSGetPowerSourceDescription(blob, ps);
+
+			auto deviceType = static_cast<CFStringRef>(CFDictionaryGetValue(dict, CFSTR(kIOPSTypeKey)));
+			if (deviceType && !CFStringCompare(deviceType, CFSTR(kIOPSInternalBatteryType), 0))
+				return BatteryStatus::DETECTED;
+		}
+
+		return BatteryStatus::NOT_DETECTED;
+	}
+
 	std::string GetMachineUuidString()
 	{
 		char buffer[128] = { 0 };

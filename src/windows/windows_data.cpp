@@ -161,6 +161,26 @@ namespace PDM
 		return GetPhysicallyInstalledSystemMemory(&kbytes) ? kbytes * 1024 : 0;
 	}
 
+	BatteryStatus GetBatteryStatus()
+	{
+		SYSTEM_POWER_STATUS spsPwr;
+		GetSystemPowerStatus(&spsPwr);
+
+		switch(spsPwr.BatteryFlag)
+		{
+		case 1:
+		case 2:
+		case 4:
+		case 8:
+			return BatteryStatus::DETECTED;
+		case 128:
+			return BatteryStatus::NOT_DETECTED;
+		case 255:
+		default:
+			return BatteryStatus::UNKNOWN;
+		}
+	}
+
 	std::string GetMachineUuidString()
 	{
 		REGSAM access = KEY_READ;
