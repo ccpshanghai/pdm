@@ -2,6 +2,7 @@
 
 #include "../../include/pdm.h"
 #include "../utilities.h"
+#include "../defines.h"
 
 #include <vector>
 #include <sys/sysctl.h>
@@ -9,6 +10,9 @@
 
 #import <AppKit/AppKit.h>
 #import <Metal/Metal.h>
+
+#import <IOKit/ps/IOPowerSources.h>
+#import <IOKit/ps/IOPSKeys.h>
 #import <IOKit/graphics/IOGraphicsLib.h>
 #import <IOKit/network/IOEthernetInterface.h>
 #import <IOKit/network/IOEthernetController.h>
