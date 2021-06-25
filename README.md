@@ -1,7 +1,7 @@
 # CCP Module - PDM
 
 Platform Detection Module (PDM) is an OS agnostic library for gathering metrics about the current machine.
-More information about the module can be found on its [feature page](https://wiki.ccpgames.com/display/TE/Platform+Detection+Module).
+More information about the module can be found on its [feature page](https://wiki.ccpgames.com/display/TE/Platform+Detection+Module) and [general documentation page](https://wiki.ccpgames.com/pages/viewpage.action?pageId=123406873).
 
 ## Building
 
