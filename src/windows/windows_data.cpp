@@ -164,21 +164,11 @@ namespace PDM
 	BatteryStatus GetBatteryStatus()
 	{
 		SYSTEM_POWER_STATUS spsPwr;
-		GetSystemPowerStatus(&spsPwr);
-
-		switch(spsPwr.BatteryFlag)
-		{
-		case 1:
-		case 2:
-		case 4:
-		case 8:
-			return BatteryStatus::DETECTED;
-		case 128:
-			return BatteryStatus::NOT_DETECTED;
-		case 255:
-		default:
+		if (!GetSystemPowerStatus(&spsPwr) || spsPwr.BatteryFlag == 0xFF)
 			return BatteryStatus::UNKNOWN;
-		}
+		if ((spsPwr.BatteryFlag & 0x80) == 0x80)
+			return BatteryStatus::NOT_DETECTED;
+		return BatteryStatus::DETECTED;
 	}
 
 	std::string GetMachineUuidString()
