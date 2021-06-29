@@ -118,13 +118,14 @@ namespace PDM
 	BatteryStatus GetBatteryStatus()
 	{
 		auto blob = IOPSCopyPowerSourcesInfo();
+		if (!blob) return BatteryStatus::UNKNOWN;
 		SCOPE_EXIT(CFRelease(blob));
-		auto sources = IOPSCopyPowerSourcesList(blob);
-		SCOPE_EXIT(CFRelease(sources));
-		int keyCount = CFArrayGetCount(sources);
-		if (!keyCount) return BatteryStatus::UNKNOWN;
 
-		for (int i = 0; i < keyCount; i++)
+		auto sources = IOPSCopyPowerSourcesList(blob);
+		if (!sources) return BatteryStatus::UNKNOWN;
+		SCOPE_EXIT(CFRelease(sources));
+
+		for (long i = 0, keyCount = CFArrayGetCount(sources); i < keyCount; i++)
 		{
 			auto ps = CFArrayGetValueAtIndex(sources, i);
 			auto dict = IOPSGetPowerSourceDescription(blob, ps);
