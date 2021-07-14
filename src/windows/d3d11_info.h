@@ -12,8 +12,9 @@
 
 namespace PDM
 {
-	const auto D3D_FEATURE_LEVEL_12_2 = static_cast<D3D_FEATURE_LEVEL>(0xc200);
-	const auto D3D_FEATURE_LEVEL_NONE = static_cast<D3D_FEATURE_LEVEL>(0x0);
+	const auto D3D_FEATURE_LEVEL_12_2     = static_cast<D3D_FEATURE_LEVEL>(0xc200);
+	const auto D3D_FEATURE_LEVEL_1_0_CORE = static_cast<D3D_FEATURE_LEVEL>(0x1000);
+	const auto D3D_FEATURE_LEVEL_NONE     = static_cast<D3D_FEATURE_LEVEL>(0x0);
 
 	struct D3D11Info
 	{
