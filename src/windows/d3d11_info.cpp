@@ -6,7 +6,7 @@
 
 #include <functional>
 #include <comdef.h>
-#include <dxgi1_6.h>
+#include <dxgi1_6.h> 
 
 namespace PDM
 {
@@ -195,6 +195,7 @@ namespace PDM
 #pragma warning(default:26812)
 	{
 		const D3D_FEATURE_LEVEL FEATURE_LEVELS[] = {
+			D3D_FEATURE_LEVEL_12_2,
 			D3D_FEATURE_LEVEL_12_1,
 			D3D_FEATURE_LEVEL_12_0,
 			D3D_FEATURE_LEVEL_11_1,
@@ -203,7 +204,8 @@ namespace PDM
 			D3D_FEATURE_LEVEL_10_0,
 			D3D_FEATURE_LEVEL_9_3,
 			D3D_FEATURE_LEVEL_9_2,
-			D3D_FEATURE_LEVEL_9_1
+			D3D_FEATURE_LEVEL_9_1,
+			D3D_FEATURE_LEVEL_1_0_CORE,
 		};
 
 		ID3D11Device* device = nullptr;

@@ -272,6 +272,8 @@ namespace PDM
 	{
 		switch (support)
 		{
+		case D3D_FEATURE_LEVEL_12_2:
+			return "12.2";
 		case D3D_FEATURE_LEVEL_12_1:
 			return "12.1";
 		case D3D_FEATURE_LEVEL_12_0:
@@ -290,8 +292,12 @@ namespace PDM
 			return "9.2";
 		case D3D_FEATURE_LEVEL_9_1:
 			return "9.1";
-		default:
+		case D3D_FEATURE_LEVEL_1_0_CORE:
+			return "1.0 CORE";
+		case D3D_FEATURE_LEVEL_NONE:
 			return "NONE";
+		default:
+			return "UNKNOWN";
 		}
 	}
 
