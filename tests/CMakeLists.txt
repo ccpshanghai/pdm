@@ -18,7 +18,3 @@ set_property(TARGET Tests PROPERTY CXX_STANDARD 17)
 set_property(TARGET Tests PROPERTY CXX_STANDARD_REQUIRED ON)
 
 target_link_libraries(Tests LINK_PUBLIC pdm gtest_main)
-
-include(GoogleTest)
-enable_testing()
-gtest_discover_tests(Tests)
