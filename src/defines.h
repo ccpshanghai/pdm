@@ -28,6 +28,13 @@ namespace PDM
 		rtrim(s);
 	}
 
+    inline std::string getTrimmed(const std::string& s)
+    {
+        std::string ret = s;
+        trim(ret);
+        return ret;
+    }
+
 	inline std::string toupper(std::string s)
 	{
 		std::transform(s.begin(), s.end(), s.begin(), [](char c) { return static_cast<char>(std::toupper(c)); });

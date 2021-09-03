@@ -4,6 +4,15 @@
 #include "../utilities.h"
 #include "../defines.h"
 
+#include <cstdio>
+#include <iostream>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <array>
+#include <sstream>
+#include <regex>
+
 #include <vector>
 #include <sys/sysctl.h>
 #include <sys/utsname.h>
@@ -19,155 +28,179 @@
 
 namespace PDM
 {
-	std::string GetOSString(const char* name)
-	{
-		char buffer[1024] = { 0 };
-		size_t size = sizeof(buffer);
-		sysctlbyname(name, buffer, &size, nullptr, 0);
-		
-		return buffer;
-	}
+    std::vector<std::string> split(const std::string& str, const std::string& regex_str)
+    {
+        std::regex regexz(regex_str);
+        return { std::sregex_token_iterator(str.begin(), str.end(), regexz, -1), std::sregex_token_iterator() };
+    }
 
-	uint64_t GetOSInteger(const char* name)
-	{
-		uint64_t result = 0;
-		size_t size = sizeof(result);
-		sysctlbyname(name, &result, &size, nullptr, 0);
-		
-		return result;
-	}
+    std::string exec(const std::string& cmd)
+    {
+        std::array<char, 128> buffer;
+        std::stringstream result;
+        std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.c_str(), "r"), pclose);
+        if (!pipe) return {};
 
-	Bitness GetOSBitnessInternal()
-	{
+        while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr)
+            result << buffer.data();
+        return getTrimmed(result.str());
+    }
+
+    std::string GetOSString(const char* name)
+    {
+        char buffer[1024] = { 0 };
+        size_t size = sizeof(buffer);
+        sysctlbyname(name, buffer, &size, nullptr, 0);
+        
+        return buffer;
+    }
+
+    uint64_t GetOSInteger(const char* name)
+    {
+        uint64_t result = 0;
+        size_t size = sizeof(result);
+        sysctlbyname(name, &result, &size, nullptr, 0);
+        
+        return result;
+    }
+
+    Bitness GetOSBitnessInternal()
+    {
 #if __aarch64__
-		return Bitness::BITNESS_64;
+        return Bitness::BITNESS_64;
 #else
-		struct utsname un;
-		int res = uname(&un);
-		if (res >= 0)
-		{
-			std::string machine{un.machine};
-			if (machine == "x86_64") return Bitness::BITNESS_64;
-			if (machine == "i386"  ) return Bitness::BITNESS_32;
-		}
-		
-		return Bitness::BITNESS_UNKNOWN;
+        struct utsname un;
+        int res = uname(&un);
+        if (res >= 0)
+        {
+            std::string machine{un.machine};
+            if (machine == "x86_64") return Bitness::BITNESS_64;
+            if (machine == "i386"  ) return Bitness::BITNESS_32;
+        }
+        
+        return Bitness::BITNESS_UNKNOWN;
 #endif
-	}
+    }
 
-	OS GetOSType()
-	{
-		return OS::MACOS;
-	}
+    OS GetOSType()
+    {
+        return OS::MACOS;
+    }
 
-	std::string GetOSName()
-	{
-		return [[[NSProcessInfo processInfo] operatingSystemVersionString] UTF8String];
-	}
+    std::string GetOSName()
+    {
+        return [[[NSProcessInfo processInfo] operatingSystemVersionString] UTF8String];
+    }
 
-	std::string GetOSMajorVersion()
-	{
-		return std::to_string([[NSProcessInfo processInfo] operatingSystemVersion].majorVersion);
-	}
+    std::string GetOSPart(unsigned part)
+    {
+        auto parts = split(exec("sw_vers -productVersion"), "\\.");
+        return parts.size() > part ? parts[part] : "0";
+    }
 
-	std::string GetOSMinorVersion()
-	{
-		return std::to_string([[NSProcessInfo processInfo] operatingSystemVersion].minorVersion);
-	}
+    std::string GetOSMajorVersion()
+    {
+        return GetOSPart(0);
+    }
 
-	std::string GetOSBuildNumber()
-	{
-		return std::to_string([[NSProcessInfo processInfo] operatingSystemVersion].patchVersion);
-	}
+    std::string GetOSMinorVersion()
+    {
+        return GetOSPart(1);
+    }
 
-	std::string GetOSKernelVersion()
-	{
-		return GetOSString("kern.osrelease");
-	}
+    std::string GetOSBuildNumber()
+    {
+        return GetOSPart(2);
+    }
 
-	std::string GetMachineName()
-	{
-		return [[[NSProcessInfo processInfo] hostName] UTF8String];
-	}
+    std::string GetOSKernelVersion()
+    {
+        return GetOSString("kern.osrelease");
+    }
 
-	std::string GetUsername()
-	{
-		return [[[NSProcessInfo processInfo] userName] UTF8String];
-	}
+    std::string GetMachineName()
+    {
+        return [[[NSProcessInfo processInfo] hostName] UTF8String];
+    }
 
-	uint32_t GetMonitorCount()
-	{
-		return [[NSScreen screens] count];
-	}
+    std::string GetUsername()
+    {
+        return [[[NSProcessInfo processInfo] userName] UTF8String];
+    }
 
-	std::string GetHardwareModel()
-	{
-		return GetOSString("hw.model");
-	}
+    uint32_t GetMonitorCount()
+    {
+        return [[NSScreen screens] count];
+    }
 
-	uint64_t GetTotalMemory()
-	{
-		return [[NSProcessInfo processInfo] physicalMemory];
-	}
+    std::string GetHardwareModel()
+    {
+        return GetOSString("hw.model");
+    }
 
-	bool IsRemoteSession()
-	{
-		return false;
-	}
+    uint64_t GetTotalMemory()
+    {
+        return [[NSProcessInfo processInfo] physicalMemory];
+    }
 
-	BatteryStatus GetBatteryStatus()
-	{
-		auto blob = IOPSCopyPowerSourcesInfo();
-		if (!blob) return BatteryStatus::UNKNOWN;
-		SCOPE_EXIT(CFRelease(blob));
+    bool IsRemoteSession()
+    {
+        return false;
+    }
 
-		auto sources = IOPSCopyPowerSourcesList(blob);
-		if (!sources) return BatteryStatus::UNKNOWN;
-		SCOPE_EXIT(CFRelease(sources));
+    BatteryStatus GetBatteryStatus()
+    {
+        auto blob = IOPSCopyPowerSourcesInfo();
+        if (!blob) return BatteryStatus::UNKNOWN;
+        SCOPE_EXIT(CFRelease(blob));
 
-		for (long i = 0, keyCount = CFArrayGetCount(sources); i < keyCount; i++)
-		{
-			auto ps = CFArrayGetValueAtIndex(sources, i);
-			auto dict = IOPSGetPowerSourceDescription(blob, ps);
+        auto sources = IOPSCopyPowerSourcesList(blob);
+        if (!sources) return BatteryStatus::UNKNOWN;
+        SCOPE_EXIT(CFRelease(sources));
 
-			auto deviceType = static_cast<CFStringRef>(CFDictionaryGetValue(dict, CFSTR(kIOPSTypeKey)));
-			if (deviceType && !CFStringCompare(deviceType, CFSTR(kIOPSInternalBatteryType), 0))
-				return BatteryStatus::DETECTED;
-		}
+        for (long i = 0, keyCount = CFArrayGetCount(sources); i < keyCount; i++)
+        {
+            auto ps = CFArrayGetValueAtIndex(sources, i);
+            auto dict = IOPSGetPowerSourceDescription(blob, ps);
 
-		return BatteryStatus::NOT_DETECTED;
-	}
+            auto deviceType = static_cast<CFStringRef>(CFDictionaryGetValue(dict, CFSTR(kIOPSTypeKey)));
+            if (deviceType && !CFStringCompare(deviceType, CFSTR(kIOPSInternalBatteryType), 0))
+                return BatteryStatus::DETECTED;
+        }
 
-	std::string GetMachineUuidString()
-	{
-		char buffer[128] = { 0 };
-		io_registry_entry_t ioRegistryRoot = IORegistryEntryFromPath(kIOMasterPortDefault, "IOService:/");
-		CFStringRef uuidCf = static_cast<CFStringRef>(IORegistryEntryCreateCFProperty(ioRegistryRoot, CFSTR(kIOPlatformUUIDKey), kCFAllocatorDefault, 0));
-		IOObjectRelease(ioRegistryRoot);
-		CFStringGetCString(uuidCf, buffer, sizeof(buffer), kCFStringEncodingMacRoman);
-		CFRelease(uuidCf);
-		
-		return buffer;
-	}
+        return BatteryStatus::NOT_DETECTED;
+    }
 
-	std::string GetUserLocale()
-	{
-		return [[[NSLocale currentLocale] localeIdentifier] UTF8String];
-	}
+    std::string GetMachineUuidString()
+    {
+        char buffer[128] = { 0 };
+        io_registry_entry_t ioRegistryRoot = IORegistryEntryFromPath(kIOMasterPortDefault, "IOService:/");
+        CFStringRef uuidCf = static_cast<CFStringRef>(IORegistryEntryCreateCFProperty(ioRegistryRoot, CFSTR(kIOPlatformUUIDKey), kCFAllocatorDefault, 0));
+        IOObjectRelease(ioRegistryRoot);
+        CFStringGetCString(uuidCf, buffer, sizeof(buffer), kCFStringEncodingMacRoman);
+        CFRelease(uuidCf);
+        
+        return buffer;
+    }
 
-	uint32_t GetIntFromID(CFMutableDictionaryRef dict, NSString* name)
-	{
-		auto val = CFDictionaryGetValue(dict, name);
-		if (val == nil) return 0;
-		return *static_cast<const uint32_t*>([static_cast<NSData*>(val) bytes]);
-	}
+    std::string GetUserLocale()
+    {
+        return [[[NSLocale currentLocale] localeIdentifier] UTF8String];
+    }
 
-	uint64_t GetLongFromID(CFMutableDictionaryRef dict, NSString* name)
-	{
-		auto val = CFDictionaryGetValue(dict, name);
-		if (val == nil) return 0;
-		return *static_cast<const uint64_t*>([static_cast<NSData*>(val) bytes]);
-	}
+    uint32_t GetIntFromID(CFMutableDictionaryRef dict, NSString* name)
+    {
+        auto val = CFDictionaryGetValue(dict, name);
+        if (val == nil) return 0;
+        return *static_cast<const uint32_t*>([static_cast<NSData*>(val) bytes]);
+    }
+
+    uint64_t GetLongFromID(CFMutableDictionaryRef dict, NSString* name)
+    {
+        auto val = CFDictionaryGetValue(dict, name);
+        if (val == nil) return 0;
+        return *static_cast<const uint64_t*>([static_cast<NSData*>(val) bytes]);
+    }
 
     uint32_t GetIntFromNumber(CFMutableDictionaryRef dict, NSString* name)
     {
@@ -176,126 +209,126 @@ namespace PDM
         return [static_cast<NSNumber*>(val) unsignedIntegerValue];
     }
 
-	NSString* screenNameForDisplay(CGDirectDisplayID displayID)
-	{
-		NSString *screenName = @"";
+    NSString* screenNameForDisplay(CGDirectDisplayID displayID)
+    {
+        NSString *screenName = @"";
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-		NSDictionary *deviceInfo = (NSDictionary *)IODisplayCreateInfoDictionary(CGDisplayIOServicePort(displayID), kIODisplayOnlyPreferredName);
+        NSDictionary *deviceInfo = (NSDictionary *)IODisplayCreateInfoDictionary(CGDisplayIOServicePort(displayID), kIODisplayOnlyPreferredName);
 #pragma clang diagnostic pop
 
-		NSDictionary *localizedNames = [deviceInfo objectForKey:[NSString stringWithUTF8String:kDisplayProductName]];
+        NSDictionary *localizedNames = [deviceInfo objectForKey:[NSString stringWithUTF8String:kDisplayProductName]];
 
-		if ([localizedNames count] > 0) screenName = [[localizedNames objectForKey:[[localizedNames allKeys] objectAtIndex:0]] retain];
+        if ([localizedNames count] > 0) screenName = [[localizedNames objectForKey:[[localizedNames allKeys] objectAtIndex:0]] retain];
 
-		[deviceInfo release];
-		return [screenName autorelease];
-	}
+        [deviceInfo release];
+        return [screenName autorelease];
+    }
 
-	std::vector<MonitorInfo> GetMonitorsInfo()
-	{
-		uint32_t displayCount;
-		CGGetOnlineDisplayList(0, nullptr, &displayCount);
-		std::vector<CGDirectDisplayID> onlineDisplays(displayCount);
-		CGGetOnlineDisplayList(displayCount, &onlineDisplays[0], nullptr);
-		
-		std::vector<MonitorInfo> monitors;
-		
-		for (NSScreen* screen in [NSScreen screens])
-		{
-			uint32_t refreshRate = 0;
-			NSString* screenName = [screen respondsToSelector:NSSelectorFromString(@"localizedName")] ? [(id)screen localizedName] : @"";
-			
-			if (id d = screen.deviceDescription[@"NSScreenNumber"]; d)
-			{
-				int nr = [d intValue];
-				for (CGDirectDisplayID display : onlineDisplays)
-				{
-					if (display == nr)
-					{
-						if ([screenName isEqual:@""]) screenName = screenNameForDisplay(display);						
-						refreshRate = static_cast<uint32_t>(CGDisplayModeGetRefreshRate(CGDisplayCopyDisplayMode(display)));
-						break;
-					}
-				}
-			}
-			
-			monitors.push_back
-			({
-				[screenName UTF8String],
-				static_cast<uint32_t>(screen.frame.size.width  * screen.backingScaleFactor),
-				static_cast<uint32_t>(screen.frame.size.height * screen.backingScaleFactor),
-				static_cast<uint32_t>(NSBitsPerSampleFromDepth(screen.depth)),
-				refreshRate,
-				static_cast<uint32_t>(screen.backingScaleFactor * 100),
-			});
-		}
-		
-		return monitors;
-	}
+    std::vector<MonitorInfo> GetMonitorsInfo()
+    {
+        uint32_t displayCount;
+        CGGetOnlineDisplayList(0, nullptr, &displayCount);
+        std::vector<CGDirectDisplayID> onlineDisplays(displayCount);
+        CGGetOnlineDisplayList(displayCount, &onlineDisplays[0], nullptr);
+        
+        std::vector<MonitorInfo> monitors;
+        
+        for (NSScreen* screen in [NSScreen screens])
+        {
+            uint32_t refreshRate = 0;
+            NSString* screenName = [screen respondsToSelector:NSSelectorFromString(@"localizedName")] ? [(id)screen localizedName] : @"";
+            
+            if (id d = screen.deviceDescription[@"NSScreenNumber"]; d)
+            {
+                int nr = [d intValue];
+                for (CGDirectDisplayID display : onlineDisplays)
+                {
+                    if (display == nr)
+                    {
+                        if ([screenName isEqual:@""]) screenName = screenNameForDisplay(display);
+                        refreshRate = static_cast<uint32_t>(CGDisplayModeGetRefreshRate(CGDisplayCopyDisplayMode(display)));
+                        break;
+                    }
+                }
+            }
+            
+            monitors.push_back
+            ({
+                [screenName UTF8String],
+                static_cast<uint32_t>(screen.frame.size.width  * screen.backingScaleFactor),
+                static_cast<uint32_t>(screen.frame.size.height * screen.backingScaleFactor),
+                static_cast<uint32_t>(NSBitsPerSampleFromDepth(screen.depth)),
+                refreshRate,
+                static_cast<uint32_t>(screen.backingScaleFactor * 100),
+            });
+        }
+        
+        return monitors;
+    }
 
-	std::string bytesToHexString(NSData* data)
-	{
-		auto result = [[NSMutableString alloc] initWithCapacity: [data length] << 1];
-		auto mbytes = static_cast<const UInt8*>([data bytes]);
-		char hBytes[8] = {'\0'};
+    std::string bytesToHexString(NSData* data)
+    {
+        auto result = [[NSMutableString alloc] initWithCapacity: [data length] << 1];
+        auto mbytes = static_cast<const UInt8*>([data bytes]);
+        char hBytes[8] = {'\0'};
 
-		for (int i = 0; i < [data length]; i++)
-		{
-			snprintf(hBytes, 3, "%02X", mbytes[i]);
-			if (0 == i) [result appendFormat:@"%s", hBytes];
-			else [result appendFormat:@":%s", hBytes];
-		}
-		
-		std::string str = [result UTF8String];
-		[result release];
-		
-		return str;
-	}
+        for (int i = 0; i < [data length]; i++)
+        {
+            snprintf(hBytes, 3, "%02X", mbytes[i]);
+            if (0 == i) [result appendFormat:@"%s", hBytes];
+            else [result appendFormat:@":%s", hBytes];
+        }
+        
+        std::string str = [result UTF8String];
+        [result release];
+        
+        return str;
+    }
 
-	std::vector<NetworkAdapterInfo> GetNetworkAdapterInfo()
-	{
-		std::vector<NetworkAdapterInfo> adapters;
-		
-		mach_port_t machPort;
-		IOMasterPort(MACH_PORT_NULL, &machPort);
-		io_iterator_t netIterator = {0};
-		IOServiceGetMatchingServices(machPort, IOServiceMatching(kIOEthernetInterfaceClass), &netIterator);
-		io_object_t interfaceService, controllerService;
-		
-		while ( (interfaceService = IOIteratorNext(netIterator)) )
-		{
-			if (kern_return_t kernResult = IORegistryEntryGetParentEntry( interfaceService, kIOServicePlane, &controllerService ); kernResult == KERN_SUCCESS)
-			{
-				CFTypeRef MACAddrAsCFData   = IORegistryEntryCreateCFProperty(controllerService, CFSTR(kIOMACAddress), kCFAllocatorDefault, 0);
-				CFTypeRef BSDNameAsCFString = IORegistryEntryCreateCFProperty(interfaceService,  CFSTR("BSD Name"),    kCFAllocatorDefault, 0);
-				
-				if (MACAddrAsCFData && BSDNameAsCFString)
-				{
-					auto str = bytesToHexString(static_cast<NSData*>(MACAddrAsCFData));
-					adapters.push_back
-					({
-						[static_cast<NSString*>(BSDNameAsCFString) UTF8String],
-						str,
-						{},
-						HexStringToByteArray(str, 6),
-						{}
-					});
-				}
-				if (nil != BSDNameAsCFString) CFRelease(BSDNameAsCFString);
-				if (nil != MACAddrAsCFData) CFRelease(MACAddrAsCFData);
-			}
-		}
-		IOObjectRelease(netIterator);
-		
-		return adapters;
-	}
+    std::vector<NetworkAdapterInfo> GetNetworkAdapterInfo()
+    {
+        std::vector<NetworkAdapterInfo> adapters;
+        
+        mach_port_t machPort;
+        IOMasterPort(MACH_PORT_NULL, &machPort);
+        io_iterator_t netIterator = {0};
+        IOServiceGetMatchingServices(machPort, IOServiceMatching(kIOEthernetInterfaceClass), &netIterator);
+        io_object_t interfaceService, controllerService;
+        
+        while ( (interfaceService = IOIteratorNext(netIterator)) )
+        {
+            if (kern_return_t kernResult = IORegistryEntryGetParentEntry( interfaceService, kIOServicePlane, &controllerService ); kernResult == KERN_SUCCESS)
+            {
+                CFTypeRef MACAddrAsCFData   = IORegistryEntryCreateCFProperty(controllerService, CFSTR(kIOMACAddress), kCFAllocatorDefault, 0);
+                CFTypeRef BSDNameAsCFString = IORegistryEntryCreateCFProperty(interfaceService,  CFSTR("BSD Name"),    kCFAllocatorDefault, 0);
+                
+                if (MACAddrAsCFData && BSDNameAsCFString)
+                {
+                    auto str = bytesToHexString(static_cast<NSData*>(MACAddrAsCFData));
+                    adapters.push_back
+                    ({
+                        [static_cast<NSString*>(BSDNameAsCFString) UTF8String],
+                        str,
+                        {},
+                        HexStringToByteArray(str, 6),
+                        {}
+                    });
+                }
+                if (nil != BSDNameAsCFString) CFRelease(BSDNameAsCFString);
+                if (nil != MACAddrAsCFData) CFRelease(MACAddrAsCFData);
+            }
+        }
+        IOObjectRelease(netIterator);
+        
+        return adapters;
+    }
 
-	std::vector<GPUInfo> GetGPUInfo()
-	{
-		std::vector<GPUInfo> gpus;
-		
+    std::vector<GPUInfo> GetGPUInfo()
+    {
+        std::vector<GPUInfo> gpus;
+        
         io_iterator_t iterator;
         
 #ifdef __aarch64__
@@ -350,34 +383,34 @@ namespace PDM
             
             IOObjectRelease(iterator);
         }
-		
-		return gpus;
-	}
+        
+        return gpus;
+    }
 
-	bool GetMetalSupported()
-	{
-		return [MTLCopyAllDevices() count] > 0;
-	}
+    bool GetMetalSupported()
+    {
+        return [MTLCopyAllDevices() count] > 0;
+    }
 
-	bool IsRosetta()
-	{
-		int ret = 0;
-		size_t size = sizeof(ret);
-		return sysctlbyname("sysctl.proc_translated", &ret, &size, NULL, 0) == -1 ? false : ret;
-	}
+    bool IsRosetta()
+    {
+        int ret = 0;
+        size_t size = sizeof(ret);
+        return sysctlbyname("sysctl.proc_translated", &ret, &size, NULL, 0) == -1 ? false : ret;
+    }
 
-	VulkanProperties GetVulkanProperties()
-	{
-		// We can safely assume that metal support implies vulkan support (but we might want to probe this in the future anyway)
-		return {GetMetalSupported() ? VulkanSupport::SUPPORTED : VulkanSupport::UNSUPPORTED};
-	}
+    VulkanProperties GetVulkanProperties()
+    {
+        // We can safely assume that metal support implies vulkan support (but we might want to probe this in the future anyway)
+        return {GetMetalSupported() ? VulkanSupport::SUPPORTED : VulkanSupport::UNSUPPORTED};
+    }
 
-	std::wstring UTF8ToWString(const std::string_view utf8String)
-	{
-		NSString* str = [[NSString alloc] initWithBytes:utf8String.data() length:utf8String.size() encoding:NSUTF8StringEncoding];
-		NSData* data = [str dataUsingEncoding: CFStringConvertEncodingToNSStringEncoding(kCFStringEncodingUTF32LE)];
-		return std::wstring(static_cast<const wchar_t*>([data bytes]), [data length] / sizeof(wchar_t));   
-	}
+    std::wstring UTF8ToWString(const std::string_view utf8String)
+    {
+        NSString* str = [[NSString alloc] initWithBytes:utf8String.data() length:utf8String.size() encoding:NSUTF8StringEncoding];
+        NSData* data = [str dataUsingEncoding: CFStringConvertEncodingToNSStringEncoding(kCFStringEncodingUTF32LE)];
+        return std::wstring(static_cast<const wchar_t*>([data bytes]), [data length] / sizeof(wchar_t));
+    }
 }
 
 #endif
