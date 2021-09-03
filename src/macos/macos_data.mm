@@ -169,6 +169,13 @@ namespace PDM
 		return *static_cast<const uint64_t*>([static_cast<NSData*>(val) bytes]);
 	}
 
+    uint32_t GetIntFromNumber(CFMutableDictionaryRef dict, NSString* name)
+    {
+        auto val = CFDictionaryGetValue(dict, name);
+        if (val == nil) return 0;
+        return [static_cast<NSNumber*>(val) unsignedIntegerValue];
+    }
+
 	NSString* screenNameForDisplay(CGDirectDisplayID displayID)
 	{
 		NSString *screenName = @"";
@@ -289,47 +296,60 @@ namespace PDM
 	{
 		std::vector<GPUInfo> gpus;
 		
-		CFMutableDictionaryRef matchDict = IOServiceMatching("IOPCIDevice");
-		io_iterator_t iterator;
+        io_iterator_t iterator;
+        
+#ifdef __aarch64__
+        bool m1 = true;
+#else
+        bool m1 = IsRosetta();
+#endif
+        auto match = m1 ? "AGXAccelerator" : "IOPCIDevice";
 
-		if (IOServiceGetMatchingServices(kIOMasterPortDefault, matchDict, &iterator) == kIOReturnSuccess)
-		{
-			io_registry_entry_t regEntry;
+        if (IOServiceGetMatchingServices(kIOMasterPortDefault, IOServiceMatching(match), &iterator) == kIOReturnSuccess)
+        {
+            io_registry_entry_t regEntry;
 
-			while ((regEntry = IOIteratorNext(iterator)))
-			{
-				CFMutableDictionaryRef serviceDictionary;
-				if (IORegistryEntryCreateCFProperties(regEntry, &serviceDictionary, kCFAllocatorDefault, kNilOptions) != kIOReturnSuccess)
-				{
-					IOObjectRelease(regEntry);
-					continue;
-				}
+            while ((regEntry = IOIteratorNext(iterator)))
+            {
+                CFMutableDictionaryRef serviceDictionary;
+                if (IORegistryEntryCreateCFProperties(regEntry, &serviceDictionary, kCFAllocatorDefault, kNilOptions) != kIOReturnSuccess)
+                {
+                    IOObjectRelease(regEntry);
+                    continue;
+                }
 
-				if (auto model = static_cast<NSData*>(CFDictionaryGetValue(serviceDictionary, @"model")); model != nil)
-				{
-					if (CFGetTypeID(model) == CFDataGetTypeID())
-					{
-						NSString *nsStr = [[NSString alloc] initWithData:model encoding:NSASCIIStringEncoding];
-						std::string modelStr = [nsStr UTF8String];
-						[nsStr release];
-						
-						gpus.push_back
-						({
-							modelStr,
-							GetIntFromID(serviceDictionary, @"vendor-id"),
-							GetIntFromID(serviceDictionary, @"device-id"),
-							GetIntFromID(serviceDictionary, @"revision-id"),
-							GetLongFromID(serviceDictionary, @"VRAM,totalsize"),
-						});
-					}
-				}
-				
-				CFRelease(serviceDictionary);
-				IOObjectRelease(regEntry);
-			}
-			
-			IOObjectRelease(iterator);
-		}
+                if (auto model = static_cast<NSData*>(CFDictionaryGetValue(serviceDictionary, @"model")); model != nil)
+                {
+                    if (m1 || CFGetTypeID(model) == CFDataGetTypeID())
+                    {
+                        std::string modelStr;
+                        if (m1)
+                            modelStr = [static_cast<NSString*>(model) UTF8String];
+                        else
+                        {
+                            NSString *nsStr = [[NSString alloc] initWithData:model encoding:NSASCIIStringEncoding];
+                            std::string modelStr = [nsStr UTF8String];
+                            [nsStr release];
+                        }
+                        
+                        gpus.push_back
+                        ({
+                            modelStr,
+                            GetIntFromID(serviceDictionary, @"vendor-id"),
+                            m1 ? 0 : GetIntFromID(serviceDictionary, @"device-id"),
+                            m1 ? 0 : GetIntFromID(serviceDictionary, @"revision-id"),
+                            m1 ? 0 : GetLongFromID(serviceDictionary, @"VRAM,totalsize"),
+                            m1 ? GetIntFromNumber(serviceDictionary, @"gpu-core-count") : 0
+                        });
+                    }
+                }
+                
+                CFRelease(serviceDictionary);
+                IOObjectRelease(regEntry);
+            }
+            
+            IOObjectRelease(iterator);
+        }
 		
 		return gpus;
 	}

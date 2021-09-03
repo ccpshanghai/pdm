@@ -261,11 +261,12 @@ namespace PDM
 					}
 				},
 				{
-					{"DESCRIPTION",    gpu.description},
-					{"VENDOR_ID",      std::to_string(gpu.vendorID)},
-					{"DEVICE_ID",      std::to_string(gpu.deviceID)},
-					{"REVISION",       std::to_string(gpu.revision)},
-					{"VIDEO_MEMORY",   std::to_string(gpu.memory)},
+					{"DESCRIPTION",  gpu.description},
+					{"VENDOR_ID",    std::to_string(gpu.vendorID)},
+					{"DEVICE_ID",    std::to_string(gpu.deviceID)},
+					{"REVISION",     std::to_string(gpu.revision)},
+                    {"VIDEO_MEMORY", std::to_string(gpu.memory)},
+                    {"CORE_COUNT",   std::to_string(gpu.coreCount)},
 				}
 			});
 		}

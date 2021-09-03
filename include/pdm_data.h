@@ -94,6 +94,7 @@ namespace PDM
 		uint32_t deviceID{};
 		uint32_t revision{};
 		uint64_t memory{};
+        uint32_t coreCount{};
 		std::string driverVersionString;
 		std::string driverDate;
 		std::string driverVendor;
@@ -106,6 +107,7 @@ namespace PDM
 				deviceID == rhs.deviceID &&
 				revision == rhs.revision &&
 				memory == rhs.memory &&
+                coreCount == rhs.coreCount &&
 				driverVersionString == rhs.driverVersionString &&
 				driverDate == rhs.driverDate &&
 				driverVendor == rhs.driverVendor
