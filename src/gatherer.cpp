@@ -12,6 +12,7 @@
 namespace PDM
 {
 	Bitness GetOSBitnessInternal();
+	uint32_t GetCPUFrequency();
 
 	std::string GetPDMVersion()
 	{
@@ -28,8 +29,9 @@ namespace PDM
 		unsigned logicalCoreCount = std::thread::hardware_concurrency();
 		CPUArchitecture architecture = GetCPUArchitecture();
 		std::vector<std::string> extensions = GetCPUExtensions();
+		uint32_t frequency = GetCPUFrequency();
 
-		return { model, stepping, vendor, brand, bitness, logicalCoreCount, architecture, extensions };
+		return { model, stepping, vendor, brand, bitness, logicalCoreCount, architecture, extensions, frequency };
 	}
 
 	bool HasVMExecutionTiming()
@@ -370,6 +372,7 @@ namespace PDM
 										{"VENDOR",             cpuinfo.vendor},
 										{"MODEL",              std::to_string(cpuinfo.model)},
 										{"STEPPING",           std::to_string(cpuinfo.stepping)},
+										{"FREQUENCY_MHZ",      std::to_string(cpuinfo.frequency)},
 										{"ARCHITECTURE",       CPUArchitectureToString(cpuinfo.architecture)},
 										{"EXTENSIONS",         cpuExtensions },
 									}

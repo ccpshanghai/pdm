@@ -19,8 +19,11 @@
 #include <iomanip>
 #include <Iphlpapi.h>
 #include <sysinfoapi.h>
+#include <powerbase.h>
+#include <ntstatus.h>
 
 #pragma comment(lib, "IPHLPAPI.lib")
+#pragma comment(lib, "PowrProf.lib")
 
 
 namespace PDM
@@ -75,6 +78,29 @@ namespace PDM
 		IsWow64Process(GetCurrentProcess(), &isWow);
 		return isWow ? Bitness::BITNESS_64 : Bitness::BITNESS_32;
 #endif
+	}
+
+	uint32_t GetCPUFrequency()
+	{
+		// WTF Microsoft?
+		// "Note that this structure definition was accidentally omitted from WinNT.h.
+		// This error will be corrected in the future.
+		// In the meantime, to compile your application, include the structure definition contained in this topic in your source code."
+		struct PROCESSOR_POWER_INFORMATION {
+			ULONG  Number;
+			ULONG  MaxMhz;
+			ULONG  CurrentMhz;
+			ULONG  MhzLimit;
+			ULONG  MaxIdleState;
+			ULONG  CurrentIdleState;
+		};
+
+		SYSTEM_INFO systemInfo;
+		GetSystemInfo(&systemInfo);
+
+		std::vector<PROCESSOR_POWER_INFORMATION> data(systemInfo.dwNumberOfProcessors);
+		NTSTATUS status = CallNtPowerInformation(ProcessorInformation, nullptr, 0, &data[0], data.size() * sizeof(PROCESSOR_POWER_INFORMATION));
+		return status == STATUS_SUCCESS ? data[0].MaxMhz : 0;
 	}
 
 	OS GetOSType()

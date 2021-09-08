@@ -75,6 +75,7 @@ namespace PDM
 		uint32_t logicalCoreCount{ 0 };
 		CPUArchitecture architecture{ CPUArchitecture::UNKNOWN };
 		std::vector<std::string> extensions;
+		uint32_t frequency{};
 	};
 
 	struct PDMDllExport MonitorInfo

@@ -82,6 +82,13 @@ namespace PDM
 #endif
     }
 
+    uint32_t GetCPUFrequency()
+    {
+        auto parts = split(exec("arch -x86_64 sysctl hw.cpufrequency_max"), ": ");
+        if(parts.size() != 2) return 0;
+        return std::atoll(parts[1].c_str()) / 1000 / 1000;
+    }
+
     OS GetOSType()
     {
         return OS::MACOS;
