@@ -21,7 +21,10 @@
 #include <sysinfoapi.h>
 #include <powerbase.h>
 #include <ntstatus.h>
+#include <comdef.h>
+#include <Wbemidl.h>
 
+#pragma comment(lib, "wbemuuid.lib")
 #pragma comment(lib, "IPHLPAPI.lib")
 #pragma comment(lib, "PowrProf.lib")
 
@@ -78,6 +81,77 @@ namespace PDM
 		IsWow64Process(GetCurrentProcess(), &isWow);
 		return isWow ? Bitness::BITNESS_64 : Bitness::BITNESS_32;
 #endif
+	}
+
+	std::vector<HardDriveInfo> GetHardDriveInfo()
+	{
+		if (FAILED(CoInitializeEx(nullptr, COINIT_MULTITHREADED))) return {};
+		SCOPE_EXIT(CoUninitialize());
+
+		if (FAILED(CoInitializeSecurity(nullptr, -1, nullptr, nullptr, RPC_C_AUTHN_LEVEL_DEFAULT, RPC_C_IMP_LEVEL_IMPERSONATE, nullptr, EOAC_NONE, nullptr))) return {};
+
+		IWbemLocator* pLoc = nullptr;
+		if (FAILED(CoCreateInstance(CLSID_WbemLocator, nullptr, CLSCTX_INPROC_SERVER, IID_IWbemLocator, reinterpret_cast<LPVOID*>(&pLoc)))) return {};
+
+		IWbemServices* pSvc = nullptr;
+		if (FAILED(pLoc->ConnectServer(bstr_t(L"root\\Microsoft\\Windows\\Storage"), nullptr, nullptr, nullptr, NULL, nullptr, nullptr, &pSvc))) return {};
+		SCOPE_EXIT(pLoc->Release());
+
+		if (FAILED(CoSetProxyBlanket(pSvc, RPC_C_AUTHN_WINNT, RPC_C_AUTHZ_NONE, nullptr, RPC_C_AUTHN_LEVEL_CALL, RPC_C_IMP_LEVEL_IMPERSONATE, nullptr, EOAC_NONE))) return {};
+		SCOPE_EXIT(pSvc->Release());
+
+		IEnumWbemClassObject* pEnumerator = nullptr;
+		if (FAILED(pSvc->ExecQuery(bstr_t("WQL"), bstr_t("SELECT * FROM MSFT_PhysicalDisk"), WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY, nullptr, &pEnumerator))) return {};
+
+		IWbemClassObject* pclsObj = nullptr;
+		std::vector<HardDriveInfo> drives;
+		while (pEnumerator)
+		{
+			ULONG ret = 0;
+			if (FAILED(pEnumerator->Next(WBEM_INFINITE, 1, &pclsObj, &ret)) || !ret) break;
+			SCOPE_EXIT(pclsObj->Release());
+
+			auto vtStr = [](IWbemClassObject& obj, const wchar_t* name)
+			{
+				VARIANT vtProp{};
+				if (FAILED(obj.Get(name, 0, &vtProp, nullptr, nullptr))) return std::string();
+				auto str = std::string(WStringToUTF8(vtProp.bstrVal));
+				VariantClear(&vtProp);
+				return str;
+			};
+
+			auto vtLong = [](IWbemClassObject& obj, const wchar_t* name)
+			{
+				VARIANT vtProp{};
+				if (FAILED(obj.Get(name, 0, &vtProp, nullptr, nullptr))) return 0l;
+				auto lval = vtProp.lVal;
+				VariantClear(&vtProp);
+				return lval;
+			};
+
+			std::string name = vtStr(*pclsObj, L"FriendlyName");
+			long mediaType = vtLong(*pclsObj, L"MediaType");
+			std::string sizeStr = vtStr(*pclsObj, L"Size");
+
+			HardDriveInfo::HardDriveType type = HardDriveInfo::HardDriveType::UNKNOWN;
+			switch (mediaType)
+			{
+			case 3:
+				type = HardDriveInfo::HardDriveType::HDD;
+				break;
+			case 4:
+				type = HardDriveInfo::HardDriveType::SSD;
+				break;
+			default:
+				// We don't care about USB sticks and such
+				continue;
+			}
+			uint64_t size = std::atoll(sizeStr.c_str());
+
+			drives.push_back({name, type, size});
+		}
+
+		return drives;
 	}
 
 	uint32_t GetCPUFrequency()

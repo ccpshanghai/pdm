@@ -214,6 +214,20 @@ namespace PDM
         }
     }
 
+	constexpr const char* HardDriveTypeToString(HardDriveInfo::HardDriveType type)
+	{
+		switch (type)
+		{
+		case HardDriveInfo::HardDriveType::SSD:
+			return "SSD";
+		case HardDriveInfo::HardDriveType::HDD:
+			return "HDD";
+		case HardDriveInfo::HardDriveType::UNKNOWN:
+		default:
+			return "UNKNOWN";
+		}
+	}
+
 	std::string TimestampToString(const TimeStamp& timestamp)
 	{
 		const int MAX_SIZE = 20;
@@ -284,6 +298,21 @@ namespace PDM
 					{"NAME",        adapter.name},
 					{"MAC_ADDRESS", adapter.macAddressString},
 					{"UUID",        adapter.uuidString},
+				}
+			});
+		}
+		
+		std::vector<SubItem> hardDrives;
+		for (auto& drive : GetHardDriveInfo())
+		{
+			hardDrives.push_back
+			({
+				"HARD_DRIVE",
+				{},
+				{
+					{"NAME", drive.name},
+					{"SIZE", std::to_string(drive.size)},
+					{"SSD",  HardDriveTypeToString(drive.type)},
 				}
 			});
 		}
@@ -401,6 +430,11 @@ namespace PDM
 								{
 									"NETWORK_ADAPTERS",
 									networkAdapters,
+									{},
+								},
+								{
+									"HARD_DRIVES",
+									hardDrives,
 									{},
 								},
 							},

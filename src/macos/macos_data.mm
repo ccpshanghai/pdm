@@ -82,6 +82,45 @@ namespace PDM
 #endif
     }
 
+	std::vector<HardDriveInfo> GetHardDriveInfo()
+	{
+		auto strToPlist = [](const std::string& plistStr)
+		{
+			NSString* str = [NSString stringWithCString:plistStr.c_str() encoding:[NSString defaultCStringEncoding]];
+			NSData* plistData = [str dataUsingEncoding:NSUTF8StringEncoding];
+			[str release];
+		
+			id plist = [NSPropertyListSerialization propertyListWithData: plistData
+														options: NSPropertyListImmutable
+														format: nullptr
+														error: nullptr];
+			[plistData release];
+			
+			return plist;
+		};
+		
+		// We could also use diskutil list -plist
+		// to get all disks, but iterating through all disks
+		// triggers a popup dialog to the user, which we don't want
+		id diskInfo = strToPlist(exec("diskutil info -plist disk0"));
+		if (!diskInfo) return {};
+		SCOPE_EXIT([diskInfo release]);
+		
+		id name = diskInfo[@"MediaName"];
+		id size = diskInfo[@"TotalSize"];
+		id ssd = diskInfo[@"SolidState"];
+		// We don't care about USB sticks and such
+		id removable = diskInfo[@"RemovableMedia"];
+		
+		if (!name || !size || !ssd || !removable || [removable boolValue]) return {};
+		
+		return {{
+			[static_cast<NSString*>(name) UTF8String],
+			[ssd boolValue] ? HardDriveInfo::HardDriveType::SSD : HardDriveInfo::HardDriveType::HDD,
+			static_cast<uint64_t>([size integerValue])
+		}};
+	}
+
     uint32_t GetCPUFrequency()
     {
         auto parts = split(exec("arch -x86_64 sysctl hw.cpufrequency_max"), ": ");

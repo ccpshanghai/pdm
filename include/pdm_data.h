@@ -125,6 +125,20 @@ namespace PDM
 		std::vector<uint8_t> uuid;
 	};
 
+	struct PDMDllExport HardDriveInfo
+	{
+		enum class HardDriveType
+		{
+			UNKNOWN = 0,
+			HDD,
+			SSD
+		};
+
+		std::string name;
+		HardDriveType type{ HardDriveType::UNKNOWN };
+		uint64_t size{};
+	};
+
 	struct PDMDllExport VulkanProperties
 	{
 		VulkanSupport support{ VulkanSupport::UNKNOWN };
