@@ -312,7 +312,7 @@ namespace PDM
 				{
 					{"NAME", drive.name},
 					{"SIZE", std::to_string(drive.size)},
-					{"SSD",  HardDriveTypeToString(drive.type)},
+					{"TYPE", HardDriveTypeToString(drive.type)},
 				}
 			});
 		}
