@@ -14,6 +14,7 @@ list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake)
 set(SRC_FILES 
 	src/pdm.cpp
 	src/gatherer.cpp
+  src/output.cpp
 	src/utilities.cpp
 	src/wine/wine.cpp
 	src/windows/windows_data.cpp
@@ -30,6 +31,7 @@ set(HDR_FILES
   src/defines.h
   src/gatherer.h
   src/cpu_extensions.h
+  src/output.h
   src/windows/d3d11_info.h
 )
 
