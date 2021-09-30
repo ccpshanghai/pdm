@@ -88,13 +88,11 @@ namespace PDM
 		{
 			NSString* str = [NSString stringWithCString:plistStr.c_str() encoding:[NSString defaultCStringEncoding]];
 			NSData* plistData = [str dataUsingEncoding:NSUTF8StringEncoding];
-			[str release];
 		
 			id plist = [NSPropertyListSerialization propertyListWithData: plistData
 														options: NSPropertyListImmutable
 														format: nullptr
 														error: nullptr];
-			[plistData release];
 			
 			return plist;
 		};
@@ -104,7 +102,6 @@ namespace PDM
 		// triggers a popup dialog to the user, which we don't want
 		id diskInfo = strToPlist(exec("diskutil info -plist disk0"));
 		if (!diskInfo) return {};
-		SCOPE_EXIT([diskInfo release]);
 		
 		id name = diskInfo[@"MediaName"];
 		id size = diskInfo[@"TotalSize"];
