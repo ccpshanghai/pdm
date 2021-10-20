@@ -404,7 +404,7 @@ namespace PDM
                         else
                         {
                             NSString *nsStr = [[NSString alloc] initWithData:model encoding:NSASCIIStringEncoding];
-                            std::string modelStr = [nsStr UTF8String];
+                            modelStr = [nsStr UTF8String];
                             [nsStr release];
                         }
                         
