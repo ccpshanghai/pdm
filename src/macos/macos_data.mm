@@ -285,7 +285,7 @@ namespace PDM
             
             if (id d = screen.deviceDescription[@"NSScreenNumber"]; d)
             {
-                int nr = [d intValue];
+                unsigned nr = [d unsignedIntValue];
                 for (CGDirectDisplayID display : onlineDisplays)
                 {
                     if (display == nr)
@@ -317,11 +317,10 @@ namespace PDM
         auto mbytes = static_cast<const UInt8*>([data bytes]);
         char hBytes[8] = {'\0'};
 
-        for (int i = 0; i < [data length]; i++)
+        for (unsigned i = 0; i < [data length]; i++)
         {
             snprintf(hBytes, 3, "%02X", mbytes[i]);
-            if (0 == i) [result appendFormat:@"%s", hBytes];
-            else [result appendFormat:@":%s", hBytes];
+            [result appendFormat:(i ? @":%s" : @"%s"), hBytes];
         }
         
         std::string str = [result UTF8String];
@@ -415,7 +414,10 @@ namespace PDM
                             m1 ? 0 : GetIntFromID(serviceDictionary, @"device-id"),
                             m1 ? 0 : GetIntFromID(serviceDictionary, @"revision-id"),
                             m1 ? 0 : GetLongFromID(serviceDictionary, @"VRAM,totalsize"),
-                            m1 ? GetIntFromNumber(serviceDictionary, @"gpu-core-count") : 0
+                            m1 ? GetIntFromNumber(serviceDictionary, @"gpu-core-count") : 0,
+                            {},
+                            {},
+                            {}
                         });
                     }
                 }
@@ -445,7 +447,11 @@ namespace PDM
     VulkanProperties GetVulkanProperties()
     {
         // We can safely assume that metal support implies vulkan support (but we might want to probe this in the future anyway)
-        return {GetMetalSupported() ? VulkanSupport::SUPPORTED : VulkanSupport::UNSUPPORTED};
+        return
+        {
+            GetMetalSupported() ? VulkanSupport::SUPPORTED : VulkanSupport::UNSUPPORTED,
+            {}
+        };
     }
 
     std::wstring UTF8ToWString(const std::string_view utf8String)
