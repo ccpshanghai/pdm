@@ -321,6 +321,7 @@ namespace PDM
 		if (!dxgiModuleHandle) return info;
 		dx11ModuleHandle = LoadLibraryA("d3d11.dll");
 		if (!dx11ModuleHandle) return info;
+		//Don't break out if DX12 is not found, DX11 will be used
 		dx12ModuleHandle = LoadLibraryA("d3d12.dll");
 
 		using LPCreateDXGIFactory = HRESULT(WINAPI*)(REFIID riid, IDXGIFactory** ppFactory);
@@ -353,6 +354,7 @@ namespace PDM
 
 			D3D_FEATURE_LEVEL support = info.maxSupportedFeatureLevel;
 
+			//DX12 used to correctly detect Feature level 12.2 on Windows 11
 			if (createDX12Device)
 			{
 				if (CreateDX12Device(createDX12Device, pAdapter, support) == S_OK)
