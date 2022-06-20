@@ -304,8 +304,9 @@ namespace PDM
 		SCOPE_EXIT
 		(
 			dxgiFactory = nullptr;
-		FreeLibrary(dx11ModuleHandle);
-		FreeLibrary(dxgiModuleHandle);
+			FreeLibrary(dx11ModuleHandle);
+			FreeLibrary(dx12ModuleHandle);
+			FreeLibrary(dxgiModuleHandle);
 		);
 
 		HMODULE scalingModuleHandle{};
