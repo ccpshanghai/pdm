@@ -1,6 +1,6 @@
 #if _WIN32
 
-#include "d3d11_info.h"
+#include "d3d_info.h"
 #include "../defines.h"
 #include "../utilities.h"
 
@@ -191,7 +191,7 @@ namespace PDM
 	////////////////////////////////////////
 
 #pragma warning(disable:26812)
-	HRESULT CreateDevice(PFN_D3D11_CREATE_DEVICE d3dCreateDevice, IDXGIAdapter* adapter, D3D_FEATURE_LEVEL& maxSupport)
+	HRESULT CreateDX11Device(PFN_D3D11_CREATE_DEVICE d3dCreateDevice, IDXGIAdapter* adapter, D3D_FEATURE_LEVEL& maxSupport)
 #pragma warning(default:26812)
 	{
 		const D3D_FEATURE_LEVEL FEATURE_LEVELS[] = {
@@ -242,6 +242,54 @@ namespace PDM
 		return hr;
 	}
 
+#pragma warning(disable:26812)
+	HRESULT CreateDX12Device(PFN_D3D12_CREATE_DEVICE d3dCreateDevice, IDXGIAdapter* adapter, D3D_FEATURE_LEVEL& maxSupport)
+#pragma warning(default:26812)
+	{
+
+		const D3D_FEATURE_LEVEL FEATURE_LEVELS[] = {
+			D3D_FEATURE_LEVEL_12_2,
+			D3D_FEATURE_LEVEL_12_1,
+			D3D_FEATURE_LEVEL_12_0,
+			D3D_FEATURE_LEVEL_11_1,
+			D3D_FEATURE_LEVEL_11_0,
+			D3D_FEATURE_LEVEL_10_1,
+			D3D_FEATURE_LEVEL_10_0,
+			D3D_FEATURE_LEVEL_9_3,
+			D3D_FEATURE_LEVEL_9_2,
+			D3D_FEATURE_LEVEL_9_1,
+			D3D_FEATURE_LEVEL_1_0_CORE,
+		};
+
+		ID3D12Device* device = nullptr;
+
+		HRESULT hr;
+		__try
+		{
+			for (auto featureLevel : FEATURE_LEVELS)
+			{
+				if ((hr = d3dCreateDevice(
+					adapter,
+					featureLevel,
+					IID_PPV_ARGS(&device)
+				)) == S_OK)
+				{
+					maxSupport = featureLevel;
+					break;
+				}
+			}
+
+		}
+		__except (EXCEPTION_EXECUTE_HANDLER)
+		{
+			hr = E_FAIL;
+		}
+
+		if (device) device->Release();
+
+		return hr;
+	}
+
 	D3D11Info& GetD3DInfo()
 	{
 		static D3D11Info info;
@@ -250,6 +298,7 @@ namespace PDM
 
 		HMODULE dxgiModuleHandle{};
 		HMODULE dx11ModuleHandle{};
+		HMODULE dx12ModuleHandle{};
 		CComPtr<IDXGIFactory> dxgiFactory;
 
 		SCOPE_EXIT
@@ -272,12 +321,16 @@ namespace PDM
 		if (!dxgiModuleHandle) return info;
 		dx11ModuleHandle = LoadLibraryA("d3d11.dll");
 		if (!dx11ModuleHandle) return info;
+		dx12ModuleHandle = LoadLibraryA("d3d12.dll");
 
 		using LPCreateDXGIFactory = HRESULT(WINAPI*)(REFIID riid, IDXGIFactory** ppFactory);
 		auto createDxgiFactory = reinterpret_cast<LPCreateDXGIFactory>(GetProcAddress(dxgiModuleHandle, "CreateDXGIFactory"));
 		if (!createDxgiFactory) return info;
-		auto createDevice = reinterpret_cast<PFN_D3D11_CREATE_DEVICE>(GetProcAddress(dx11ModuleHandle, "D3D11CreateDevice"));
-		if (!createDevice) return info;
+		auto createDX11Device = reinterpret_cast<PFN_D3D11_CREATE_DEVICE>(GetProcAddress(dx11ModuleHandle, "D3D11CreateDevice"));
+		if (!createDX11Device) return info;
+		PFN_D3D12_CREATE_DEVICE createDX12Device = nullptr;
+		if (dx12ModuleHandle)
+			createDX12Device = reinterpret_cast<PFN_D3D12_CREATE_DEVICE>(GetProcAddress(dx12ModuleHandle, "D3D12CreateDevice"));
 		if (FAILED(createDxgiFactory(__uuidof(IDXGIFactory), &dxgiFactory.p))) return info;
 		
 		initialized = true;
@@ -300,7 +353,16 @@ namespace PDM
 
 			D3D_FEATURE_LEVEL support = info.maxSupportedFeatureLevel;
 
-			if (CreateDevice(createDevice, pAdapter, support) == S_OK)
+			if (createDX12Device)
+			{
+				if (CreateDX12Device(createDX12Device, pAdapter, support) == S_OK)
+				{
+					if (support > info.maxSupportedFeatureLevel)
+						info.maxSupportedFeatureLevel = support;
+				}
+			}
+
+			if (CreateDX11Device(createDX11Device, pAdapter, support) == S_OK)
 			{
 				if (support > info.maxSupportedFeatureLevel)
 					info.maxSupportedFeatureLevel = support;

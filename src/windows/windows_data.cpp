@@ -4,7 +4,7 @@
 
 #include <winsock2.h>
 
-#include "d3d11_info.h"
+#include "d3d_info.h"
 #include "../../include/pdm_data.h"
 #include "../defines.h"
 #include "../gatherer.h"
