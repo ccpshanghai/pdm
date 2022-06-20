@@ -304,8 +304,8 @@ namespace PDM
 		SCOPE_EXIT
 		(
 			dxgiFactory = nullptr;
-			FreeLibrary(dx11ModuleHandle);
-			FreeLibrary(dxgiModuleHandle);
+		FreeLibrary(dx11ModuleHandle);
+		FreeLibrary(dxgiModuleHandle);
 		);
 
 		HMODULE scalingModuleHandle{};
@@ -320,18 +320,18 @@ namespace PDM
 		dxgiModuleHandle = LoadLibraryA("dxgi.dll");
 		if (!dxgiModuleHandle) return info;
 		dx11ModuleHandle = LoadLibraryA("d3d11.dll");
-		if (!dx11ModuleHandle) return info;
-		//Don't break out if DX12 is not found, DX11 will be used
 		dx12ModuleHandle = LoadLibraryA("d3d12.dll");
 
 		using LPCreateDXGIFactory = HRESULT(WINAPI*)(REFIID riid, IDXGIFactory** ppFactory);
 		auto createDxgiFactory = reinterpret_cast<LPCreateDXGIFactory>(GetProcAddress(dxgiModuleHandle, "CreateDXGIFactory"));
 		if (!createDxgiFactory) return info;
-		auto createDX11Device = reinterpret_cast<PFN_D3D11_CREATE_DEVICE>(GetProcAddress(dx11ModuleHandle, "D3D11CreateDevice"));
-		if (!createDX11Device) return info;
+		PFN_D3D11_CREATE_DEVICE createDX11Device = nullptr;
+		if (dx11ModuleHandle)
+			createDX11Device = reinterpret_cast<PFN_D3D11_CREATE_DEVICE>(GetProcAddress(dx11ModuleHandle, "D3D11CreateDevice"));
 		PFN_D3D12_CREATE_DEVICE createDX12Device = nullptr;
 		if (dx12ModuleHandle)
 			createDX12Device = reinterpret_cast<PFN_D3D12_CREATE_DEVICE>(GetProcAddress(dx12ModuleHandle, "D3D12CreateDevice"));
+		if (!createDX11Device && !createDX12Device) return info;
 		if (FAILED(createDxgiFactory(__uuidof(IDXGIFactory), &dxgiFactory.p))) return info;
 		
 		initialized = true;
@@ -363,13 +363,15 @@ namespace PDM
 						info.maxSupportedFeatureLevel = support;
 				}
 			}
-
-			if (CreateDX11Device(createDX11Device, pAdapter, support) == S_OK)
+			if (createDX11Device)
 			{
-				if (support > info.maxSupportedFeatureLevel)
-					info.maxSupportedFeatureLevel = support;
+				if (CreateDX11Device(createDX11Device, pAdapter, support) == S_OK)
+				{
+					if (support > info.maxSupportedFeatureLevel)
+						info.maxSupportedFeatureLevel = support;
+				}
 			}
-
+			
 			uint32_t index = 0;
 			CComPtr<IDXGIOutput> pOutput;
 			while (SUCCEEDED(pAdapter->EnumOutputs(index++, reinterpret_cast<IDXGIOutput**>(&pOutput))))
