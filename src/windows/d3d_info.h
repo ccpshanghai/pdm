@@ -5,6 +5,7 @@
 #include "../../include/pdm.h"
 
 #include <d3d11.h>
+#include <d3d12.h>
 #include <atlcomcli.h>
 #include <dxgi.h>
 #include <string>

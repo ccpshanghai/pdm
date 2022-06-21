@@ -18,7 +18,7 @@ set(SRC_FILES
 	src/utilities.cpp
 	src/wine/wine.cpp
 	src/windows/windows_data.cpp
-	src/windows/d3d11_info.cpp
+	src/windows/d3d_info.cpp
 	src/windows/vulkan_info.cpp
 	src/macos/macos_data.mm
 )
@@ -32,7 +32,7 @@ set(HDR_FILES
   src/gatherer.h
   src/cpu_extensions.h
   src/output.h
-  src/windows/d3d11_info.h
+  src/windows/d3d_info.h
 )
 
 add_library(pdm STATIC
