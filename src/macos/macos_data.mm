@@ -51,7 +51,7 @@ namespace PDM
         char buffer[1024] = { 0 };
         size_t size = sizeof(buffer);
         sysctlbyname(name, buffer, &size, nullptr, 0);
-        
+
         return buffer;
     }
 
@@ -60,7 +60,7 @@ namespace PDM
         uint64_t result = 0;
         size_t size = sizeof(result);
         sysctlbyname(name, &result, &size, nullptr, 0);
-        
+
         return result;
     }
 
@@ -77,7 +77,7 @@ namespace PDM
             if (machine == "x86_64") return Bitness::BITNESS_64;
             if (machine == "i386"  ) return Bitness::BITNESS_32;
         }
-        
+
         return Bitness::BITNESS_UNKNOWN;
 #endif
     }
@@ -86,31 +86,31 @@ namespace PDM
 	{
 		auto strToPlist = [](const std::string& plistStr)
 		{
-			NSString* str = [NSString stringWithCString:plistStr.c_str() encoding:[NSString defaultCStringEncoding]];
+			NSString* str = [NSString stringWithCString:plistStr.c_str() encoding:NSUTF8StringEncoding];
 			NSData* plistData = [str dataUsingEncoding:NSUTF8StringEncoding];
-		
+
 			id plist = [NSPropertyListSerialization propertyListWithData: plistData
 														options: NSPropertyListImmutable
 														format: nullptr
 														error: nullptr];
-			
+
 			return plist;
 		};
-		
+
 		// We could also use diskutil list -plist
 		// to get all disks, but iterating through all disks
 		// triggers a popup dialog to the user, which we don't want
 		id diskInfo = strToPlist(exec("diskutil info -plist disk0"));
 		if (!diskInfo) return {};
-		
+
 		id name = diskInfo[@"MediaName"];
 		id size = diskInfo[@"TotalSize"];
 		id ssd = diskInfo[@"SolidState"];
 		// We don't care about USB sticks and such
 		id removable = diskInfo[@"RemovableMedia"];
-		
+
 		if (!name || !size || !ssd || !removable || [removable boolValue]) return {};
-		
+
 		return {{
 			[static_cast<NSString*>(name) UTF8String],
 			[ssd boolValue] ? HardDriveInfo::HardDriveType::SSD : HardDriveInfo::HardDriveType::HDD,
@@ -222,7 +222,7 @@ namespace PDM
         IOObjectRelease(ioRegistryRoot);
         CFStringGetCString(uuidCf, buffer, sizeof(buffer), kCFStringEncodingMacRoman);
         CFRelease(uuidCf);
-        
+
         return buffer;
     }
 
@@ -275,14 +275,14 @@ namespace PDM
         CGGetOnlineDisplayList(0, nullptr, &displayCount);
         std::vector<CGDirectDisplayID> onlineDisplays(displayCount);
         CGGetOnlineDisplayList(displayCount, &onlineDisplays[0], nullptr);
-        
+
         std::vector<MonitorInfo> monitors;
-        
+
         for (NSScreen* screen in [NSScreen screens])
         {
             uint32_t refreshRate = 0;
             NSString* screenName = [screen respondsToSelector:NSSelectorFromString(@"localizedName")] ? [(id)screen localizedName] : @"";
-            
+
             if (id d = screen.deviceDescription[@"NSScreenNumber"]; d)
             {
                 unsigned nr = [d unsignedIntValue];
@@ -296,7 +296,7 @@ namespace PDM
                     }
                 }
             }
-            
+
             monitors.push_back
             ({
                 [screenName UTF8String],
@@ -307,7 +307,7 @@ namespace PDM
                 static_cast<uint32_t>(screen.backingScaleFactor * 100),
             });
         }
-        
+
         return monitors;
     }
 
@@ -322,30 +322,30 @@ namespace PDM
             snprintf(hBytes, 3, "%02X", mbytes[i]);
             [result appendFormat:(i ? @":%s" : @"%s"), hBytes];
         }
-        
+
         std::string str = [result UTF8String];
         [result release];
-        
+
         return str;
     }
 
     std::vector<NetworkAdapterInfo> GetNetworkAdapterInfo()
     {
         std::vector<NetworkAdapterInfo> adapters;
-        
+
         mach_port_t machPort;
         IOMasterPort(MACH_PORT_NULL, &machPort);
         io_iterator_t netIterator = {0};
         IOServiceGetMatchingServices(machPort, IOServiceMatching(kIOEthernetInterfaceClass), &netIterator);
         io_object_t interfaceService, controllerService;
-        
+
         while ( (interfaceService = IOIteratorNext(netIterator)) )
         {
             if (kern_return_t kernResult = IORegistryEntryGetParentEntry( interfaceService, kIOServicePlane, &controllerService ); kernResult == KERN_SUCCESS)
             {
                 CFTypeRef MACAddrAsCFData   = IORegistryEntryCreateCFProperty(controllerService, CFSTR(kIOMACAddress), kCFAllocatorDefault, 0);
                 CFTypeRef BSDNameAsCFString = IORegistryEntryCreateCFProperty(interfaceService,  CFSTR("BSD Name"),    kCFAllocatorDefault, 0);
-                
+
                 if (MACAddrAsCFData && BSDNameAsCFString)
                 {
                     auto str = bytesToHexString(static_cast<NSData*>(MACAddrAsCFData));
@@ -363,16 +363,16 @@ namespace PDM
             }
         }
         IOObjectRelease(netIterator);
-        
+
         return adapters;
     }
 
     std::vector<GPUInfo> GetGPUInfo()
     {
         std::vector<GPUInfo> gpus;
-        
+
         io_iterator_t iterator;
-        
+
 #ifdef __aarch64__
         bool m1 = true;
 #else
@@ -406,7 +406,7 @@ namespace PDM
                             modelStr = [nsStr UTF8String];
                             [nsStr release];
                         }
-                        
+
                         gpus.push_back
                         ({
                             modelStr,
@@ -421,14 +421,14 @@ namespace PDM
                         });
                     }
                 }
-                
+
                 CFRelease(serviceDictionary);
                 IOObjectRelease(regEntry);
             }
-            
+
             IOObjectRelease(iterator);
         }
-        
+
         return gpus;
     }
 
