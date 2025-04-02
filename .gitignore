@@ -5,3 +5,6 @@ build/
 xcode/
 CMakeSettings.json
 PDM_Output_*
+
+#CMake directories
+cmake-build-*/
