@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.19)
+cmake_minimum_required(VERSION 3.31)
 
 # Allow setting MSVC runtime via `CMAKE_MSVC_RUNTIME_LIBRARY`
 cmake_policy(SET CMP0091 NEW)
@@ -14,7 +14,7 @@ list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake)
 set(SRC_FILES 
 	src/pdm.cpp
 	src/gatherer.cpp
-  src/output.cpp
+    src/output.cpp
 	src/utilities.cpp
 	src/wine/wine.cpp
 	src/windows/windows_data.cpp
