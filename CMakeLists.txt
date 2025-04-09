@@ -7,6 +7,9 @@ file (STRINGS "BuildNumber.txt" BUILD_NUMBER)
 string(REPLACE "\"" "" BUILD_NUMBER ${BUILD_NUMBER})
 project(pdm VERSION ${BUILD_NUMBER})
 
+include(cmake/CcpGlobalSettings.cmake)
+#include(cmake/CcpTargetConfigurations.cmake) # TODO: Should we include this?
+
 option(DLL_EXPORT "Export symbols (for building DLL)" OFF)
 
 list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake)
@@ -101,11 +104,6 @@ add_executable(pdmCLI
 	${HDR_FILES}
 	src/main.cpp
  )
-
-set_property(TARGET pdm pdmCLI PROPERTY CXX_STANDARD 17)
-set_property(TARGET pdm pdmCLI PROPERTY CXX_STANDARD_REQUIRED ON)
-set_property(TARGET pdm        PROPERTY CXX_VISIBILITY_PRESET hidden)
-set_property(TARGET pdm        PROPERTY VISIBILITY_INLINES_HIDDEN YES)
 
 if (APPLE)
 	find_library(IOKit IOKit)
