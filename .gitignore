@@ -8,3 +8,5 @@ PDM_Output_*
 
 #CMake directories
 cmake-build-*/
+
+CMakeUserPresets.json
