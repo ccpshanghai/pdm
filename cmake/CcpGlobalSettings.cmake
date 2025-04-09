@@ -35,9 +35,3 @@ set(CMAKE_XCODE_GENERATE_SCHEME ON)
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-#include(cmake/CcpVendorUtilities.cmake)
-#include(cmake/CcpBuildConfigurations.cmake)
-
-#message(STATUS "CCP Platform is ${CCP_PLATFORM}")
-#message(STATUS "CCP Architecture is ${CCP_ARCHITECTURE}")
-#message(STATUS "CCP Toolset is ${CCP_TOOLSET}")
