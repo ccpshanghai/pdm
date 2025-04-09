@@ -1,0 +1,17 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 31,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "localdev",
+      "inherits": "carbon_windows_vcpkg_vs",
+      "cacheVariables": {
+        "CMAKE_INSTALL_PREFIX": "<REPLACE_WITH_THE_PATH_TO_YOUR/vendor/github.com/ccpgames/platform-pdm/YOUR_OUTPUT_DEV_FOLDER"
+      }
+    }
+  ]
+}
