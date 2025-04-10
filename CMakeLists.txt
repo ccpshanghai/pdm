@@ -100,6 +100,6 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 	install(
 		EXPORT pdmTargets
 		DESTINATION ${CMAKE_INSTALL_PREFIX}/share/carbon-pdm  # Calling this carbon-pdm
-		FILE pdmConfig.cmake
+		FILE carbon-pdmConfig.cmake
 	)
 endif()
