@@ -45,7 +45,7 @@ add_library(ccp::pdm ALIAS pdm)
 
 target_include_directories(pdm
 	PUBLIC
-		$<INSTALL_INTERFACE:include/pdm>
+		$<INSTALL_INTERFACE:include>
 		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 	PRIVATE
 		${CMAKE_CURRENT_SOURCE_DIR}/src
