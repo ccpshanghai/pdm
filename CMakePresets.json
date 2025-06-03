@@ -42,7 +42,8 @@
         "VCPKG_USE_HOST_TOOLS": "ON",
         "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/cmake/triplets",
         "VCPKG_TARGET_TRIPLET": "universal-osx-carbon",
-        "VCPKG_HOST_TRIPLET": "universal-osx-carbon"
+        "VCPKG_HOST_TRIPLET": "universal-osx-carbon",
+        "CMAKE_OSX_ARCHITECTURES": "arm64;x86_64"
       }
     }
   ]
