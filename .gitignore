@@ -6,7 +6,8 @@ xcode/
 CMakeSettings.json
 PDM_Output_*
 
-#CMake directories
+# Build output
 cmake-build-*/
+.cmake-build-*/
 
 CMakeUserPresets.json
