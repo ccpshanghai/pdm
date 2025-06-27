@@ -3,7 +3,6 @@ if(APPLE)
     # we are building on, but we want to stick to our policy of supporting the last three releases.
     set(CMAKE_OSX_DEPLOYMENT_TARGET 10.14 CACHE STRING "The minimum macOS version we target." FORCE)
     message(STATUS "Building for minimum macOS version: ${CMAKE_OSX_DEPLOYMENT_TARGET}")
-    set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64")
     message(STATUS "Building for ${CMAKE_OSX_ARCHITECTURES} architecture")
 endif()
 
