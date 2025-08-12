@@ -1,11 +1,3 @@
-.DS_Store
-.vs/
-out/
-build/
-xcode/
-CMakeSettings.json
-PDM_Output_*
-
 # Build output
 cmake-build-*/
 .cmake-build-*/
