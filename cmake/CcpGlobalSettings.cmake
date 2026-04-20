@@ -1,3 +1,5 @@
+# Copyright © 2026 CCP ehf.
+
 if(APPLE)
     # Explicitly set the minimum macOS version we target; otherwise it defaults to whatever version
     # we are building on, but we want to stick to our policy of supporting the last three releases.

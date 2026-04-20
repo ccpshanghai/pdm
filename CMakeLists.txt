@@ -1,3 +1,5 @@
+# Copyright © 2026 CCP ehf.
+
 cmake_minimum_required(VERSION 3.30)
 
 # Allow setting MSVC runtime via `CMAKE_MSVC_RUNTIME_LIBRARY`

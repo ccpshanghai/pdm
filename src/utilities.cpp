@@ -1,3 +1,5 @@
+// Copyright © 2026 CCP ehf.
+
 #include "utilities.h"
 #include "../include/pdm.h"
 

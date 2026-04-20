@@ -1,4 +1,6 @@
-﻿#include <string>
+﻿// Copyright © 2026 CCP ehf.
+
+#include <string>
 
 #if _WIN32
 

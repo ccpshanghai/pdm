@@ -1,3 +1,5 @@
+// Copyright © 2026 CCP ehf.
+
 #if __APPLE__
 
 #include "../../include/pdm.h"

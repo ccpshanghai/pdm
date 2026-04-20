@@ -1,3 +1,5 @@
+// Copyright © 2026 CCP ehf.
+
 #include "gatherer.h"
 #include "defines.h"
 #include "utilities.h"

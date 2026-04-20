@@ -1,4 +1,6 @@
-﻿#include "output.h"
+﻿// Copyright © 2026 CCP ehf.
+
+#include "output.h"
 #include "utilities.h"
 
 #include <fstream>

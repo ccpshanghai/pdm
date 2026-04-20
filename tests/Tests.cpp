@@ -1,4 +1,6 @@
-﻿#include "gtest/gtest.h"
+﻿// Copyright © 2026 CCP ehf.
+
+#include "gtest/gtest.h"
 #include "../include/pdm.h"
 #include "../src/utilities.h"
 

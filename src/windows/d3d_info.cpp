@@ -1,3 +1,5 @@
+// Copyright © 2026 CCP ehf.
+
 #if _WIN32
 
 #include "d3d_info.h"
