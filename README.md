@@ -14,7 +14,7 @@ Note that PDM depends on the [C++ 2017 redistibutable package](https://support.m
 In other words `vcruntime140.dll`, `vcruntime140_1.dll`, and `msvcp140.dll`.
 
 ### macOS - make
-Open a terminal, git clone the repo, and CD into the root of the cloned repo.  
+Open a terminal and git clone the repo, and CD into the root of the cloned repo.  
 Make a new folder called build and CD into it.  
 Run following cmake command: `cmake ..`  
 Run make with: `make`  
