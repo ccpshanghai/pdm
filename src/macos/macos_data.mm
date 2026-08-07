@@ -1,6 +1,8 @@
 // Copyright © 2026 CCP ehf.
 
-#if __APPLE__
+#include <TargetConditionals.h>
+
+#if defined(__APPLE__) && TARGET_OS_OSX
 
 #include "../../include/pdm.h"
 #include "../utilities.h"

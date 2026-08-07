@@ -63,7 +63,7 @@ add_executable(pdmCLI
 	src/main.cpp
 )
 
-if (APPLE)
+if (APPLE AND NOT IOS)
 	find_library(IOKit IOKit)
 	find_library(AppKit AppKit)
 	find_library(Metal Metal)
