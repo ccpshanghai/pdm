@@ -12,6 +12,12 @@
 #include <intrin.h>
 #endif
 
+#if defined( __ANDROID__ )
+#include <sys/system_properties.h>
+#include <fstream>
+#include <cstdlib>
+#endif
+
 #include "utilities.h"
 
 namespace PDM
@@ -371,6 +377,111 @@ namespace PDM
 
         return extensions;
     }
+// ARM64 on Android. The branch below this one is selected on __aarch64__ but is written
+// entirely against macOS sysctl names -- machdep.cpu.brand_string, hw.cpufamily,
+// kern.hv_vmm_present -- so aarch64 has meant "Apple Silicon" here. Android is aarch64 and
+// is not Apple, which is what this arm is for.
+#elif defined( __ANDROID__ )
+    inline std::string AndroidProperty( const char* name )
+    {
+        char value[ PROP_VALUE_MAX ] = {};
+        return __system_property_get( name, value ) > 0 ? std::string( value ) : std::string();
+    }
+
+    inline int32_t AndroidCpuInfoField( const char* key )
+    {
+        std::ifstream cpuinfo( "/proc/cpuinfo" );
+        std::string line;
+        while( std::getline( cpuinfo, line ) )
+        {
+            if( line.rfind( key, 0 ) != 0 )
+            {
+                continue;
+            }
+            const size_t colon = line.find( ':' );
+            if( colon != std::string::npos )
+            {
+                // Values are printed as 0x… here, so let the base be detected.
+                return int32_t( std::strtol( line.c_str() + colon + 1, nullptr, 0 ) );
+            }
+        }
+        return 0;
+    }
+
+    class CPUID
+    {
+    public:
+		static Bitness GetBitness()
+        {
+            return Bitness::BITNESS_64;
+        }
+
+		static std::string GetBrand()
+        {
+            // /proc/cpuinfo on arm64 has no "model name"; the closest is the implementer
+            // and part pair, which identifies the core design rather than the SoC. The SoC
+            // name lives in a system property instead.
+            std::string soc = AndroidProperty( "ro.soc.model" );
+            if( soc.empty() )
+            {
+                soc = AndroidProperty( "ro.board.platform" );
+            }
+            return soc;
+        }
+
+		static std::string GetVendor()
+        {
+            std::string vendor = AndroidProperty( "ro.soc.manufacturer" );
+            return vendor.empty() ? AndroidProperty( "ro.product.manufacturer" ) : vendor;
+        }
+
+		static int32_t GetModel()
+        {
+            return AndroidCpuInfoField( "CPU part" );
+        }
+
+		static int32_t GetStepping()
+        {
+            return AndroidCpuInfoField( "CPU variant" );
+        }
+    };
+
+    bool HasHypervisorBit()
+	{
+        // No kern.hv_vmm_present equivalent. The emulator advertises itself through
+        // ro.kernel.qemu, and ro.hardware is "ranchu" or "goldfish" on the AVD images.
+        if( AndroidProperty( "ro.kernel.qemu" ) == "1" )
+        {
+            return true;
+        }
+        const std::string hardware = AndroidProperty( "ro.hardware" );
+        return hardware == "ranchu" || hardware == "goldfish";
+	}
+
+	std::string GetHypervisorName()
+	{
+        return HasHypervisorBit() ? AndroidProperty( "ro.hardware" ) : std::string();
+	}
+
+	bool IsHyperVGuestOS()
+    {
+        return false;
+    }
+
+    std::vector<std::string> GetCPUExtensions()
+    {
+        // TODO: read the Features line of /proc/cpuinfo, or use getauxval(AT_HWCAP).
+        // Reported as the armv8-a baseline for now, matching what the macOS arm does.
+        return {"AES", "CRC32", "PMULL", "SHA1", "SHA2"};
+    }
+
+	bool IsSuspectedVM()
+	{
+		return
+            HasVMExecutionTiming() ||
+            HasHypervisorBit() ||
+            GetHypervisorName() != "";
+	}
 // ARM64, currently only supported on macOS
 #else
     class CPUID
