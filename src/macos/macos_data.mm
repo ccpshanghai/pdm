@@ -1,13 +1,8 @@
 // Copyright © 2026 CCP ehf.
 
-// TargetConditionals.h is an Apple SDK header, so it needs an __APPLE__ guard of its
-// own. It cannot just move inside the guard below, because that guard's condition is
-// what needs TARGET_OS_OSX, and TARGET_OS_OSX only exists once this is included.
-//
-// Compiling this file on non-Apple targets is expected: SRC_FILES in CMakeLists.txt is
-// deliberately flat and each source guards itself, as src/windows/*.cpp and
-// src/wine/wine.cpp do with _WIN32. Leaving this include unguarded therefore broke
-// x64-windows outright — MSVC compiles .mm as C++ and has no Apple SDK to find.
+// This file is compiled on non-Apple targets too — SRC_FILES is flat and each source
+// guards itself — so an Apple SDK header needs a guard of its own. It cannot move inside
+// the guard below: that condition tests TARGET_OS_OSX, which this header defines.
 #if defined( __APPLE__ )
 #include <TargetConditionals.h>
 #endif
