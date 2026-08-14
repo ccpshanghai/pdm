@@ -1,6 +1,11 @@
 // Copyright © 2026 CCP ehf.
 
+// This file is compiled on non-Apple targets too — SRC_FILES is flat and each source
+// guards itself — so an Apple SDK header needs a guard of its own. It cannot move inside
+// the guard below: that condition tests TARGET_OS_OSX, which this header defines.
+#if defined( __APPLE__ )
 #include <TargetConditionals.h>
+#endif
 
 #if defined(__APPLE__) && TARGET_OS_OSX
 
