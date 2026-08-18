@@ -25,6 +25,8 @@ set(SRC_FILES
 	src/windows/d3d_info.cpp
 	src/windows/vulkan_info.cpp
 	src/macos/macos_data.mm
+	src/ios/ios_data.mm
+	src/android/android_data.cpp
 )
 
 # For IDE support
@@ -57,11 +59,27 @@ if(DLL_EXPORT)
 	target_compile_definitions(pdm PRIVATE PDM_DLL_EXPORT)
 endif()
 
+# pdmCLI is a command-line tool. There is no useful iOS CLI binary, and on Android it is the
+# only target that links the inventory backend into an executable, so it is the first thing
+# to fail there too. Nothing installs it on either platform.
+if(NOT IOS AND NOT ANDROID)
 add_executable(pdmCLI
 	${SRC_FILES}
 	${HDR_FILES}
 	src/main.cpp
 )
+endif()
+
+if (IOS)
+	# Metal backs GPUInfo and GetMetalSupported in the iOS backend; UIKit and Foundation cover
+	# UIScreen/UIDevice/NSProcessInfo. Linked the same plain way the macOS branch below does so
+	# the requirement propagates to consumers -- carbon-blue names UIKit and Foundation itself,
+	# but not Metal.
+	find_library(Metal Metal)
+	find_library(UIKit UIKit)
+	find_library(Foundation Foundation)
+	target_link_libraries(pdm ${Metal} ${UIKit} ${Foundation})
+endif()
 
 if (APPLE AND NOT IOS)
 	find_library(IOKit IOKit)
