@@ -25,6 +25,8 @@ set(SRC_FILES
 	src/windows/d3d_info.cpp
 	src/windows/vulkan_info.cpp
 	src/macos/macos_data.mm
+	src/ios/ios_data.mm
+	src/android/android_data.cpp
 )
 
 # For IDE support
@@ -57,11 +59,35 @@ if(DLL_EXPORT)
 	target_compile_definitions(pdm PRIVATE PDM_DLL_EXPORT)
 endif()
 
+# pdmCLI is a command-line tool and neither platform has a useful place to put one, so nothing
+# installs it on either. That is now the whole reason. This comment also used to say it was
+# "the first thing to fail" because it was the only target linking the inventory backend into
+# an executable -- true while the backends were missing, not true any more. Measured rather
+# than assumed: a probe binary linking libpdm and ios_data.mm builds and runs under
+# `xcrun simctl spawn` on arm64-ios-simulator.
+#
+# The tests target further down is deliberately NOT gated the same way. A gtest binary is
+# exactly what you run on a simulator or a device, so it is the only route to execution
+# coverage of these backends; gating it off would foreclose the one thing that catches what a
+# successful link cannot.
+if(NOT IOS AND NOT ANDROID)
 add_executable(pdmCLI
 	${SRC_FILES}
 	${HDR_FILES}
 	src/main.cpp
 )
+endif()
+
+if (IOS)
+	# Metal backs GPUInfo and GetMetalSupported in the iOS backend; UIKit and Foundation cover
+	# UIScreen/UIDevice/NSProcessInfo. Linked the same plain way the macOS branch below does so
+	# the requirement propagates to consumers -- carbon-blue names UIKit and Foundation itself,
+	# but not Metal.
+	find_library(Metal Metal)
+	find_library(UIKit UIKit)
+	find_library(Foundation Foundation)
+	target_link_libraries(pdm ${Metal} ${UIKit} ${Foundation})
+endif()
 
 if (APPLE AND NOT IOS)
 	find_library(IOKit IOKit)
