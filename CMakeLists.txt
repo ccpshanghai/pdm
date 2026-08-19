@@ -59,9 +59,17 @@ if(DLL_EXPORT)
 	target_compile_definitions(pdm PRIVATE PDM_DLL_EXPORT)
 endif()
 
-# pdmCLI is a command-line tool. There is no useful iOS CLI binary, and on Android it is the
-# only target that links the inventory backend into an executable, so it is the first thing
-# to fail there too. Nothing installs it on either platform.
+# pdmCLI is a command-line tool and neither platform has a useful place to put one, so nothing
+# installs it on either. That is now the whole reason. This comment also used to say it was
+# "the first thing to fail" because it was the only target linking the inventory backend into
+# an executable -- true while the backends were missing, not true any more. Measured rather
+# than assumed: a probe binary linking libpdm and ios_data.mm builds and runs under
+# `xcrun simctl spawn` on arm64-ios-simulator.
+#
+# The tests target further down is deliberately NOT gated the same way. A gtest binary is
+# exactly what you run on a simulator or a device, so it is the only route to execution
+# coverage of these backends; gating it off would foreclose the one thing that catches what a
+# successful link cannot.
 if(NOT IOS AND NOT ANDROID)
 add_executable(pdmCLI
 	${SRC_FILES}
