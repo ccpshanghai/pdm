@@ -29,6 +29,16 @@ set(SRC_FILES
 	src/android/android_data.cpp
 )
 
+# g++ selects the Objective-C++ frontend from the .mm extension and then
+# looks for cc1objplus. The Apple bodies are already empty outside
+# __APPLE__, but the driver never gets that far. Windows translation units
+# stay in the list: d3d_info.cpp and vulkan_info.cpp are empty under
+# _WIN32, and windows_data.cpp's non-Windows half is the D3D "NONE" stub.
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+	list(FILTER SRC_FILES EXCLUDE REGEX "\\.mm$")
+	list(APPEND SRC_FILES src/linux/linux_data.cpp)
+endif()
+
 # For IDE support
 set(HDR_FILES
 	include/version.h
@@ -46,6 +56,10 @@ add_library(pdm STATIC
 	${HDR_FILES}
  )
 add_library(ccp::pdm ALIAS pdm)
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+	target_link_libraries(pdm PUBLIC ${CMAKE_DL_LIBS})
+endif()
 
 target_include_directories(pdm
 	PUBLIC
