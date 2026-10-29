@@ -1,6 +1,6 @@
 # Copyright © 2026 CCP ehf.
 
-if(APPLE)
+if(APPLE AND NOT IOS)
     # Explicitly set the minimum macOS version we target; otherwise it defaults to whatever version
     # we are building on, but we want to stick to our policy of supporting the last three releases.
     set(CMAKE_OSX_DEPLOYMENT_TARGET 10.14 CACHE STRING "The minimum macOS version we target." FORCE)
