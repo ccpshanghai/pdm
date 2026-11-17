@@ -1,53 +1,29 @@
 // Copyright © 2026 CCP ehf.
 
-#pragma once
+#if __x86_64__ || _M_X64
+
+#include <cpu.h>
+#include <defines.h>
+#include <pdm.h>
 
 #include <bitset>
-#include <array>
 #include <string>
+#include <tuple>
 #include <vector>
-#include <thread>
 
 #if _WIN32
 #include <intrin.h>
 #endif
 
-#if defined( __ANDROID__ )
-#include <sys/system_properties.h>
-#include <fstream>
-#include <cstdlib>
-#endif
-
-#include "utilities.h"
-
 namespace PDM
 {
-    constexpr CPUArchitecture GetCPUArchitecture()
-    {
-#if _M_IX86 || __i386
-		return CPUArchitecture::X86;
-#elif _M_AMD64 || __amd64
-		return CPUArchitecture::X86_64;
-#elif _M_ARM || __arm__
-		return CPUArchitecture::ARM;
-#elif __aarch64__
-		return CPUArchitecture::ARM64;
-#else
-		return CPUArchitecture::UNKNOWN;
-#error Unknown CPU architecture
-#endif
-    }
-
-// Assume x86
-#if !__aarch64__
-    constexpr auto HYPER_V_NAME = "Microsoft Hv";
-
-    class CPUID
+    // Wrapper around the x86 cpuid instruction
+    class X86CPUID
     {
         uint32_t regs[4];
 
     public:
-        explicit CPUID(unsigned funcId)
+        explicit X86CPUID(unsigned funcId)
         {
         #if _WIN32
             __cpuidex(reinterpret_cast<int*>(regs), static_cast<int>(funcId), 0);
@@ -80,75 +56,19 @@ namespace PDM
             return std::string(reinterpret_cast<const char*>(&reg), 4);
         }
 
-        static std::string GetVendor()
-        {
-            CPUID id0(0);
-            std::string vendor = id0.get_ebx_string() + id0.get_edx_string() + id0.get_ecx_string();
-            trim(vendor);
-            return vendor;
-        }
-
-        static std::string GetBrand()
-        {
-            std::string brand;
-
-            if (CPUID(CPUID_FLAG).EAX() >= CPUID_MODEL_NAME_FLAG)
-            {
-                for (unsigned i = 0; i < 3; i++)
-                {
-                    CPUID id(CPUID_MODEL_NAME_OFFSET_FLAG + i);
-                    brand += id.get_eax_string() + id.get_ebx_string() + id.get_ecx_string() + id.get_edx_string();
-                }
-
-                trim(brand);
-            }
-
-            return brand;
-        }
-
-        static Bitness GetBitness()
-        {
-            Bitness bitness;
-
-            CPUID id8(CPUID::CPUID_FLAG);
-            if (id8.EAX() >= CPUID::CPUID_EXTENDED_FLAG)
-            {
-                CPUID id81(CPUID::CPUID_EXTENDED_FLAG);
-                bitness = id81.EDX() & CPUID::CPUID_X64_FLAG ? Bitness::BITNESS_64 : Bitness::BITNESS_32;
-            }
-            else
-            {
-                bitness = Bitness::BITNESS_32;
-            }
-
-            return bitness;
-        }
-
         static std::tuple<int32_t, int32_t> GetCPUModelStepping()
         {
             int32_t model = 0;
             int32_t stepping = 0;
 
-            if (CPUID(0).EAX() > 0)
+            if (X86CPUID(0).EAX() > 0)
             {
-                CPUID id1(1);
+                X86CPUID id1(1);
                 model = (id1.EAX() >> 4) & 0xf;
                 stepping = id1.EAX() & 0xf;
             }
 
             return {model, stepping};
-        }
-
-        static int32_t GetModel()
-        {
-            auto [model, stepping] = GetCPUModelStepping();
-            return model;
-        }
-
-        static int32_t GetStepping()
-        {
-            auto [model, stepping] = GetCPUModelStepping();
-            return stepping;
         }
 
         std::string get_eax_string() const { return register_to_string(EAX()); }
@@ -165,16 +85,72 @@ namespace PDM
         static constexpr uint32_t HYPERVISOR_INFO_FLAG         = 0x40000000;
     };
 
+    std::string CPUID::GetVendor()
+    {
+        X86CPUID id0(0);
+        std::string vendor = id0.get_ebx_string() + id0.get_edx_string() + id0.get_ecx_string();
+        trim(vendor);
+        return vendor;
+    }
+
+    std::string CPUID::GetBrand()
+    {
+        std::string brand;
+
+        if (X86CPUID(X86CPUID::CPUID_FLAG).EAX() >= X86CPUID::CPUID_MODEL_NAME_FLAG)
+        {
+            for (unsigned i = 0; i < 3; i++)
+            {
+                X86CPUID id(X86CPUID::CPUID_MODEL_NAME_OFFSET_FLAG + i);
+                brand += id.get_eax_string() + id.get_ebx_string() + id.get_ecx_string() + id.get_edx_string();
+            }
+
+            trim(brand);
+        }
+
+        return brand;
+    }
+
+    Bitness CPUID::GetBitness()
+    {
+        Bitness bitness;
+
+        X86CPUID id8(X86CPUID::CPUID_FLAG);
+        if (id8.EAX() >= X86CPUID::CPUID_EXTENDED_FLAG)
+        {
+            X86CPUID id81(X86CPUID::CPUID_EXTENDED_FLAG);
+            bitness = id81.EDX() & X86CPUID::CPUID_X64_FLAG ? Bitness::BITNESS_64 : Bitness::BITNESS_32;
+        }
+        else
+        {
+            bitness = Bitness::BITNESS_32;
+        }
+
+        return bitness;
+    }
+
+    int32_t CPUID::GetModel()
+    {
+        auto [model, stepping] = X86CPUID::GetCPUModelStepping();
+        return model;
+    }
+
+    int32_t CPUID::GetStepping()
+    {
+        auto [model, stepping] = X86CPUID::GetCPUModelStepping();
+        return stepping;
+    }
+
 	bool HasHypervisorBit()
 	{
-		return CPUID(1).ECX() & CPUID::HYPERVISOR_PRESENT_FLAG;
+		return X86CPUID(1).ECX() & X86CPUID::HYPERVISOR_PRESENT_FLAG;
 	}
 
 	std::string GetHypervisorName()
 	{
 		if (!HasHypervisorBit()) return "";
 
-		CPUID id(CPUID::HYPERVISOR_INFO_FLAG);
+		X86CPUID id(X86CPUID::HYPERVISOR_INFO_FLAG);
 		auto str = id.get_ebx_string() + id.get_ecx_string() + id.get_edx_string();
 		trim(str);
 		return str;
@@ -185,21 +161,27 @@ namespace PDM
 		if (GetHypervisorName() != HYPER_V_NAME) return false;
 
 		// TODO: More checks?
-		if (CPUID(CPUID::HYPERVISOR_INFO_FLAG + 128).has_data() ||
-			CPUID(CPUID::HYPERVISOR_INFO_FLAG + 129).has_data() ||
-			CPUID(CPUID::HYPERVISOR_INFO_FLAG + 130).has_data())
+		if (X86CPUID(X86CPUID::HYPERVISOR_INFO_FLAG + 128).has_data() ||
+			X86CPUID(X86CPUID::HYPERVISOR_INFO_FLAG + 129).has_data() ||
+			X86CPUID(X86CPUID::HYPERVISOR_INFO_FLAG + 130).has_data())
 			return true;
 
 		return false;
 	}
 
-	bool IsSuspectedVM()
+	size_t GetTimingCycles()
 	{
-		if (HasVMExecutionTiming() || IsHyperVGuestOS()) return true;
-		if (!HasHypervisorBit()) return false;
-		if (GetHypervisorName() != HYPER_V_NAME) return true;
+		volatile size_t time1 = 0;
+		volatile size_t time2 = 0;
 
-		return false;
+#if _WIN32
+		time1 = __rdtsc();
+		time2 = __rdtsc();
+#else
+		asm volatile("RDTSC" : "=a" (time1));
+		asm volatile("RDTSC" : "=a" (time2));
+#endif
+		return time2 - time1;
 	}
 
     // Extension checking taken from https://docs.microsoft.com/en-us/cpp/intrinsics/cpuid-cpuidex
@@ -222,22 +204,22 @@ namespace PDM
             else if (vendor == "AuthenticAMD")
                 isAMD_ = true;
             
-            uint32_t ids = CPUID(0).EAX();
+            uint32_t ids = X86CPUID(0).EAX();
             if (ids >= 1)
             {
-                CPUID id1(1);
+                X86CPUID id1(1);
                 f_1_ECX_ = id1.ECX();
                 f_1_EDX_ = id1.EDX();
             }
             if (ids >= 7)
             {
-                CPUID id7(7);
+                X86CPUID id7(7);
                 f_7_EBX_ = id7.EBX();
                 f_7_ECX_ = id7.ECX();
             }
-            if (CPUID(CPUID::CPUID_FLAG).EAX() >= CPUID::CPUID_EXTENDED_FLAG)
+            if (X86CPUID(X86CPUID::CPUID_FLAG).EAX() >= X86CPUID::CPUID_EXTENDED_FLAG)
             {
-                CPUID ext(CPUID::CPUID_EXTENDED_FLAG);
+                X86CPUID ext(X86CPUID::CPUID_EXTENDED_FLAG);
                 f_81_ECX_ = ext.ECX();
                 f_81_EDX_ = ext.EDX();
             }
@@ -377,197 +359,6 @@ namespace PDM
 
         return extensions;
     }
-// ARM64 on Android. The branch below this one is selected on __aarch64__ but is written
-// entirely against macOS sysctl names -- machdep.cpu.brand_string, hw.cpufamily,
-// kern.hv_vmm_present -- so aarch64 has meant "Apple Silicon" here. Android is aarch64 and
-// is not Apple, which is what this arm is for.
-#elif defined( __ANDROID__ )
-    inline std::string AndroidProperty( const char* name )
-    {
-        char value[ PROP_VALUE_MAX ] = {};
-        return __system_property_get( name, value ) > 0 ? std::string( value ) : std::string();
-    }
-
-    inline int32_t AndroidCpuInfoField( const char* key )
-    {
-        std::ifstream cpuinfo( "/proc/cpuinfo" );
-        std::string line;
-        while( std::getline( cpuinfo, line ) )
-        {
-            if( line.rfind( key, 0 ) != 0 )
-            {
-                continue;
-            }
-            const size_t colon = line.find( ':' );
-            if( colon != std::string::npos )
-            {
-                // Values are printed as 0x… here, so let the base be detected.
-                return int32_t( std::strtol( line.c_str() + colon + 1, nullptr, 0 ) );
-            }
-        }
-        return 0;
-    }
-
-    class CPUID
-    {
-    public:
-		static Bitness GetBitness()
-        {
-            return Bitness::BITNESS_64;
-        }
-
-		static std::string GetBrand()
-        {
-            // /proc/cpuinfo on arm64 has no "model name"; the closest is the implementer
-            // and part pair, which identifies the core design rather than the SoC. The SoC
-            // name lives in a system property instead.
-            std::string soc = AndroidProperty( "ro.soc.model" );
-            if( soc.empty() )
-            {
-                soc = AndroidProperty( "ro.board.platform" );
-            }
-            return soc;
-        }
-
-		static std::string GetVendor()
-        {
-            std::string vendor = AndroidProperty( "ro.soc.manufacturer" );
-            return vendor.empty() ? AndroidProperty( "ro.product.manufacturer" ) : vendor;
-        }
-
-		static int32_t GetModel()
-        {
-            return AndroidCpuInfoField( "CPU part" );
-        }
-
-		static int32_t GetStepping()
-        {
-            return AndroidCpuInfoField( "CPU variant" );
-        }
-    };
-
-    bool HasHypervisorBit()
-	{
-        // No kern.hv_vmm_present equivalent. The emulator advertises itself through
-        // ro.kernel.qemu, and ro.hardware is "ranchu" or "goldfish" on the AVD images.
-        if( AndroidProperty( "ro.kernel.qemu" ) == "1" )
-        {
-            return true;
-        }
-        const std::string hardware = AndroidProperty( "ro.hardware" );
-        return hardware == "ranchu" || hardware == "goldfish";
-	}
-
-	std::string GetHypervisorName()
-	{
-        return HasHypervisorBit() ? AndroidProperty( "ro.hardware" ) : std::string();
-	}
-
-	bool IsHyperVGuestOS()
-    {
-        return false;
-    }
-
-    std::vector<std::string> GetCPUExtensions()
-    {
-        // TODO: read the Features line of /proc/cpuinfo, or use getauxval(AT_HWCAP).
-        // Reported as the armv8-a baseline for now, matching what the macOS arm does.
-        return {"AES", "CRC32", "PMULL", "SHA1", "SHA2"};
-    }
-
-	bool IsSuspectedVM()
-	{
-		return
-            HasVMExecutionTiming() ||
-            HasHypervisorBit() ||
-            GetHypervisorName() != "";
-	}
-// ARM64, currently only supported on macOS
-#else
-    class CPUID
-    {
-    public:
-		static Bitness GetBitness()
-        {
-            return Bitness::BITNESS_64;
-        }
-
-		static std::string GetBrand()
-        {
-            return GetOSString("machdep.cpu.brand_string");
-        }
-
-		static std::string GetVendor()
-        {
-            return "Apple";
-        }
-
-		static int32_t GetModel()
-        {
-            return GetOSInteger("hw.cpufamily");
-        }
-
-		static int32_t GetStepping()
-        {
-            return GetOSInteger("hw.cpusubfamily");
-        }
-    };
-
-    bool HasHypervisorBit()
-	{
-        return GetOSInteger("kern.hv_vmm_present");
-	}
-
-	std::string GetHypervisorName()
-	{
-        // Model name will always contain 'mac' on original hardware
-		std::string hw = GetOSString("hw.model");
-        return tolower(hw).find("mac") == std::string::npos ? hw : "";
-	}
-
-	bool IsHyperVGuestOS()
-    {
-        return false;
-    }
-
-    std::vector<std::string> GetCPUExtensions()
-    {
-        // TODO: Query extensions
-        return {"AES", "CRC32", "PMULL", "SHA1", "SHA2"};
-    }
-
-	bool IsSuspectedVM()
-	{
-		return
-            HasVMExecutionTiming() ||
-            HasHypervisorBit() ||
-            GetHypervisorName() != "";
-	}
-#endif
-
-    size_t GetTimingCycles()
-	{
-		volatile size_t time1 = 0;
-		volatile size_t time2 = 0;
-
-#if _WIN64
-		time1 = __rdtsc();
-		time2 = __rdtsc();
-#elif _WIN32
-		__asm
-		{
-			RDTSC
-			MOV time1, EAX
-			RDTSC
-			MOV time2, EAX
-		}
-#elif __aarch64__
-		asm volatile("mrs %0, cntvct_el0" : "=r" (time1));
-		asm volatile("mrs %0, cntvct_el0" : "=r" (time2));
-#else
-		asm volatile("RDTSC" : "=a" (time1));
-		asm volatile("RDTSC" : "=a" (time2));
-#endif
-		return time2 - time1;
-	}
 }
+
+#endif
