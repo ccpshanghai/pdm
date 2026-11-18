@@ -9,8 +9,6 @@ file (STRINGS "BuildNumber.txt" BUILD_NUMBER)
 string(REPLACE "\"" "" BUILD_NUMBER ${BUILD_NUMBER})
 project(pdm VERSION ${BUILD_NUMBER})
 
-include(cmake/CcpGlobalSettings.cmake)
-
 option(DLL_EXPORT "Export symbols (for building DLL)" OFF)
 
 list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake)
@@ -20,11 +18,21 @@ set(SRC_FILES
 	src/gatherer.cpp
 	src/output.cpp
 	src/utilities.cpp
+	src/cpu_vm.cpp
+	src/arch/x86_64.cpp
+	src/arch/arm64.cpp
+	src/macos/cpu_macos.cpp
+	src/linux/cpu_linux.cpp
+	src/linux/linux_data.cpp
 	src/wine/wine.cpp
 	src/windows/windows_data.cpp
 	src/windows/d3d_info.cpp
 	src/windows/vulkan_info.cpp
-	src/macos/macos_data.mm
+	# The fork's mobile backends (ccpshanghai/pdm mobile-exp). Each guards itself on its platform;
+	# linux_data.cpp, which the NDK's __linux__ would otherwise select on Android too, excludes
+	# __ANDROID__, and the CPU fields on Android come from linux/cpu_linux.cpp (aarch64 Linux).
+	src/ios/ios_data.mm
+	src/android/android_data.cpp
 )
 
 # For IDE support
@@ -34,7 +42,8 @@ set(HDR_FILES
 	include/pdm_data.h
 	src/defines.h
 	src/gatherer.h
-	src/cpu_extensions.h
+	src/cpu.h
+	src/platform_cpu.h
 	src/output.h
 	src/windows/d3d_info.h
 )
@@ -57,21 +66,50 @@ if(DLL_EXPORT)
 	target_compile_definitions(pdm PRIVATE PDM_DLL_EXPORT)
 endif()
 
+# pdmCLI is a command-line tool and neither iOS nor Android has a useful place to put one.
+if(NOT IOS AND NOT ANDROID)
 add_executable(pdmCLI
 	${SRC_FILES}
 	${HDR_FILES}
 	src/main.cpp
 )
+endif()
 
-if (APPLE)
+if(TARGET pdmCLI)
+target_include_directories(pdmCLI
+	PRIVATE
+		${CMAKE_CURRENT_SOURCE_DIR}/include
+		${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+endif()
+
+if (IOS)
+	# Metal backs GPUInfo and GetMetalSupported in the iOS backend; UIKit and Foundation cover
+	# UIScreen/UIDevice/NSProcessInfo. Linked the plain way the macOS branch below does so the
+	# requirement propagates to consumers -- carbon-blue names UIKit and Foundation itself, but
+	# not Metal.
+	find_library(Metal Metal)
+	find_library(UIKit UIKit)
+	find_library(Foundation Foundation)
+	target_link_libraries(pdm ${Metal} ${UIKit} ${Foundation})
+endif()
+
+# macOS only: CMake's APPLE is true for iOS too, where macos_data.mm compiles to nothing (it
+# guards on TARGET_OS_OSX) and AppKit and IOKit do not exist.
+if (APPLE AND NOT IOS)
 	find_library(IOKit IOKit)
 	find_library(AppKit AppKit)
 	find_library(Metal Metal)
+	target_sources(pdmCLI
+		PRIVATE
+			src/macos/macos_data.mm
+	)
+	target_sources(pdm
+		PRIVATE
+			src/macos/macos_data.mm
+	)
 	target_link_libraries(pdmCLI ${IOKit} ${AppKit} ${Metal})
 	target_link_libraries(pdm    ${IOKit} ${AppKit} ${Metal})
-
-	# We don't actually need to go this low (we only support last 3 versions), but nice to get explicit warnings
-	set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9")
 
 	# Silence no symbol warnings
 	SET(CMAKE_C_ARCHIVE_CREATE   "<CMAKE_AR> Scr <TARGET> <LINK_FLAGS> <OBJECTS>")
@@ -80,16 +118,21 @@ if (APPLE)
 	SET(CMAKE_CXX_ARCHIVE_FINISH "<CMAKE_RANLIB> -no_warning_for_no_symbols -c <TARGET>")
 endif()
 
+if (UNIX AND NOT APPLE AND NOT ANDROID)
+	# Vulkan is loaded at runtime, glibc before 2.34 needs libdl for that
+	target_link_libraries(pdmCLI ${CMAKE_DL_LIBS})
+	target_link_libraries(pdm    ${CMAKE_DL_LIBS})
+endif()
+
 # Set up testing
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 	option(BUILD_TESTING "Build and run tests. Enabled by default." ON)
 	if(BUILD_TESTING)
+		enable_testing()
 		add_subdirectory(tests)
 	endif()
-endif()
 
-# Install rules
-if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+	# Install rules
 	install(
 		TARGETS pdm
 		EXPORT pdmTargets
