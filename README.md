@@ -4,34 +4,24 @@ Platform Detection Module (PDM) is an OS agnostic library for gathering metrics 
 
 ## Building
 
-### Windows - Visual Studio 2019
-Select `Open in Visual Studio` under the `Clone or download` menu in the top right corner.  
-Visual studio 2019 should show up and give you the option to clone the repo.  
-Once the repo is cloned and cmake has finished initializing, select `pdmCLI.exe` under the `Select startup item` dropdown menu.  
-You should now be able to compile and run the CLI application.  
+The project can be built using the normal CMake flow:
 
-Note that PDM depends on the [C++ 2017 redistibutable package](https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads).  
-In other words `vcruntime140.dll`, `vcruntime140_1.dll`, and `msvcp140.dll`.
+```shell
+> cmake -DCMAKE_BUILD_TYPE=Release --preset arm64-linux-release -S /path/to/pdm/sources -B /path/to/build/folder
+> cmake --build /path/to/build/folder --target all
+```
 
-### macOS - make
-Open a terminal and git clone the repo, and CD into the root of the cloned repo.  
-Make a new folder called build and CD into it.  
-Run following cmake command: `cmake ..`  
-Run make with: `make`  
-Run the command line application with `./pdmCLI`
+There are a variety of presets available, you can list ones available for your current platform using:
+```shell
+> cmake --list-presets
+```
 
-### macOS - Xcode
-Open a terminal, git clone the repo, and CD into the root of the cloned repo.  
-Make a new folder called build and CD into it.  
-Run following cmake command: `cmake -G Xcode ..`  
-Use Xcode to open `pdm.xcodeproj` which was created in the build folder.  
-Select `pdmCLI` under the build target dropbown menu.  
-You should now be able to compile and run the CLI application.
+Alternately, look at `CMakePresets.json` to see an overview of presets for all platform
 
 ## 🤝 Contributing
 Contribution follows the standard GIT PR model.
 
-By submitting a pull request or otherwise contributing to this project, you agree to license your contribution under the (to be determined) License, and you confirm that you have the right to do so.
+By submitting a pull request or otherwise contributing to this project, you agree to license your contribution under the MIT License, and you confirm that you have the right to do so.
 
 ## 📄 License and Legal Notices
 
