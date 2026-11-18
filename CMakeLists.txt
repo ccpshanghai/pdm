@@ -35,6 +35,12 @@ set(SRC_FILES
 	src/android/android_data.cpp
 )
 
+# g++ picks the Objective-C++ frontend from the .mm extension and then looks for cc1objplus, so
+# the fork's ios_data.mm (empty outside iOS) cannot sit in a desktop Linux build's source list.
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+	list(FILTER SRC_FILES EXCLUDE REGEX "\\.mm$")
+endif()
+
 # For IDE support
 set(HDR_FILES
 	include/version.h
